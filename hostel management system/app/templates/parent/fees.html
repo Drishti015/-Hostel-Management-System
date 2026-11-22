@@ -1,0 +1,141 @@
+{% extends 'base.html' %}
+
+{% block title %}Child Fee Ledger & Receipts{% endblock %}
+
+{% block content %}
+<div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4">
+    <div>
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb mb-1 small">
+                <li class="breadcrumb-item"><a href="{{ url_for('parent.dashboard') }}">Dashboard</a></li>
+                <li class="breadcrumb-item active" aria-current="page">Fee Monitoring</li>
+            </ol>
+        </nav>
+        <h2 class="fw-bold text-dark mb-1">Ward Fee Dues & Transaction Ledger</h2>
+        <p class="text-muted small mb-0">Official hostel fee records, verified payments, and downloadable receipts for <strong>{{ student.full_name }}</strong></p>
+    </div>
+    <span class="badge bg-secondary-subtle text-secondary px-3 py-2">
+        <i class="fa-solid fa-lock me-1"></i>Read-Only Ledger
+    </span>
+</div>
+
+<!-- Dues Financial Overview -->
+<div class="row g-3 mb-4">
+    <div class="col-md-4">
+        <div class="stat-card">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <div class="stat-title">Semester Fee Tariff</div>
+                    <div class="stat-value text-dark">₹{{ "{:,.0f}".format(fees.total_fee) }}</div>
+                </div>
+                <div class="stat-icon-wrapper bg-primary-subtle text-primary">
+                    <i class="fa-solid fa-hotel"></i>
+                </div>
+            </div>
+            <div class="small text-muted mt-2">Accommodation & standard mess utilities</div>
+        </div>
+    </div>
+
+    <div class="col-md-4">
+        <div class="stat-card">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <div class="stat-title">Total Paid to Date</div>
+                    <div class="stat-value text-success">₹{{ "{:,.0f}".format(fees.total_paid) }}</div>
+                </div>
+                <div class="stat-icon-wrapper bg-success-subtle text-success">
+                    <i class="fa-solid fa-circle-check"></i>
+                </div>
+            </div>
+            <div class="small text-muted mt-2">Cleared & verified in hostel ledger</div>
+        </div>
+    </div>
+
+    <div class="col-md-4">
+        <div class="stat-card">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <div class="stat-title">Balance Outstanding</div>
+                    <div class="stat-value {% if fees.balance_due > 0 %}text-danger{% else %}text-success{% endif %}">
+                        ₹{{ "{:,.0f}".format(fees.balance_due) }}
+                    </div>
+                </div>
+                <div class="stat-icon-wrapper {% if fees.balance_due > 0 %}bg-danger-subtle text-danger{% else %}bg-success-subtle text-success{% endif %}">
+                    <i class="fa-solid fa-receipt"></i>
+                </div>
+            </div>
+            <div class="small text-muted mt-2">
+                Status: <strong class="{% if fees.status == 'Paid' %}text-success{% elif fees.status == 'Partial' %}text-warning{% else %}text-danger{% endif %}">{{ fees.status }}</strong>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Transactions Table Card -->
+<div class="card shadow-sm border-0 mb-4">
+    <div class="card-header bg-white py-3 border-bottom d-flex justify-content-between align-items-center">
+        <h6 class="fw-bold mb-0 text-dark"><i class="fa-solid fa-receipt me-2 text-primary"></i>Verified Payment Transactions & Receipts</h6>
+        <span class="text-muted small">{{ fees.records|length }} transaction(s)</span>
+    </div>
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0 small">
+                <thead class="table-light">
+                    <tr>
+                        <th class="ps-4">Receipt No</th>
+                        <th>Fee Particulars</th>
+                        <th>Amount Paid</th>
+                        <th>Payment Mode</th>
+                        <th>Transaction ID</th>
+                        <th>Date</th>
+                        <th>Status</th>
+                        <th class="text-end pe-4">Receipt Slip</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for f in fees.records %}
+                        <tr>
+                            <td class="ps-4">
+                                <span class="font-monospace fw-bold text-primary">{{ f.receipt_no }}</span>
+                            </td>
+                            <td>{{ f.fee_type }}</td>
+                            <td class="fw-bold text-dark">₹{{ "{:,.2f}".format(f.amount) }}</td>
+                            <td>{{ f.payment_method }}</td>
+                            <td class="font-monospace text-muted">{{ f.transaction_id }}</td>
+                            <td>{{ f.payment_date.strftime('%d %b, %Y') }}</td>
+                            <td>
+                                <span class="badge bg-success-subtle text-success border border-success-subtle">
+                                    {{ f.status|capitalize }}
+                                </span>
+                            </td>
+                            <td class="text-end pe-4">
+                                <a href="{{ url_for('parent.view_receipt', id=f.id) }}" target="_blank" class="btn btn-sm btn-outline-primary py-1 px-2">
+                                    <i class="fa-solid fa-print me-1"></i>Print Slip
+                                </a>
+                            </td>
+                        </tr>
+                    {% else %}
+                        <tr>
+                            <td colspan="8" class="text-center py-5 text-muted">
+                                <i class="fa-regular fa-receipt fs-3 d-block mb-2 text-secondary opacity-50"></i>
+                                No payment records logged in the system for this resident yet.
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<div class="alert alert-info border-0 shadow-sm small">
+    <div class="d-flex gap-2">
+        <i class="fa-solid fa-circle-info fs-5 text-info mt-1"></i>
+        <div>
+            <strong>Fee Payment Instructions:</strong><br>
+            Official hostel semester dues are collected through the university accounts office or authorized banking channels. Parents can print verified receipts directly from this portal once accounts entries are logged.
+        </div>
+    </div>
+</div>
+{% endblock %}
+

@@ -1,0 +1,68 @@
+{% extends 'base.html' %}
+
+{% block title %}My Grievance Tickets{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h2 class="fw-bold text-dark mb-1">Grievance & Maintenance Desk</h2>
+        <p class="text-muted small mb-0">File maintenance issues, electrical faults, plumbing, or mess complaints</p>
+    </div>
+    <a href="{{ url_for('student.new_complaint') }}" class="btn btn-primary-custom">
+        <i class="fa-solid fa-plus me-2"></i>File New Grievance
+    </a>
+</div>
+
+<div class="card border-0 shadow-sm rounded-4 overflow-hidden bg-white">
+    <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+            <thead class="table-light">
+                <tr>
+                    <th class="ps-4">Ticket ID</th>
+                    <th>Issue Subject</th>
+                    <th>Category</th>
+                    <th>Priority</th>
+                    <th>Date Filed</th>
+                    <th>Status</th>
+                    <th class="text-end pe-4">View Progress</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for c in complaints %}
+                    <tr>
+                        <td class="ps-4 font-monospace fw-bold text-muted">#{{ c.id }}</td>
+                        <td>
+                            <div class="fw-bold text-dark">{{ c.title }}</div>
+                            <small class="text-muted">{{ c.description[:60] }}...</small>
+                        </td>
+                        <td><span class="badge bg-light text-dark border">{{ c.category|capitalize }}</span></td>
+                        <td>
+                            <span class="badge {% if c.priority in ['high', 'emergency'] %}bg-danger-subtle text-danger{% else %}bg-warning-subtle text-warning{% endif %}">
+                                {{ c.priority|capitalize }}
+                            </span>
+                        </td>
+                        <td>{{ c.created_at.strftime('%d %b, %Y') }}</td>
+                        <td>
+                            <span class="badge-status badge-{{ c.status }}">{{ c.status|replace('_', ' ')|capitalize }}</span>
+                        </td>
+                        <td class="text-end pe-4">
+                            <a href="{{ url_for('student.view_complaint', id=c.id) }}" class="btn btn-sm btn-outline-primary">
+                                <i class="fa-solid fa-eye me-1"></i>Track
+                            </a>
+                        </td>
+                    </tr>
+                {% else %}
+                    <tr>
+                        <td colspan="7" class="text-center py-5 text-muted">
+                            <i class="fa-solid fa-circle-check fs-2 text-success mb-2"></i>
+                            <h5 class="fw-bold text-dark">No Grievances Filed</h5>
+                            <p class="small">If you face any issues with room amenities, Wi-Fi or mess, click "File New Grievance".</p>
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}
+

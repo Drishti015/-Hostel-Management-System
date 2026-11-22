@@ -1,0 +1,193 @@
+{% extends 'base.html' %}
+
+{% block title %}Digital Out-Passes{% endblock %}
+
+{% block content %}
+<div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4">
+    <div>
+        <h2 class="fw-bold text-dark mb-1"><i class="fa-solid fa-qrcode text-primary me-2"></i>Digital Out-Passes & Gate Wallet</h2>
+        <p class="text-muted small mb-0">Present your active QR Out-Pass at the campus main security gate during exit and entry</p>
+    </div>
+    <div>
+        <a href="{{ url_for('student.leaves_list') }}" class="btn btn-outline-secondary d-inline-flex align-items-center gap-2">
+            <i class="fa-solid fa-arrow-left"></i> Leave Applications
+        </a>
+    </div>
+</div>
+
+<!-- Stat Cards -->
+<div class="row g-3 mb-4">
+    <div class="col-sm-6 col-xl-3">
+        <div class="stat-card">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <div class="stat-title">Total Out-Passes</div>
+                    <div class="stat-value text-dark">{{ total_passes }}</div>
+                </div>
+                <div class="stat-icon-wrapper bg-primary-subtle text-primary">
+                    <i class="fa-solid fa-ticket"></i>
+                </div>
+            </div>
+            <div class="small text-muted mt-2">All issued gate passes</div>
+        </div>
+    </div>
+
+    <div class="col-sm-6 col-xl-3">
+        <div class="stat-card">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <div class="stat-title">Active Passes</div>
+                    <div class="stat-value text-success">{{ active_passes }}</div>
+                </div>
+                <div class="stat-icon-wrapper bg-success-subtle text-success">
+                    <i class="fa-solid fa-qrcode"></i>
+                </div>
+            </div>
+            <div class="small text-muted mt-2">Ready for gate departure</div>
+        </div>
+    </div>
+
+    <div class="col-sm-6 col-xl-3">
+        <div class="stat-card">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <div class="stat-title">Currently Outside</div>
+                    <div class="stat-value text-warning">{{ used_passes }}</div>
+                </div>
+                <div class="stat-icon-wrapper bg-warning-subtle text-warning">
+                    <i class="fa-solid fa-person-walking-arrow-right"></i>
+                </div>
+            </div>
+            <div class="small text-muted mt-2">Checked out at gate</div>
+        </div>
+    </div>
+
+    <div class="col-sm-6 col-xl-3">
+        <div class="stat-card">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <div class="stat-title">Completed Returns</div>
+                    <div class="stat-value text-info">{{ completed_passes }}</div>
+                </div>
+                <div class="stat-icon-wrapper bg-info-subtle text-info">
+                    <i class="fa-solid fa-circle-check"></i>
+                </div>
+            </div>
+            <div class="small text-muted mt-2">Returned safely to hostel</div>
+        </div>
+    </div>
+</div>
+
+<!-- Status Filter Tabs -->
+<div class="card border-0 shadow-sm rounded-4 mb-4 bg-white">
+    <div class="card-body p-3">
+        <div class="d-flex flex-wrap gap-2 align-items-center">
+            <span class="small fw-bold text-muted me-2"><i class="fa-solid fa-filter me-1"></i>Filter:</span>
+            <a href="{{ url_for('student.outpasses_list', status='all') }}" class="btn btn-sm {% if current_filter == 'all' %}btn-primary{% else %}btn-outline-secondary{% endif %} rounded-pill px-3">
+                All ({{ total_passes }})
+            </a>
+            <a href="{{ url_for('student.outpasses_list', status='Active') }}" class="btn btn-sm {% if current_filter == 'Active' %}btn-success text-white{% else %}btn-outline-success{% endif %} rounded-pill px-3">
+                Active ({{ active_passes }})
+            </a>
+            <a href="{{ url_for('student.outpasses_list', status='Used') }}" class="btn btn-sm {% if current_filter == 'Used' %}btn-warning text-white{% else %}btn-outline-warning{% endif %} rounded-pill px-3">
+                Outside Campus ({{ used_passes }})
+            </a>
+            <a href="{{ url_for('student.outpasses_list', status='Completed') }}" class="btn btn-sm {% if current_filter == 'Completed' %}btn-info text-white{% else %}btn-outline-info{% endif %} rounded-pill px-3">
+                Completed ({{ completed_passes }})
+            </a>
+            <a href="{{ url_for('student.outpasses_list', status='Expired') }}" class="btn btn-sm {% if current_filter == 'Expired' %}btn-secondary{% else %}btn-outline-secondary{% endif %} rounded-pill px-3">
+                Expired ({{ expired_passes }})
+            </a>
+        </div>
+    </div>
+</div>
+
+<!-- Out-Pass Cards Grid -->
+<div class="row g-4">
+    {% for p in outpasses %}
+        <div class="col-md-6 col-lg-4">
+            <div class="card border-0 shadow-sm rounded-4 overflow-hidden h-100 bg-white">
+                <div class="card-header bg-white border-bottom py-3 px-4 d-flex justify-content-between align-items-center">
+                    <span class="font-monospace fw-bold text-primary">#OP-{{ p.id }}</span>
+                    {% if p.status == 'Active' %}
+                        <span class="badge bg-success-subtle text-success border border-success-subtle px-2 py-1">Active</span>
+                    {% elif p.status == 'Used' %}
+                        <span class="badge bg-warning-subtle text-warning border border-warning-subtle px-2 py-1">Outside Campus</span>
+                    {% elif p.status == 'Completed' %}
+                        <span class="badge bg-info-subtle text-info border border-info-subtle px-2 py-1">Completed</span>
+                    {% elif p.status == 'Revoked' %}
+                        <span class="badge bg-danger-subtle text-danger border border-danger-subtle px-2 py-1">Revoked</span>
+                    {% else %}
+                        <span class="badge bg-secondary-subtle text-secondary border border-secondary-subtle px-2 py-1">Expired</span>
+                    {% endif %}
+                </div>
+                <div class="card-body p-4 text-center">
+                    <!-- QR Code Preview -->
+                    {% if p.qr_code_file and p.status in ['Active', 'Used'] %}
+                        <div class="mb-3 p-2 bg-light rounded-3 d-inline-block border">
+                            <img src="{{ p.qr_code_url or url_for('static', filename='uploads/qrcodes/' + p.qr_code_file) }}" alt="Out-Pass QR Code" style="width: 140px; height: 140px;" class="img-fluid">
+                        </div>
+                    {% else %}
+                        <div class="mb-3 p-4 bg-light rounded-3 d-inline-block border text-muted" style="width: 140px; height: 140px;">
+                            <i class="fa-solid fa-qrcode fs-1 opacity-25 d-block mt-3"></i>
+                        </div>
+                    {% endif %}
+
+                    <h6 class="fw-bold text-dark mb-1">{{ student.full_name }}</h6>
+                    <small class="text-muted font-monospace d-block mb-3">{{ student.enrollment_no }}</small>
+
+                    <div class="bg-light p-3 rounded-3 text-start small mb-3">
+                        <div class="d-flex justify-content-between mb-1">
+                            <span class="text-muted">Hostel & Room:</span>
+                            <span class="fw-semibold text-dark">
+                                {% if student.current_allocation %}
+                                    {{ student.current_allocation.room.room_number }} ({{ student.current_allocation.hostel.name[:12] }}..)
+                                {% else %}
+                                    -
+                                {% endif %}
+                            </span>
+                        </div>
+                        <div class="d-flex justify-content-between mb-1">
+                            <span class="text-muted">Leave Type:</span>
+                            <span class="fw-semibold text-dark">{{ p.leave_application.leave_type }}</span>
+                        </div>
+                        <div class="d-flex justify-content-between mb-1">
+                            <span class="text-muted">Departure:</span>
+                            <span class="fw-bold text-primary">{{ p.departure_date.strftime('%d %b, %Y') }}</span>
+                        </div>
+                        <div class="d-flex justify-content-between">
+                            <span class="text-muted">Return By:</span>
+                            <span class="fw-bold text-primary">{{ p.expected_return_date.strftime('%d %b, %Y') }}</span>
+                        </div>
+                    </div>
+
+                    <!-- Action Buttons -->
+                    <div class="d-flex justify-content-center gap-2">
+                        <a href="{{ url_for('student.view_outpass', id=p.id) }}" class="btn btn-sm btn-primary-custom flex-grow-1">
+                            <i class="fa-solid fa-eye me-1"></i> Pass Slip
+                        </a>
+                        {% if p.qr_code_file %}
+                            <a href="{{ url_for('student.download_qr', id=p.id) }}" class="btn btn-sm btn-outline-secondary" title="Download QR Image">
+                                <i class="fa-solid fa-download"></i>
+                            </a>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    {% else %}
+        <div class="col-12">
+            <div class="card border-0 shadow-sm rounded-4 p-5 text-center bg-white">
+                <i class="fa-solid fa-ticket fs-1 text-secondary opacity-50 mb-3"></i>
+                <h5 class="fw-bold text-dark">No Digital Out-Passes Found</h5>
+                <p class="text-muted small mb-3">A digital QR out-pass is automatically generated as soon as your hostel warden approves your leave application.</p>
+                <div>
+                    <a href="{{ url_for('student.apply_leave') }}" class="btn btn-primary-custom btn-sm">
+                        <i class="fa-solid fa-plus me-1"></i> Apply for Leave
+                    </a>
+                </div>
+            </div>
+        </div>
+    {% endfor %}
+</div>
+{% endblock %}

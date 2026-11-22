@@ -1,0 +1,165 @@
+{% extends 'base.html' %}
+
+{% block title %}Student Portal{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h2 class="fw-bold text-dark mb-1">Student Residence Desk</h2>
+        <p class="text-muted small mb-0">Welcome back, <strong>{{ student.full_name if student else current_user.username }}</strong></p>
+    </div>
+    <div>
+        <span class="badge bg-primary-subtle text-primary border border-primary-subtle px-3 py-2 font-monospace">
+            {{ student.enrollment_no if student else 'ENR-PENDING' }}
+        </span>
+    </div>
+</div>
+
+<!-- Key Stat Cards -->
+<div class="row g-3 mb-4">
+    <div class="col-md-4">
+        <div class="stat-card">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <div class="stat-title">Room & Bed</div>
+                    <div class="stat-value fs-4 text-primary">
+                        {% if allocation %}
+                            {{ allocation.room.room_number }} ({{ allocation.bed.bed_number }})
+                        {% else %}
+                            <span class="text-secondary fs-5">Unallocated</span>
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="stat-icon-wrapper bg-primary-subtle text-primary">
+                    <i class="fa-solid fa-door-open"></i>
+                </div>
+            </div>
+            <div class="small text-muted mt-2">
+                {% if allocation %}
+                    {{ allocation.hostel.name }}
+                {% else %}
+                    Contact Admin for bed assignment
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-4">
+        <div class="stat-card">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <div class="stat-title">Attendance Rate</div>
+                    <div class="stat-value text-success">
+                        {{ student.attendance_percentage if student else 100 }}%
+                    </div>
+                </div>
+                <div class="stat-icon-wrapper bg-success-subtle text-success">
+                    <i class="fa-solid fa-chart-pie"></i>
+                </div>
+            </div>
+            <div class="small text-muted mt-2">Night roll-call compliance</div>
+        </div>
+    </div>
+
+    <div class="col-md-4">
+        <div class="stat-card">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <div class="stat-title">Total Fees Paid</div>
+                    <div class="stat-value text-dark">
+                        ₹{{ "{:,.0f}".format(student.total_fees_paid if student else 0) }}
+                    </div>
+                </div>
+                <div class="stat-icon-wrapper bg-info-subtle text-info">
+                    <i class="fa-solid fa-receipt"></i>
+                </div>
+            </div>
+            <div class="small text-muted mt-2">Verified payment transactions</div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-4">
+    <!-- Student Profile & Academic Details -->
+    <div class="col-lg-6">
+        <div class="card border-0 shadow-sm rounded-4 p-4 bg-white mb-4">
+            <h5 class="fw-bold text-dark mb-3"><i class="fa-solid fa-id-card text-primary me-2"></i>Academic & Resident Profile</h5>
+            <div class="row g-2 small">
+                <div class="col-5 text-muted">Branch / Dept:</div>
+                <div class="col-7 fw-semibold text-dark">{{ student.branch if student else 'N/A' }}</div>
+
+                <div class="col-5 text-muted">Year & Semester:</div>
+                <div class="col-7 fw-semibold text-dark">Year {{ student.year if student else '-' }}, Sem {{ student.semester if student else '-' }}</div>
+
+                <div class="col-5 text-muted">Contact Phone:</div>
+                <div class="col-7 fw-semibold text-dark">{{ student.phone if student else '-' }}</div>
+
+                <div class="col-5 text-muted">Blood Group:</div>
+                <div class="col-7 fw-semibold text-dark">{{ student.blood_group or 'Not recorded' }}</div>
+
+                <div class="col-5 text-muted">Guardian Name:</div>
+                <div class="col-7 fw-semibold text-dark">{{ student.guardian_name if student else '-' }} ({{ student.guardian_phone if student else '-' }})</div>
+
+                <div class="col-5 text-muted">Home Address:</div>
+                <div class="col-7 text-dark">{{ student.address if student else '-' }}</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Active Grievances & Circulars -->
+    <div class="col-lg-6">
+        <!-- Leave Applications Card -->
+        <div class="card border-0 shadow-sm rounded-4 p-4 bg-white mb-4">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h5 class="fw-bold text-dark mb-0"><i class="fa-solid fa-calendar-days text-primary me-2"></i>Recent Leave Requests</h5>
+                <a href="{{ url_for('student.apply_leave') }}" class="btn btn-sm btn-outline-primary">
+                    <i class="fa-solid fa-plus me-1"></i>Apply Leave
+                </a>
+            </div>
+            <div class="list-group list-group-flush">
+                {% for l in recent_leaves %}
+                    <div class="list-group-item px-0 py-2 d-flex justify-content-between align-items-center">
+                        <div>
+                            <div class="fw-semibold text-dark">{{ l.leave_type }}</div>
+                            <small class="text-muted">{{ l.from_date.strftime('%d %b') }} &rarr; {{ l.to_date.strftime('%d %b, %Y') }} ({{ l.number_of_days }}d)</small>
+                        </div>
+                        <div>
+                            {% if l.status == 'Approved' %}
+                                <span class="badge bg-success-subtle text-success border border-success-subtle px-2 py-1">Approved</span>
+                            {% elif l.status == 'Pending' %}
+                                <span class="badge bg-warning-subtle text-warning border border-warning-subtle px-2 py-1">Pending</span>
+                            {% elif l.status == 'Rejected' %}
+                                <span class="badge bg-danger-subtle text-danger border border-danger-subtle px-2 py-1">Rejected</span>
+                            {% else %}
+                                <span class="badge bg-secondary-subtle text-secondary border border-secondary-subtle px-2 py-1">Cancelled</span>
+                            {% endif %}
+                            <a href="{{ url_for('student.view_leave', id=l.id) }}" class="btn btn-sm btn-link text-decoration-none p-0 ms-2">View</a>
+                        </div>
+                    </div>
+                {% else %}
+                    <div class="text-muted small py-3 text-center">
+                        No recent leave requests. <a href="{{ url_for('student.apply_leave') }}">Apply for an out-pass</a> when planning travel.
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <div class="card border-0 shadow-sm rounded-4 p-4 bg-white mb-4">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h5 class="fw-bold text-dark mb-0"><i class="fa-solid fa-bullhorn text-warning me-2"></i>Campus Notices</h5>
+            </div>
+            <div class="list-group list-group-flush">
+                {% for n in notices %}
+                    <div class="list-group-item px-0 py-2">
+                        <div class="fw-semibold text-dark">{{ n.title }}</div>
+                        <small class="text-muted">{{ n.content[:90] }}...</small>
+                    </div>
+                {% else %}
+                    <div class="text-muted small py-3">No new notices for your category.</div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+

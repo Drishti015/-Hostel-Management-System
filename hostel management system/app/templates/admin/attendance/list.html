@@ -1,0 +1,54 @@
+{% extends 'base.html' %}
+
+{% block title %}System Attendance Logs{% endblock %}
+
+{% block content %}
+<div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4">
+    <div>
+        <h2 class="fw-bold text-dark mb-1">Night Roll-Call Logs</h2>
+        <p class="text-muted small mb-0">System-wide attendance history across all hostel residence blocks</p>
+    </div>
+</div>
+
+<!-- Attendance Records Table -->
+<div class="card border-0 shadow-sm rounded-4 overflow-hidden bg-white">
+    <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+            <thead class="table-light">
+                <tr>
+                    <th class="ps-4">Date</th>
+                    <th>Resident Name</th>
+                    <th>Hostel Block</th>
+                    <th>Roll-Call Status</th>
+                    <th>Marked By</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for att in attendance_logs %}
+                    <tr>
+                        <td class="ps-4 font-monospace small fw-bold">{{ att.date.strftime('%d %b, %Y') }}</td>
+                        <td>
+                            <div class="fw-bold text-dark">{{ att.student.full_name }}</div>
+                            <small class="text-muted font-monospace">{{ att.student.enrollment_no }}</small>
+                        </td>
+                        <td>{{ att.hostel.name }}</td>
+                        <td>
+                            <span class="badge-status badge-{{ att.status }}">{{ att.status|capitalize }}</span>
+                        </td>
+                        <td>
+                            <small class="text-muted">
+                                {{ att.marked_by_warden.full_name if att.marked_by_warden else 'Warden Desk' }}
+                            </small>
+                        </td>
+                    </tr>
+                {% else %}
+                    <tr>
+                        <td colspan="5" class="text-center py-5 text-muted">No attendance logs found.</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}
+

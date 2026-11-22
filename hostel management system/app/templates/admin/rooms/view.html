@@ -1,0 +1,81 @@
+{% extends 'base.html' %}
+
+{% block title %}Room {{ room.room_number }} Details{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h2 class="fw-bold text-dark mb-1">Room {{ room.room_number }} Details</h2>
+        <p class="text-muted small mb-0">{{ room.hostel.name }} — Floor {{ room.floor }}</p>
+    </div>
+    <a href="{{ url_for('admin.rooms_list') }}" class="btn btn-outline-secondary">
+        <i class="fa-solid fa-arrow-left me-2"></i>Back to Rooms
+    </a>
+</div>
+
+<div class="row g-4">
+    <div class="col-md-4">
+        <div class="card border-0 shadow-sm rounded-4 p-4 bg-white">
+            <h5 class="fw-bold text-dark mb-3">Room Specifications</h5>
+            <div class="small">
+                <div class="d-flex justify-content-between py-2 border-bottom">
+                    <span class="text-muted">Hostel Block:</span>
+                    <span class="fw-semibold text-dark">{{ room.hostel.name }}</span>
+                </div>
+                <div class="d-flex justify-content-between py-2 border-bottom">
+                    <span class="text-muted">Floor Number:</span>
+                    <span class="fw-semibold text-dark">Floor {{ room.floor }}</span>
+                </div>
+                <div class="d-flex justify-content-between py-2 border-bottom">
+                    <span class="text-muted">Room Type:</span>
+                    <span class="fw-semibold text-dark">{{ room.room_type|capitalize }} ({{ room.capacity }} Beds)</span>
+                </div>
+                <div class="d-flex justify-content-between py-2 border-bottom">
+                    <span class="text-muted">Monthly Fee:</span>
+                    <span class="fw-semibold text-dark">₹{{ "{:,.2f}".format(room.monthly_fee) }}</span>
+                </div>
+                <div class="d-flex justify-content-between py-2">
+                    <span class="text-muted">Status:</span>
+                    <span class="badge-status badge-{{ room.status }}">{{ room.status|capitalize }}</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-8">
+        <div class="card border-0 shadow-sm rounded-4 p-4 bg-white">
+            <h5 class="fw-bold text-dark mb-3"><i class="fa-solid fa-bed text-primary me-2"></i>Bed Units & Occupants</h5>
+            <div class="row g-3">
+                {% for bed in room.beds %}
+                    <div class="col-sm-6">
+                        <div class="p-3 border rounded-3 {% if bed.status == 'occupied' %}bg-primary-subtle border-primary-subtle{% else %}bg-light{% endif %}">
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <h6 class="fw-bold mb-0 text-dark">{{ bed.bed_number }}</h6>
+                                <span class="badge-status badge-{{ bed.status }}">{{ bed.status|capitalize }}</span>
+                            </div>
+                            {% if bed.status == 'occupied' and bed.current_allocation %}
+                                <div class="small">
+                                    <div class="fw-semibold text-dark">{{ bed.current_allocation.student.full_name }}</div>
+                                    <div class="text-muted font-monospace">{{ bed.current_allocation.student.enrollment_no }}</div>
+                                    <div class="text-muted">Since: {{ bed.current_allocation.allocated_from.strftime('%d %b, %Y') }}</div>
+                                    <div class="mt-2">
+                                        <form method="POST" action="{{ url_for('admin.vacate_allocation', id=bed.current_allocation.id) }}" onsubmit="return confirm('Vacate this bed?');">
+                                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                                            <button type="submit" class="btn btn-sm btn-outline-danger">Vacate Bed</button>
+                                        </form>
+                                    </div>
+                                </div>
+                            {% else %}
+                                <div class="small text-muted py-2">
+                                    This bed is currently vacant and ready for student allocation.
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+

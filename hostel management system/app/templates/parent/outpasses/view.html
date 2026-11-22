@@ -1,0 +1,135 @@
+{% extends 'base.html' %}
+
+{% block title %}Out-Pass #{{ outpass.id }} Movement Trail{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb mb-1 small">
+                <li class="breadcrumb-item"><a href="{{ url_for('parent.dashboard') }}">Dashboard</a></li>
+                <li class="breadcrumb-item"><a href="{{ url_for('parent.outpasses_list') }}">Out-Passes</a></li>
+                <li class="breadcrumb-item active" aria-current="page">#OP-{{ outpass.id }}</li>
+            </ol>
+        </nav>
+        <h2 class="fw-bold text-dark mb-0">Digital Out-Pass Particulars & Movement Log</h2>
+    </div>
+    <a href="{{ url_for('parent.outpasses_list') }}" class="btn btn-outline-secondary btn-sm">
+        <i class="fa-solid fa-arrow-left me-1"></i>Back to Out-Passes
+    </a>
+</div>
+
+<div class="row g-4">
+    <!-- Left Column: Outpass Details -->
+    <div class="col-lg-5">
+        <div class="card shadow-sm border-0 mb-4">
+            <div class="card-header bg-white py-3 border-bottom d-flex justify-content-between align-items-center">
+                <h6 class="fw-bold mb-0 text-dark"><i class="fa-solid fa-id-card me-2 text-primary"></i>Out-Pass Slip #OP-{{ outpass.id }}</h6>
+                <span class="badge {{ outpass.status_badge_class }} fs-6">{{ outpass.status }}</span>
+            </div>
+            <div class="card-body">
+                <ul class="list-group list-group-flush small">
+                    <li class="list-group-item px-0 d-flex justify-content-between">
+                        <span class="text-muted">Student Resident:</span>
+                        <span class="fw-semibold text-dark">{{ student.full_name }}</span>
+                    </li>
+                    <li class="list-group-item px-0 d-flex justify-content-between">
+                        <span class="text-muted">Enrollment Number:</span>
+                        <span class="fw-semibold font-monospace">{{ student.enrollment_no }}</span>
+                    </li>
+                    <li class="list-group-item px-0 d-flex justify-content-between">
+                        <span class="text-muted">Associated Leave Type:</span>
+                        <span class="fw-semibold text-primary">{{ outpass.leave_application.leave_type if outpass.leave_application else 'Out-Pass' }}</span>
+                    </li>
+                    <li class="list-group-item px-0 d-flex justify-content-between">
+                        <span class="text-muted">Destination:</span>
+                        <span class="fw-semibold">{{ outpass.leave_application.destination if outpass.leave_application else '-' }}</span>
+                    </li>
+                    <li class="list-group-item px-0 d-flex justify-content-between">
+                        <span class="text-muted">Departure Window:</span>
+                        <span class="fw-semibold">{{ outpass.departure_date.strftime('%d %b, %Y') }}</span>
+                    </li>
+                    <li class="list-group-item px-0 d-flex justify-content-between">
+                        <span class="text-muted">Return Deadline:</span>
+                        <span class="fw-semibold text-danger">{{ outpass.expected_return_date.strftime('%d %b, %Y') }}</span>
+                    </li>
+                    <li class="list-group-item px-0 d-flex justify-content-between">
+                        <span class="text-muted">Actual Departure Recorded:</span>
+                        <span class="fw-semibold">{{ outpass.actual_departure_time.strftime('%d %b %Y, %I:%M %p') if outpass.actual_departure_time else 'Not logged yet' }}</span>
+                    </li>
+                    <li class="list-group-item px-0 d-flex justify-content-between">
+                        <span class="text-muted">Actual Return Recorded:</span>
+                        <span class="fw-semibold text-success">{{ outpass.actual_return_time.strftime('%d %b %Y, %I:%M %p') if outpass.actual_return_time else ( 'Currently Outside' if outpass.is_outside else 'N/A' ) }}</span>
+                    </li>
+                </ul>
+
+                {% if outpass.status == 'Revoked' %}
+                    <div class="alert alert-danger mt-3 small mb-0">
+                        <i class="fa-solid fa-triangle-exclamation me-1"></i>
+                        <strong>Revocation Reason:</strong> {{ outpass.revoked_reason or 'Administrative hold' }}
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <div class="alert alert-info border-0 shadow-sm small">
+            <i class="fa-solid fa-shield-halved text-info me-2 fs-5"></i>
+            <strong>Security Notice:</strong>
+            QR Codes are cryptographically signed verification tokens exclusively usable by the student on their own mobile device at physical gate terminals. Parents cannot modify or issue passes.
+        </div>
+    </div>
+
+    <!-- Right Column: Gate Activity Logs -->
+    <div class="col-lg-7">
+        <div class="card shadow-sm border-0">
+            <div class="card-header bg-white py-3 border-bottom d-flex justify-content-between align-items-center">
+                <h6 class="fw-bold mb-0 text-dark"><i class="fa-solid fa-clock-rotate-left me-2 text-primary"></i>Gate Terminal Activity Trail</h6>
+                <span class="text-muted small">{{ transactions|length }} event(s) logged</span>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0 small">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Event Type</th>
+                                <th>Gate Terminal</th>
+                                <th>Scan Timestamp</th>
+                                <th>Status</th>
+                                <th>Guard Remarks</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for tx in transactions %}
+                                <tr>
+                                    <td>
+                                        <span class="badge {% if tx.event_type == 'EXIT' %}bg-warning text-dark{% else %}bg-success{% endif %}">
+                                            <i class="fa-solid {% if tx.event_type == 'EXIT' %}fa-arrow-right-from-bracket{% else %}fa-arrow-right-to-bracket{% endif %} me-1"></i>
+                                            {{ tx.event_type }}
+                                        </span>
+                                    </td>
+                                    <td class="fw-semibold">{{ tx.gate_location }}</td>
+                                    <td>{{ tx.scanned_at.strftime('%d %b %Y, %I:%M:%S %p') }}</td>
+                                    <td>
+                                        <span class="badge {% if tx.verification_status == 'Success' %}bg-success-subtle text-success{% else %}bg-danger-subtle text-danger{% endif %}">
+                                            {{ tx.verification_status }}
+                                        </span>
+                                    </td>
+                                    <td class="text-muted">{{ tx.remarks or 'Gate scan verified' }}</td>
+                                </tr>
+                            {% else %}
+                                <tr>
+                                    <td colspan="5" class="text-center py-5 text-muted">
+                                        <i class="fa-solid fa-door-open fs-3 d-block mb-2 text-secondary opacity-50"></i>
+                                        No gate transactions recorded for this out-pass yet.
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+

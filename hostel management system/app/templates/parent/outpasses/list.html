@@ -1,0 +1,124 @@
+{% extends 'base.html' %}
+
+{% block title %}Digital Out-Pass Monitoring{% endblock %}
+
+{% block content %}
+<div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4">
+    <div>
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb mb-1 small">
+                <li class="breadcrumb-item"><a href="{{ url_for('parent.dashboard') }}">Dashboard</a></li>
+                <li class="breadcrumb-item active" aria-current="page">Movement & Out-Passes</li>
+            </ol>
+        </nav>
+        <h2 class="fw-bold text-dark mb-1">Campus Movement & Out-Pass Monitoring</h2>
+        <p class="text-muted small mb-0">Real-time gate scan verification and perimeter monitoring for <strong>{{ student.full_name }}</strong></p>
+    </div>
+    <span class="badge bg-secondary-subtle text-secondary px-3 py-2">
+        <i class="fa-solid fa-satellite-dish me-1"></i>Real-Time Gate Logs
+    </span>
+</div>
+
+<!-- Prominent Current Movement Status Card -->
+<div class="card border-0 shadow-sm mb-4 overflow-hidden">
+    <div class="card-body p-4 bg-light border-start border-4 {% if movement.code == 'OVERDUE' %}border-danger{% elif movement.code == 'OUTSIDE' %}border-warning{% elif movement.code == 'APPROVED_PENDING_EXIT' %}border-info{% else %}border-success{% endif %}">
+        <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3">
+            <div class="d-flex align-items-center gap-3">
+                <span class="d-inline-flex align-items-center justify-content-center rounded-circle p-3 {{ movement.badge_class }}" style="width: 58px; height: 58px;">
+                    <i class="fa-solid {{ movement.icon }} fs-3"></i>
+                </span>
+                <div>
+                    <div class="d-flex align-items-center gap-2 mb-1">
+                        <span class="small text-uppercase fw-bold text-muted">Current Resident Status:</span>
+                        <span class="badge {{ movement.badge_class }} px-2 py-1 fs-6">{{ movement.badge_text }}</span>
+                    </div>
+                    <p class="mb-0 text-dark">{{ movement.description }}</p>
+                </div>
+            </div>
+            {% if movement.last_txn %}
+                <div class="text-md-end small text-muted bg-white p-2 rounded border">
+                    <div><strong>Last Gate Event:</strong> {{ movement.last_txn.event_type }}</div>
+                    <div>{{ movement.last_txn.gate_location }} &bull; {{ movement.last_txn.scanned_at.strftime('%d %b, %I:%M %p') }}</div>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- Out-Pass History Table Card -->
+<div class="card shadow-sm border-0">
+    <div class="card-header bg-white py-3 border-bottom d-flex justify-content-between align-items-center">
+        <h6 class="fw-bold mb-0 text-dark"><i class="fa-solid fa-id-card-clip me-2 text-primary"></i>Issued Digital Out-Passes</h6>
+        <div class="d-flex gap-2">
+            <a href="{{ url_for('parent.outpasses_list') }}" class="btn btn-sm {% if current_filter == 'all' %}btn-primary{% else %}btn-outline-secondary{% endif %}">All</a>
+            <a href="{{ url_for('parent.outpasses_list', status='Active') }}" class="btn btn-sm {% if current_filter == 'Active' %}btn-info text-dark{% else %}btn-outline-secondary{% endif %}">Active</a>
+            <a href="{{ url_for('parent.outpasses_list', status='Used') }}" class="btn btn-sm {% if current_filter == 'Used' %}btn-warning text-dark{% else %}btn-outline-secondary{% endif %}">Outside</a>
+            <a href="{{ url_for('parent.outpasses_list', status='Completed') }}" class="btn btn-sm {% if current_filter == 'Completed' %}btn-success{% else %}btn-outline-secondary{% endif %}">Completed</a>
+        </div>
+    </div>
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="table-light small">
+                    <tr>
+                        <th>Pass ID</th>
+                        <th>Leave Type</th>
+                        <th>Authorized Window</th>
+                        <th>Actual Gate Departure</th>
+                        <th>Actual Gate Return</th>
+                        <th>Status</th>
+                        <th class="text-end">Actions</th>
+                    </tr>
+                </thead>
+                <tbody class="small">
+                    {% for pass in outpasses %}
+                        <tr>
+                            <td class="fw-semibold font-monospace">#OP-{{ pass.id }}</td>
+                            <td>
+                                <div class="fw-semibold text-dark">{{ pass.leave_application.leave_type if pass.leave_application else 'Out-Pass' }}</div>
+                                <div class="text-muted" style="font-size: 0.72rem;">Ref: #LV-{{ pass.leave_application_id }}</div>
+                            </td>
+                            <td>
+                                <div>{{ pass.departure_date.strftime('%d %b, %Y') }}</div>
+                                <div class="text-muted">Return by: {{ pass.expected_return_date.strftime('%d %b, %Y') }}</div>
+                            </td>
+                            <td>
+                                {% if pass.actual_departure_time %}
+                                    <span class="text-dark fw-semibold">{{ pass.actual_departure_time.strftime('%d %b %Y, %I:%M %p') }}</span>
+                                {% else %}
+                                    <span class="badge bg-light text-muted border">Not Departed</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if pass.actual_return_time %}
+                                    <span class="text-success fw-semibold">{{ pass.actual_return_time.strftime('%d %b %Y, %I:%M %p') }}</span>
+                                {% elif pass.is_outside %}
+                                    <span class="badge bg-warning text-dark">Currently Outside</span>
+                                {% else %}
+                                    <span class="badge bg-light text-muted border">-</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <span class="badge {{ pass.status_badge_class }}">{{ pass.status }}</span>
+                            </td>
+                            <td class="text-end">
+                                <a href="{{ url_for('parent.view_outpass', id=pass.id) }}" class="btn btn-outline-primary btn-sm py-1 px-2" title="Inspect Pass & Gate Trail">
+                                    <i class="fa-solid fa-clock-rotate-left me-1"></i>Audit Trail
+                                </a>
+                            </td>
+                        </tr>
+                    {% else %}
+                        <tr>
+                            <td colspan="7" class="text-center py-5 text-muted">
+                                <i class="fa-regular fa-id-card fs-3 d-block mb-2 text-secondary opacity-50"></i>
+                                No digital out-passes issued for your child yet.
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}
+

@@ -1,0 +1,53 @@
+{% extends 'base.html' %}
+
+{% block title %}Manual Bed Allocation{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h2 class="fw-bold text-dark mb-1">Manual Bed Allocation</h2>
+        <p class="text-muted small mb-0">Assign a specific vacant bed to a registered resident</p>
+    </div>
+    <a href="{{ url_for('admin.allocations_list') }}" class="btn btn-outline-secondary">
+        <i class="fa-solid fa-arrow-left me-2"></i>Back to Allocations
+    </a>
+</div>
+
+<div class="row justify-content-center">
+    <div class="col-md-8 col-lg-6">
+        <div class="card border-0 shadow-sm rounded-4 p-4 p-md-5 bg-white">
+            <form method="POST">
+                {{ form.hidden_tag() }}
+
+                <div class="mb-3">
+                    <label class="form-label small fw-semibold">{{ form.student_id.label.text }} *</label>
+                    {{ form.student_id(class="form-select") }}
+                    <small class="text-muted">Only unallocated active students appear in this list.</small>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label small fw-semibold">{{ form.bed_id.label.text }} *</label>
+                    {{ form.bed_id(class="form-select") }}
+                    <small class="text-muted">Only vacant beds in active rooms appear in this list.</small>
+                </div>
+
+                <div class="mb-4">
+                    <label class="form-label small fw-semibold">{{ form.allocated_from.label.text }} *</label>
+                    {{ form.allocated_from(class="form-control") }}
+                </div>
+
+                <div class="alert alert-warning small mb-4">
+                    <i class="fa-solid fa-shield-halved me-1"></i>
+                    <strong>Integrity Guard:</strong> The system automatically verifies gender constraints (e.g. boys cannot be allocated to girls hostels) and guarantees no two students can occupy the same bed.
+                </div>
+
+                <div class="d-flex justify-content-end gap-2">
+                    <a href="{{ url_for('admin.allocations_list') }}" class="btn btn-light border">Cancel</a>
+                    {{ form.submit(class="btn btn-primary-custom px-4") }}
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+

@@ -1,0 +1,158 @@
+<aside class="sidebar">
+    <div class="sidebar-header">
+        <div class="sidebar-brand-icon">
+            <i class="fa-solid fa-hotel"></i>
+        </div>
+        <div class="sidebar-brand-text">{{ app_name }}</div>
+    </div>
+
+    <div class="sidebar-nav">
+        {% if current_user.is_admin %}
+            <!-- ADMIN NAVIGATION -->
+            <div class="nav-section-title">Core Management</div>
+            <a href="{{ url_for('admin.dashboard') }}" class="sidebar-link {% if request.endpoint == 'admin.dashboard' %}active{% endif %}">
+                <i class="fa-solid fa-chart-line"></i> Dashboard
+            </a>
+            <a href="{{ url_for('admin.students_list') }}" class="sidebar-link {% if 'student' in request.endpoint and request.blueprint == 'admin' %}active{% endif %}">
+                <i class="fa-solid fa-user-graduate"></i> Students
+            </a>
+            <a href="{{ url_for('admin.parents_list') }}" class="sidebar-link {% if 'parent' in request.endpoint and request.blueprint == 'admin' %}active{% endif %}">
+                <i class="fa-solid fa-users"></i> Parents & Guardians
+            </a>
+
+            <div class="nav-section-title">Hostel & Rooms</div>
+            <a href="{{ url_for('admin.hostels_list') }}" class="sidebar-link {% if 'hostel' in request.endpoint and request.blueprint == 'admin' %}active{% endif %}">
+                <i class="fa-solid fa-building"></i> Hostels & Blocks
+            </a>
+            <a href="{{ url_for('admin.rooms_list') }}" class="sidebar-link {% if 'room' in request.endpoint and request.blueprint == 'admin' %}active{% endif %}">
+                <i class="fa-solid fa-door-open"></i> Rooms & Beds
+            </a>
+            <a href="{{ url_for('admin.allocations_list') }}" class="sidebar-link {% if 'allocation' in request.endpoint and request.blueprint == 'admin' %}active{% endif %}">
+                <i class="fa-solid fa-key"></i> Bed Allocations
+            </a>
+
+            <div class="nav-section-title">Operations</div>
+            <a href="{{ url_for('admin.leaves_list') }}" class="sidebar-link {% if 'leave' in request.endpoint and request.blueprint == 'admin' %}active{% endif %}">
+                <i class="fa-solid fa-calendar-days"></i> Leave Applications
+            </a>
+            <a href="{{ url_for('admin.outpasses_list') }}" class="sidebar-link {% if 'outpass' in request.endpoint and request.blueprint == 'admin' %}active{% endif %}">
+                <i class="fa-solid fa-qrcode"></i> Digital Out-Passes
+            </a>
+            <a href="{{ url_for('admin.gate_transactions') }}" class="sidebar-link {% if 'gate' in request.endpoint and request.blueprint == 'admin' %}active{% endif %}">
+                <i class="fa-solid fa-door-open"></i> Gate Security Logs
+            </a>
+            <a href="{{ url_for('admin.fees_list') }}" class="sidebar-link {% if 'fee' in request.endpoint and request.blueprint == 'admin' %}active{% endif %}">
+                <i class="fa-solid fa-receipt"></i> Fee Records
+            </a>
+            <a href="{{ url_for('admin.attendance_list') }}" class="sidebar-link {% if 'attendance' in request.endpoint and request.blueprint == 'admin' %}active{% endif %}">
+                <i class="fa-solid fa-clipboard-user"></i> Attendance Logs
+            </a>
+            <a href="{{ url_for('admin.complaints_list') }}" class="sidebar-link {% if 'complaint' in request.endpoint and request.blueprint == 'admin' %}active{% endif %}">
+                <i class="fa-solid fa-triangle-exclamation"></i> Grievances
+            </a>
+            <a href="{{ url_for('admin.notices_list') }}" class="sidebar-link {% if 'notice' in request.endpoint and request.blueprint == 'admin' %}active{% endif %}">
+                <i class="fa-solid fa-bullhorn"></i> Bulletins & Notices
+            </a>
+
+        {% elif current_user.is_warden %}
+            <!-- WARDEN NAVIGATION -->
+            <div class="nav-section-title">Warden Desk</div>
+            <a href="{{ url_for('warden.dashboard') }}" class="sidebar-link {% if request.endpoint == 'warden.dashboard' %}active{% endif %}">
+                <i class="fa-solid fa-chart-line"></i> Dashboard
+            </a>
+            <a href="{{ url_for('warden.leaves_list') }}" class="sidebar-link {% if 'leave' in request.endpoint and request.blueprint == 'warden' %}active{% endif %}">
+                <i class="fa-solid fa-envelope-open-text"></i> Leave Requests
+            </a>
+            <a href="{{ url_for('warden.outpasses_list') }}" class="sidebar-link {% if 'outpass' in request.endpoint and request.blueprint == 'warden' %}active{% endif %}">
+                <i class="fa-solid fa-id-card-clip"></i> Out-Pass Management
+            </a>
+            <a href="{{ url_for('warden.attendance_view') }}" class="sidebar-link {% if 'attendance' in request.endpoint and request.blueprint == 'warden' %}active{% endif %}">
+                <i class="fa-solid fa-clipboard-check"></i> Mark Attendance
+            </a>
+            <a href="{{ url_for('warden.complaints_list') }}" class="sidebar-link {% if 'complaint' in request.endpoint and request.blueprint == 'warden' %}active{% endif %}">
+                <i class="fa-solid fa-triangle-exclamation"></i> Resolve Grievances
+            </a>
+            <a href="{{ url_for('warden.notices_list') }}" class="sidebar-link {% if 'notice' in request.endpoint and request.blueprint == 'warden' %}active{% endif %}">
+                <i class="fa-solid fa-bullhorn"></i> Post Notices
+            </a>
+            <a href="{{ url_for('warden.parent_inquiries') }}" class="sidebar-link {% if 'inquir' in request.endpoint and request.blueprint == 'warden' %}active{% endif %}">
+                <i class="fa-solid fa-comments"></i> Parent Inquiries
+            </a>
+
+        {% elif current_user.is_security %}
+            <!-- SECURITY GUARD NAVIGATION -->
+            <div class="nav-section-title">Security Gate Desk</div>
+            <a href="{{ url_for('security.dashboard') }}" class="sidebar-link {% if request.endpoint == 'security.dashboard' %}active{% endif %}">
+                <i class="fa-solid fa-chart-line"></i> Station Overview
+            </a>
+            <a href="{{ url_for('security.scan_terminal') }}" class="sidebar-link {% if request.endpoint == 'security.scan_terminal' %}active{% endif %}">
+                <i class="fa-solid fa-qrcode"></i> Scan QR Terminal
+            </a>
+            <a href="{{ url_for('security.outside_list') }}" class="sidebar-link {% if request.endpoint == 'security.outside_list' %}active{% endif %}">
+                <i class="fa-solid fa-person-walking-arrow-right"></i> Students Outside
+            </a>
+            <a href="{{ url_for('security.transactions_list') }}" class="sidebar-link {% if request.endpoint == 'security.transactions_list' %}active{% endif %}">
+                <i class="fa-solid fa-clock-rotate-left"></i> Gate Activity Log
+            </a>
+
+        {% elif current_user.is_student %}
+            <!-- STUDENT NAVIGATION -->
+            <div class="nav-section-title">Student Portal</div>
+            <a href="{{ url_for('student.dashboard') }}" class="sidebar-link {% if request.endpoint == 'student.dashboard' %}active{% endif %}">
+                <i class="fa-solid fa-chart-pie"></i> Overview
+            </a>
+            <a href="{{ url_for('student.leaves_list') }}" class="sidebar-link {% if 'leave' in request.endpoint and request.blueprint == 'student' %}active{% endif %}">
+                <i class="fa-solid fa-calendar-days"></i> Leave Application
+            </a>
+            <a href="{{ url_for('student.outpasses_list') }}" class="sidebar-link {% if 'outpass' in request.endpoint and request.blueprint == 'student' %}active{% endif %}">
+                <i class="fa-solid fa-qrcode"></i> Digital Out-Pass
+            </a>
+            <a href="{{ url_for('student.fees_view') }}" class="sidebar-link {% if 'fee' in request.endpoint and request.blueprint == 'student' %}active{% endif %}">
+                <i class="fa-solid fa-file-invoice-dollar"></i> Fee Dues & Receipts
+            </a>
+            <a href="{{ url_for('student.attendance_view') }}" class="sidebar-link {% if 'attendance' in request.endpoint and request.blueprint == 'student' %}active{% endif %}">
+                <i class="fa-solid fa-calendar-check"></i> My Attendance
+            </a>
+            <a href="{{ url_for('student.complaints_list') }}" class="sidebar-link {% if 'complaint' in request.endpoint and request.blueprint == 'student' %}active{% endif %}">
+                <i class="fa-solid fa-circle-question"></i> Grievances
+            </a>
+            <a href="{{ url_for('student.notices_view') }}" class="sidebar-link {% if 'notice' in request.endpoint and request.blueprint == 'student' %}active{% endif %}">
+                <i class="fa-solid fa-bullhorn"></i> Bulletins & Notices
+            </a>
+
+        {% elif current_user.is_parent %}
+            <!-- PARENT NAVIGATION -->
+            <div class="nav-section-title">Parent Portal</div>
+            <a href="{{ url_for('parent.dashboard') }}" class="sidebar-link {% if request.endpoint == 'parent.dashboard' %}active{% endif %}">
+                <i class="fa-solid fa-chart-line"></i> Dashboard
+            </a>
+            <a href="{{ url_for('parent.child_profile') }}" class="sidebar-link {% if request.endpoint == 'parent.child_profile' %}active{% endif %}">
+                <i class="fa-solid fa-user-graduate"></i> My Child
+            </a>
+            <a href="{{ url_for('parent.leaves_list') }}" class="sidebar-link {% if 'leave' in request.endpoint and request.blueprint == 'parent' %}active{% endif %}">
+                <i class="fa-solid fa-calendar-days"></i> Leave Requests
+            </a>
+            <a href="{{ url_for('parent.outpasses_list') }}" class="sidebar-link {% if 'outpass' in request.endpoint and request.blueprint == 'parent' %}active{% endif %}">
+                <i class="fa-solid fa-id-card-clip"></i> Movement & Out-Pass
+            </a>
+            <a href="{{ url_for('parent.attendance_view') }}" class="sidebar-link {% if 'attendance' in request.endpoint and request.blueprint == 'parent' %}active{% endif %}">
+                <i class="fa-solid fa-clipboard-user"></i> Attendance Records
+            </a>
+            <a href="{{ url_for('parent.fees_view') }}" class="sidebar-link {% if 'fee' in request.endpoint and request.blueprint == 'parent' %}active{% endif %}">
+                <i class="fa-solid fa-receipt"></i> Fee Status & Receipts
+            </a>
+            <a href="{{ url_for('parent.inquiries_list') }}" class="sidebar-link {% if 'inquir' in request.endpoint and request.blueprint == 'parent' %}active{% endif %}">
+                <i class="fa-solid fa-envelope-open-text"></i> Contact Warden
+            </a>
+            <a href="{{ url_for('parent.notifications_list') }}" class="sidebar-link {% if 'notification' in request.endpoint and request.blueprint == 'parent' %}active{% endif %}">
+                <i class="fa-solid fa-bell"></i> Notifications
+            </a>
+        {% endif %}
+    </div>
+
+    <div class="sidebar-footer">
+        <a href="{{ url_for('auth.logout') }}" class="sidebar-link text-danger">
+            <i class="fa-solid fa-right-from-bracket"></i> Logout
+        </a>
+    </div>
+</aside>

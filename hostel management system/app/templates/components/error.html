@@ -1,0 +1,17 @@
+{% extends 'base.html' %}
+
+{% block title %}Error {{ code }}{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center py-5">
+    <div class="col-md-6 text-center">
+        <div class="display-1 fw-bold text-primary mb-3">{{ code }}</div>
+        <h2 class="h4 text-dark mb-3">{{ message }}</h2>
+        <p class="text-muted mb-4">The action could not be completed or the requested resource is unavailable.</p>
+        <a href="{{ url_for('main.index') }}" class="btn btn-primary-custom">
+            <i class="fa-solid fa-house me-2"></i>Return to Home
+        </a>
+    </div>
+</div>
+{% endblock %}
+

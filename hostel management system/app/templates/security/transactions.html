@@ -1,0 +1,166 @@
+{% extends 'base.html' %}
+
+{% block title %}Gate Transactions Log{% endblock %}
+
+{% block content %}
+<div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4">
+    <div>
+        <h2 class="fw-bold text-dark mb-1">Gate Transactions Audit Trail</h2>
+        <p class="text-muted small mb-0">
+            Real-time security gate ingress and egress activity log
+        </p>
+    </div>
+    <div class="d-flex gap-2">
+        <a href="{{ url_for('security.dashboard') }}" class="btn btn-outline-secondary">
+            <i class="fa-solid fa-arrow-left me-1"></i>Security Dashboard
+        </a>
+        <a href="{{ url_for('security.scan') }}" class="btn btn-primary-custom">
+            <i class="fa-solid fa-qrcode me-1"></i>Scan Pass
+        </a>
+    </div>
+</div>
+
+<!-- Filter Bar -->
+<div class="card border-0 shadow-sm rounded-4 mb-4 p-3 bg-white">
+    <form method="GET" action="{{ url_for('security.transactions') }}" class="row g-2 align-items-center">
+        <div class="col-md-3">
+            <div class="input-group">
+                <span class="input-group-text bg-light border-end-0"><i class="fa-solid fa-magnifying-glass text-muted"></i></span>
+                <input type="text" name="q" value="{{ query or '' }}" class="form-control border-start-0" placeholder="Student name or roll no...">
+            </div>
+        </div>
+        <div class="col-md-2">
+            <select name="event_type" class="form-select">
+                <option value="">All Events (EXIT & ENTRY)</option>
+                <option value="EXIT" {% if event_type == 'EXIT' %}selected{% endif %}>EXIT Only</option>
+                <option value="ENTRY" {% if event_type == 'ENTRY' %}selected{% endif %}>ENTRY Only</option>
+            </select>
+        </div>
+        <div class="col-md-2">
+            <select name="status" class="form-select">
+                <option value="">All Verification Status</option>
+                <option value="Success" {% if status == 'Success' %}selected{% endif %}>Success</option>
+                <option value="Failed" {% if status == 'Failed' %}selected{% endif %}>Failed</option>
+            </select>
+        </div>
+        <div class="col-md-2">
+            <input type="date" name="start_date" value="{{ start_date or '' }}" class="form-control" title="Start Date">
+        </div>
+        <div class="col-md-2">
+            <input type="date" name="end_date" value="{{ end_date or '' }}" class="form-control" title="End Date">
+        </div>
+        <div class="col-md-1 d-flex gap-1">
+            <button type="submit" class="btn btn-primary-custom w-100"><i class="fa-solid fa-filter"></i></button>
+            <a href="{{ url_for('security.transactions') }}" class="btn btn-outline-secondary" title="Reset"><i class="fa-solid fa-rotate"></i></a>
+        </div>
+    </form>
+</div>
+
+<!-- Transactions Table -->
+<div class="card border-0 shadow-sm rounded-4 overflow-hidden">
+    <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+            <thead class="table-light small text-uppercase text-secondary">
+                <tr>
+                    <th>Txn ID</th>
+                    <th>Date & Time</th>
+                    <th>Student</th>
+                    <th>Event</th>
+                    <th>Gate Location</th>
+                    <th>Status</th>
+                    <th>Verified By</th>
+                    <th>Remarks</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% if transactions.items %}
+                    {% for t in transactions.items %}
+                    <tr>
+                        <td class="font-monospace fw-bold text-muted">#GT-{{ t.id }}</td>
+                        <td>
+                            <div class="small fw-bold text-dark">{{ t.scanned_at.strftime('%d %b %Y') }}</div>
+                            <div class="small text-muted">{{ t.scanned_at.strftime('%I:%M:%S %p') }}</div>
+                        </td>
+                        <td>
+                            <div class="fw-bold text-dark">{{ t.student.full_name }}</div>
+                            <div class="small text-muted font-monospace">{{ t.student.enrollment_no }}</div>
+                        </td>
+                        <td>
+                            {% if t.event_type == 'EXIT' %}
+                                <span class="badge bg-warning text-dark px-2 py-1">
+                                    <i class="fa-solid fa-arrow-right-from-bracket me-1"></i>EXIT
+                                </span>
+                            {% else %}
+                                <span class="badge bg-success px-2 py-1">
+                                    <i class="fa-solid fa-arrow-right-to-bracket me-1"></i>ENTRY
+                                </span>
+                            {% endif %}
+                        </td>
+                        <td><small class="text-muted">{{ t.gate_location }}</small></td>
+                        <td>
+                            {% if t.verification_status == 'Success' %}
+                                <span class="badge bg-success-subtle text-success border border-success">
+                                    <i class="fa-solid fa-check me-1"></i>Success
+                                </span>
+                            {% else %}
+                                <span class="badge bg-danger-subtle text-danger border border-danger">
+                                    <i class="fa-solid fa-xmark me-1"></i>Failed
+                                </span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <small class="text-secondary fw-semibold">
+                                <i class="fa-solid fa-user-shield me-1"></i>{{ t.security_user.username }}
+                            </small>
+                        </td>
+                        <td>
+                            <small class="text-muted">{{ t.failure_reason or t.remarks or 'Gate scan completed' }}</small>
+                            {% if t.is_overdue %}
+                                <span class="badge bg-danger ms-1">OVERDUE</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                {% else %}
+                    <tr>
+                        <td colspan="8" class="text-center py-5 text-muted">
+                            <i class="fa-regular fa-folder-open fa-2x mb-2 d-block"></i>
+                            No gate transactions match the specified filter criteria.
+                        </td>
+                    </tr>
+                {% endif %}
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Pagination -->
+    {% if transactions.pages > 1 %}
+    <div class="card-footer bg-white py-3">
+        <ul class="pagination justify-content-center mb-0">
+            {% if transactions.has_prev %}
+            <li class="page-item">
+                <a class="page-link" href="{{ url_for('security.transactions', page=transactions.prev_num, q=query, event_type=event_type, status=status, start_date=start_date, end_date=end_date) }}">Previous</a>
+            </li>
+            {% endif %}
+            
+            {% for page_num in transactions.iter_pages(left_edge=1, right_edge=1, left_current=2, right_current=2) %}
+                {% if page_num %}
+                    <li class="page-item {% if page_num == transactions.page %}active{% endif %}">
+                        <a class="page-link" href="{{ url_for('security.transactions', page=page_num, q=query, event_type=event_type, status=status, start_date=start_date, end_date=end_date) }}">{{ page_num }}</a>
+                    </li>
+                {% else %}
+                    <li class="page-item disabled"><span class="page-link">&hellip;</span></li>
+                {% endif %}
+            {% endfor %}
+
+            {% if transactions.has_next %}
+            <li class="page-item">
+                <a class="page-link" href="{{ url_for('security.transactions', page=transactions.next_num, q=query, event_type=event_type, status=status, start_date=start_date, end_date=end_date) }}">Next</a>
+            </li>
+            {% endif %}
+        </ul>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
+

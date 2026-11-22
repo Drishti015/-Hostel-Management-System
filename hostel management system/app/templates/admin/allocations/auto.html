@@ -1,0 +1,88 @@
+{% extends 'base.html' %}
+
+{% block title %}Smart Auto-Allocation Engine{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h2 class="fw-bold text-dark mb-1">Smart Auto-Allocation Engine</h2>
+        <p class="text-muted small mb-0">Automatic matching algorithm pairing unallocated students to appropriate beds based on gender and lowest occupancy</p>
+    </div>
+    <a href="{{ url_for('admin.allocations_list') }}" class="btn btn-outline-secondary">
+        <i class="fa-solid fa-arrow-left me-2"></i>Back to Allocations
+    </a>
+</div>
+
+<div class="row g-4">
+    <div class="col-lg-8">
+        <div class="card border-0 shadow-sm rounded-4 p-4 bg-white">
+            <h5 class="fw-bold text-dark mb-3">
+                <i class="fa-solid fa-users text-primary me-2"></i>Students Awaiting Bed Allocation
+            </h5>
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Student Name</th>
+                            <th>Enrollment</th>
+                            <th>Gender</th>
+                            <th>Branch</th>
+                            <th class="text-end">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for s in unallocated_students %}
+                            <tr>
+                                <td>
+                                    <div class="fw-bold text-dark">{{ s.full_name }}</div>
+                                    <small class="text-muted">{{ s.phone }}</small>
+                                </td>
+                                <td><span class="font-monospace small">{{ s.enrollment_no }}</span></td>
+                                <td>
+                                    <span class="badge {% if s.gender == 'male' %}bg-primary-subtle text-primary{% else %}bg-danger-subtle text-danger{% endif %}">
+                                        {{ s.gender|capitalize }}
+                                    </span>
+                                </td>
+                                <td>{{ s.branch }} (Yr {{ s.year }})</td>
+                                <td class="text-end">
+                                    <form method="POST" action="{{ url_for('admin.trigger_auto_allocate', student_id=s.id) }}" class="d-inline">
+                                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                                        <button type="submit" class="btn btn-sm btn-primary-custom">
+                                            <i class="fa-solid fa-wand-magic-sparkles me-1"></i>Auto-Assign Bed
+                                        </button>
+                                    </form>
+                                </td>
+                            </tr>
+                        {% else %}
+                            <tr>
+                                <td colspan="5" class="text-center py-4 text-muted">
+                                    <i class="fa-solid fa-circle-check text-success fs-3 mb-2"></i>
+                                    <div>All registered students currently hold an active bed allocation!</div>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Algorithm Explanation Card (Ideal for AKTU Examination Viva) -->
+    <div class="col-lg-4">
+        <div class="card border-0 shadow-sm rounded-4 p-4 bg-white">
+            <h5 class="fw-bold text-dark mb-3"><i class="fa-solid fa-gears text-secondary me-2"></i>Algorithm Logic</h5>
+            <ol class="small text-muted ps-3 mb-3">
+                <li class="mb-2"><strong>Gender Identification:</strong> Maps student gender directly to building rules (Boys $\rightarrow$ Boys Hostel, Girls $\rightarrow$ Girls Hostel).</li>
+                <li class="mb-2"><strong>Capacity Sorting:</strong> Queries active rooms ordered by floor number (`floor ASC`) and available vacancy.</li>
+                <li class="mb-2"><strong>Conflict Avoidance:</strong> Employs atomic database transactions to ensure zero race conditions or overbooking.</li>
+                <li><strong>Bed Binding:</strong> Marks bed status as <code>occupied</code> and binds allocation start date.</li>
+            </ol>
+            <div class="p-3 bg-light rounded-3 small">
+                <div class="text-secondary fw-bold mb-1">AKTU Viva Tip:</div>
+                This algorithm provides a Greedy Best-Fit solution with $O(1)$ lookup time using indexed SQL constraints.
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+

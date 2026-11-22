@@ -1,0 +1,68 @@
+{% extends 'base.html' %}
+
+{% block title %}Add New Room{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h2 class="fw-bold text-dark mb-1">Add New Room</h2>
+        <p class="text-muted small mb-0">Create room record with auto-generation of discrete bed units</p>
+    </div>
+    <a href="{{ url_for('admin.rooms_list') }}" class="btn btn-outline-secondary">
+        <i class="fa-solid fa-arrow-left me-2"></i>Back to Rooms
+    </a>
+</div>
+
+<div class="row justify-content-center">
+    <div class="col-md-8 col-lg-6">
+        <div class="card border-0 shadow-sm rounded-4 p-4 p-md-5 bg-white">
+            <form method="POST">
+                {{ form.hidden_tag() }}
+
+                <div class="mb-3">
+                    <label class="form-label small fw-semibold">{{ form.hostel_id.label.text }} *</label>
+                    {{ form.hostel_id(class="form-select") }}
+                </div>
+
+                <div class="row g-3 mb-3">
+                    <div class="col-md-6">
+                        <label class="form-label small fw-semibold">{{ form.room_number.label.text }} *</label>
+                        {{ form.room_number(class="form-control", placeholder="e.g. A-201") }}
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label small fw-semibold">{{ form.floor.label.text }} *</label>
+                        {{ form.floor(class="form-control", min="0", max="20") }}
+                    </div>
+                </div>
+
+                <div class="row g-3 mb-3">
+                    <div class="col-md-6">
+                        <label class="form-label small fw-semibold">{{ form.room_type.label.text }} *</label>
+                        {{ form.room_type(class="form-select") }}
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label small fw-semibold">{{ form.monthly_fee.label.text }} *</label>
+                        {{ form.monthly_fee(class="form-control") }}
+                    </div>
+                </div>
+
+                <div class="mb-4">
+                    <label class="form-label small fw-semibold">{{ form.status.label.text }} *</label>
+                    {{ form.status(class="form-select") }}
+                </div>
+
+                <div class="alert alert-info small mb-4">
+                    <i class="fa-solid fa-wand-magic-sparkles me-1 text-primary"></i>
+                    <strong>Automated Bed Generator:</strong> Adding this room will automatically create corresponding bed records (e.g. Double Seater $\rightarrow$ Bed-A and Bed-B) ready for student allocation.
+                </div>
+
+                <div class="d-flex justify-content-end gap-2">
+                    <a href="{{ url_for('admin.rooms_list') }}" class="btn btn-light border">Cancel</a>
+                    {{ form.submit(class="btn btn-primary-custom px-4") }}
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+

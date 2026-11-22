@@ -1,0 +1,150 @@
+{% extends 'base.html' %}
+
+{% block title %}Inspect Leave #{{ leave.id }}{% endblock %}
+
+{% block content %}
+<div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4">
+    <div>
+        <div class="d-flex align-items-center gap-2 mb-1">
+            <h2 class="fw-bold text-dark mb-0">Leave Record #LVE-{{ leave.id }}</h2>
+            {% if leave.status == 'Approved' %}
+                <span class="badge bg-success text-white px-3 py-2">Approved</span>
+            {% elif leave.status == 'Pending' %}
+                <span class="badge bg-warning text-dark px-3 py-2">Pending Review</span>
+            {% elif leave.status == 'Rejected' %}
+                <span class="badge bg-danger text-white px-3 py-2">Rejected</span>
+            {% else %}
+                <span class="badge bg-secondary text-white px-3 py-2">Cancelled</span>
+            {% endif %}
+        </div>
+        <p class="text-muted small mb-0">Application submitted on {{ leave.created_at.strftime('%d %B, %Y at %I:%M %p') }}</p>
+    </div>
+    <div class="d-flex gap-2">
+        <a href="{{ url_for('admin.leaves_list') }}" class="btn btn-outline-secondary">
+            <i class="fa-solid fa-arrow-left me-1"></i> Back to Leave Oversight
+        </a>
+    </div>
+</div>
+
+<div class="row g-4">
+    <div class="col-lg-7">
+        <!-- Leave Information Card -->
+        <div class="card border-0 shadow-sm rounded-4 p-4 bg-white mb-4">
+            <h5 class="fw-bold text-dark mb-3"><i class="fa-solid fa-file-invoice text-primary me-2"></i>Out-Pass Information</h5>
+
+            <div class="row g-3 py-2 border-bottom">
+                <div class="col-sm-4 text-muted small fw-semibold">Leave Type:</div>
+                <div class="col-sm-8 fw-bold text-dark">{{ leave.leave_type }}</div>
+            </div>
+
+            <div class="row g-3 py-2 border-bottom">
+                <div class="col-sm-4 text-muted small fw-semibold">Dates & Duration:</div>
+                <div class="col-sm-8 text-dark">
+                    <span class="fw-bold text-primary">{{ leave.from_date.strftime('%d %b, %Y') }}</span>
+                    &nbsp;&rarr;&nbsp;
+                    <span class="fw-bold text-primary">{{ leave.to_date.strftime('%d %b, %Y') }}</span>
+                    <span class="badge bg-light text-secondary border ms-2 font-monospace">{{ leave.number_of_days }} Days Total</span>
+                </div>
+            </div>
+
+            <div class="row g-3 py-2 border-bottom">
+                <div class="col-sm-4 text-muted small fw-semibold">Destination:</div>
+                <div class="col-sm-8 text-dark">{{ leave.destination }}</div>
+            </div>
+
+            <div class="row g-3 py-2 border-bottom">
+                <div class="col-sm-4 text-muted small fw-semibold">Emergency Phone:</div>
+                <div class="col-sm-8 text-dark font-monospace fw-semibold">{{ leave.emergency_contact }}</div>
+            </div>
+
+            <div class="row g-3 py-3 border-bottom">
+                <div class="col-sm-4 text-muted small fw-semibold">Reason Stated:</div>
+                <div class="col-sm-8 text-dark bg-light p-3 rounded-3">{{ leave.reason }}</div>
+            </div>
+
+            <div class="row g-3 py-2">
+                <div class="col-sm-4 text-muted small fw-semibold">Document:</div>
+                <div class="col-sm-8">
+                    {% if leave.supporting_document %}
+                        <a href="{{ url_for('main.download_leave_document', filename=leave.supporting_document) }}" target="_blank" class="btn btn-sm btn-outline-primary rounded-pill">
+                            <i class="fa-solid fa-file-arrow-down me-1"></i> View Uploaded File
+                        </a>
+                    {% else %}
+                        <span class="text-muted small">None attached</span>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Student Profile Card -->
+        <div class="card border-0 shadow-sm rounded-4 p-4 bg-white">
+            <h5 class="fw-bold text-dark mb-3"><i class="fa-solid fa-user-graduate text-primary me-2"></i>Resident Details</h5>
+            <div class="row g-2 small">
+                <div class="col-4 text-muted">Full Name:</div>
+                <div class="col-8 fw-semibold text-dark">{{ leave.student.full_name }}</div>
+
+                <div class="col-4 text-muted">Enrollment / Roll:</div>
+                <div class="col-8 font-monospace text-dark">{{ leave.student.enrollment_no }} / {{ leave.student.roll_no or 'N/A' }}</div>
+
+                <div class="col-4 text-muted">Hostel & Room:</div>
+                <div class="col-8 text-dark">
+                    {% if leave.student.current_allocation %}
+                        {{ leave.student.current_allocation.hostel.name }} &bull; Room {{ leave.student.current_allocation.room.room_number }} (Bed {{ leave.student.current_allocation.bed.bed_number }})
+                    {% else %}
+                        <span class="text-muted">Unallocated</span>
+                    {% endif %}
+                </div>
+
+                <div class="col-4 text-muted">Branch & Year:</div>
+                <div class="col-8 text-dark">{{ leave.student.branch }} (Year {{ leave.student.year }})</div>
+
+                <div class="col-4 text-muted">Guardian Phone:</div>
+                <div class="col-8 text-dark">{{ leave.student.guardian_name }} ({{ leave.student.guardian_phone }})</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Review Audit Trail Card -->
+    <div class="col-lg-5">
+        <div class="card border-0 shadow-sm rounded-4 p-4 bg-white mb-4">
+            <h5 class="fw-bold text-dark mb-3"><i class="fa-solid fa-shield-halved text-primary me-2"></i>Warden Review Audit</h5>
+
+            <div class="mb-3">
+                <small class="text-muted d-block">Current Status:</small>
+                {% if leave.status == 'Approved' %}
+                    <span class="badge bg-success text-white px-3 py-2 fs-6">Approved</span>
+                {% elif leave.status == 'Rejected' %}
+                    <span class="badge bg-danger text-white px-3 py-2 fs-6">Rejected</span>
+                {% elif leave.status == 'Pending' %}
+                    <span class="badge bg-warning text-dark px-3 py-2 fs-6">Pending Review</span>
+                {% else %}
+                    <span class="badge bg-secondary text-white px-3 py-2 fs-6">Cancelled</span>
+                {% endif %}
+            </div>
+
+            {% if leave.reviewed_at %}
+                <div class="mb-3">
+                    <small class="text-muted d-block">Reviewing Official:</small>
+                    <div class="fw-bold text-dark">{{ leave.reviewer.full_name if leave.reviewer else 'Hostel Warden' }}</div>
+                    {% if leave.reviewer and leave.reviewer.assigned_hostel %}
+                        <small class="text-muted">{{ leave.reviewer.assigned_hostel.name }}</small>
+                    {% endif %}
+                </div>
+
+                <div class="mb-3">
+                    <small class="text-muted d-block">Decision Timestamp:</small>
+                    <div class="small text-dark">{{ leave.reviewed_at.strftime('%d %B, %Y at %I:%M %p') }}</div>
+                </div>
+            {% endif %}
+
+            <div>
+                <small class="text-muted d-block mb-1">Official Remarks:</small>
+                <div class="p-3 bg-light rounded-3 small text-dark border">
+                    {{ leave.review_comment or 'No remarks recorded.' }}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+

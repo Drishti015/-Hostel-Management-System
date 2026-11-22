@@ -1,0 +1,190 @@
+{% extends 'base.html' %}
+
+{% block title %}Leave Application #{{ leave.id }}{% endblock %}
+
+{% block content %}
+<div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4">
+    <div>
+        <div class="d-flex align-items-center gap-2 mb-1">
+            <h2 class="fw-bold text-dark mb-0">Leave Application #LVE-{{ leave.id }}</h2>
+            {% if leave.status == 'Approved' %}
+                <span class="badge bg-success-subtle text-success border border-success-subtle px-3 py-2">
+                    <i class="fa-solid fa-check me-1"></i>Approved
+                </span>
+            {% elif leave.status == 'Pending' %}
+                <span class="badge bg-warning-subtle text-warning border border-warning-subtle px-3 py-2">
+                    <i class="fa-solid fa-clock me-1"></i>Pending Review
+                </span>
+            {% elif leave.status == 'Rejected' %}
+                <span class="badge bg-danger-subtle text-danger border border-danger-subtle px-3 py-2">
+                    <i class="fa-solid fa-xmark me-1"></i>Rejected
+                </span>
+            {% else %}
+                <span class="badge bg-secondary-subtle text-secondary border border-secondary-subtle px-3 py-2">
+                    <i class="fa-solid fa-ban me-1"></i>Cancelled
+                </span>
+            {% endif %}
+        </div>
+        <p class="text-muted small mb-0">Submitted on {{ leave.created_at.strftime('%d %B, %Y at %I:%M %p') }}</p>
+    </div>
+    <div class="d-flex gap-2">
+        <a href="{{ url_for('student.leaves_list') }}" class="btn btn-outline-secondary">
+            <i class="fa-solid fa-arrow-left me-1"></i> Back to Leave Desk
+        </a>
+        <button onclick="window.print()" class="btn btn-outline-dark">
+            <i class="fa-solid fa-print me-1"></i> Print Slip
+        </button>
+    </div>
+</div>
+
+<div class="row g-4">
+    <!-- Main Application Details Card -->
+    <div class="col-lg-8">
+        <div class="card border-0 shadow-sm rounded-4 p-4 bg-white mb-4">
+            <h5 class="fw-bold text-dark mb-3"><i class="fa-solid fa-file-lines text-primary me-2"></i>Application Details</h5>
+
+            <div class="row g-3 py-2 border-bottom">
+                <div class="col-sm-4 text-muted small fw-semibold">Leave Category:</div>
+                <div class="col-sm-8 fw-bold text-dark">{{ leave.leave_type }}</div>
+            </div>
+
+            <div class="row g-3 py-2 border-bottom">
+                <div class="col-sm-4 text-muted small fw-semibold">Leave Duration:</div>
+                <div class="col-sm-8 text-dark">
+                    <span class="fw-bold text-primary">{{ leave.from_date.strftime('%d %b, %Y') }}</span>
+                    &nbsp;&rarr;&nbsp;
+                    <span class="fw-bold text-primary">{{ leave.to_date.strftime('%d %b, %Y') }}</span>
+                    <span class="badge bg-light text-secondary border ms-2 font-monospace">{{ leave.number_of_days }} Days Total</span>
+                </div>
+            </div>
+
+            <div class="row g-3 py-2 border-bottom">
+                <div class="col-sm-4 text-muted small fw-semibold">Destination / Address:</div>
+                <div class="col-sm-8 text-dark">{{ leave.destination }}</div>
+            </div>
+
+            <div class="row g-3 py-2 border-bottom">
+                <div class="col-sm-4 text-muted small fw-semibold">Emergency Contact:</div>
+                <div class="col-sm-8 text-dark font-monospace fw-semibold">{{ leave.emergency_contact }}</div>
+            </div>
+
+            <div class="row g-3 py-3 border-bottom">
+                <div class="col-sm-4 text-muted small fw-semibold">Reason for Leave:</div>
+                <div class="col-sm-8 text-dark bg-light p-3 rounded-3">{{ leave.reason }}</div>
+            </div>
+
+            <div class="row g-3 py-2">
+                <div class="col-sm-4 text-muted small fw-semibold">Supporting Document:</div>
+                <div class="col-sm-8">
+                    {% if leave.supporting_document %}
+                        <a href="{{ url_for('main.download_leave_document', filename=leave.supporting_document) }}" target="_blank" class="btn btn-sm btn-outline-primary rounded-pill">
+                            <i class="fa-solid fa-file-arrow-down me-1"></i> View Uploaded Document
+                        </a>
+                    {% else %}
+                        <span class="text-muted small">No document attached</span>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        {% if leave.status == 'Pending' %}
+            <!-- Student Cancellation Option Card -->
+            <div class="card border-warning-subtle bg-warning-subtle bg-opacity-25 rounded-4 p-4 mb-4">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="fw-bold text-dark mb-1"><i class="fa-solid fa-triangle-exclamation text-warning me-2"></i>Need to Cancel this Request?</h6>
+                        <p class="small text-muted mb-0">You can cancel your application while it remains in Pending status before warden review.</p>
+                    </div>
+                    <div>
+                        <button type="button" class="btn btn-danger rounded-pill px-3" data-bs-toggle="modal" data-bs-target="#cancelModal">
+                            <i class="fa-solid fa-ban me-1"></i> Cancel Leave
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Modal -->
+                <div class="modal fade" id="cancelModal" tabindex="-1" aria-hidden="true">
+                    <div class="modal-dialog modal-dialog-centered">
+                        <div class="modal-content rounded-4 border-0 shadow">
+                            <div class="modal-header border-bottom-0 pb-0">
+                                <h5 class="modal-title fw-bold text-danger">Cancel Leave Application</h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                            </div>
+                            <div class="modal-body py-3">
+                                Are you sure you want to cancel this leave request? This action cannot be undone.
+                            </div>
+                            <div class="modal-footer border-top-0 pt-0">
+                                <button type="button" class="btn btn-light border rounded-pill px-3" data-bs-dismiss="modal">Keep Request</button>
+                                <form method="POST" action="{{ url_for('student.cancel_leave', id=leave.id) }}" class="d-inline">
+                                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                    <button type="submit" class="btn btn-danger rounded-pill px-3">Confirm Cancellation</button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        {% endif %}
+    </div>
+
+    <!-- Reviewer Audit Trail & Resident Card -->
+    <div class="col-lg-4">
+        <!-- Warden Review Timeline Card -->
+        <div class="card border-0 shadow-sm rounded-4 p-4 bg-white mb-4">
+            <h5 class="fw-bold text-dark mb-3"><i class="fa-solid fa-stamp text-primary me-2"></i>Warden Review Desk</h5>
+
+            <div class="mb-3">
+                <small class="text-muted d-block mb-1">Current Status:</small>
+                {% if leave.status == 'Approved' %}
+                    <span class="badge bg-success text-white px-3 py-2 fs-6">
+                        <i class="fa-solid fa-check me-1"></i>Approved
+                    </span>
+                {% elif leave.status == 'Pending' %}
+                    <span class="badge bg-warning text-dark px-3 py-2 fs-6">
+                        <i class="fa-solid fa-clock me-1"></i>Awaiting Warden Review
+                    </span>
+                {% elif leave.status == 'Rejected' %}
+                    <span class="badge bg-danger text-white px-3 py-2 fs-6">
+                        <i class="fa-solid fa-xmark me-1"></i>Rejected
+                    </span>
+                {% else %}
+                    <span class="badge bg-secondary text-white px-3 py-2 fs-6">
+                        <i class="fa-solid fa-ban me-1"></i>Cancelled by Student
+                    </span>
+                {% endif %}
+            </div>
+
+            {% if leave.reviewed_at %}
+                <div class="mb-3">
+                    <small class="text-muted d-block">Reviewed By:</small>
+                    <div class="fw-semibold text-dark">{{ leave.reviewer.full_name if leave.reviewer else 'Hostel Warden' }}</div>
+                </div>
+
+                <div class="mb-3">
+                    <small class="text-muted d-block">Decision Timestamp:</small>
+                    <div class="small text-dark">{{ leave.reviewed_at.strftime('%d %B, %Y at %I:%M %p') }}</div>
+                </div>
+            {% endif %}
+
+            <div>
+                <small class="text-muted d-block mb-1">Warden Remarks / Instructions:</small>
+                <div class="p-3 bg-light rounded-3 small text-dark border">
+                    {{ leave.review_comment or 'No warden remarks recorded yet.' }}
+                </div>
+            </div>
+        </div>
+
+        <!-- Resident Profile Card -->
+        <div class="card border-0 shadow-sm rounded-4 p-4 bg-white">
+            <h6 class="fw-bold text-dark mb-3"><i class="fa-solid fa-id-card text-secondary me-2"></i>Resident Info</h6>
+            <div class="small">
+                <div class="mb-2"><span class="text-muted">Student:</span> <strong>{{ student.full_name }}</strong></div>
+                <div class="mb-2"><span class="text-muted">Enrollment:</span> <span class="font-monospace">{{ student.enrollment_no }}</span></div>
+                <div class="mb-2"><span class="text-muted">Hostel:</span> {{ leave.hostel.name if leave.hostel else 'N/A' }}</div>
+                <div><span class="text-muted">Branch:</span> {{ student.branch }}</div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+

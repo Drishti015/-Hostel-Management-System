@@ -1,0 +1,220 @@
+{% extends 'base.html' %}
+
+{% block title %}All Leave Applications{% endblock %}
+
+{% block content %}
+<div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4">
+    <div>
+        <h2 class="fw-bold text-dark mb-1">Campus Leave Applications & Out-Passes</h2>
+        <p class="text-muted small mb-0">System-wide monitoring of student leave requests across all hostel blocks</p>
+    </div>
+</div>
+
+<!-- System Statistics Row -->
+<div class="row g-3 mb-4">
+    <div class="col-sm-6 col-xl">
+        <div class="stat-card">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <div class="stat-title">Total Leaves</div>
+                    <div class="stat-value text-dark">{{ total_leaves }}</div>
+                </div>
+                <div class="stat-icon-wrapper bg-primary-subtle text-primary">
+                    <i class="fa-solid fa-folder-open"></i>
+                </div>
+            </div>
+            <div class="small text-muted mt-2">All blocks combined</div>
+        </div>
+    </div>
+
+    <div class="col-sm-6 col-xl">
+        <div class="stat-card">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <div class="stat-title">Pending</div>
+                    <div class="stat-value text-warning">{{ pending_leaves }}</div>
+                </div>
+                <div class="stat-icon-wrapper bg-warning-subtle text-warning">
+                    <i class="fa-solid fa-clock"></i>
+                </div>
+            </div>
+            <div class="small text-muted mt-2">Awaiting decision</div>
+        </div>
+    </div>
+
+    <div class="col-sm-6 col-xl">
+        <div class="stat-card">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <div class="stat-title">Approved</div>
+                    <div class="stat-value text-success">{{ approved_leaves }}</div>
+                </div>
+                <div class="stat-icon-wrapper bg-success-subtle text-success">
+                    <i class="fa-solid fa-circle-check"></i>
+                </div>
+            </div>
+            <div class="small text-muted mt-2">Granted passes</div>
+        </div>
+    </div>
+
+    <div class="col-sm-6 col-xl">
+        <div class="stat-card">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <div class="stat-title">Rejected</div>
+                    <div class="stat-value text-danger">{{ rejected_leaves }}</div>
+                </div>
+                <div class="stat-icon-wrapper bg-danger-subtle text-danger">
+                    <i class="fa-solid fa-circle-xmark"></i>
+                </div>
+            </div>
+            <div class="small text-muted mt-2">Declined by warden</div>
+        </div>
+    </div>
+
+    <div class="col-sm-6 col-xl">
+        <div class="stat-card">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <div class="stat-title">Cancelled</div>
+                    <div class="stat-value text-secondary">{{ cancelled_leaves }}</div>
+                </div>
+                <div class="stat-icon-wrapper bg-light text-secondary border">
+                    <i class="fa-solid fa-ban"></i>
+                </div>
+            </div>
+            <div class="small text-muted mt-2">Revoked by student</div>
+        </div>
+    </div>
+</div>
+
+<!-- Multi-Filter Toolbar Card -->
+<div class="card border-0 shadow-sm rounded-4 mb-4 bg-white">
+    <div class="card-body p-4">
+        <form method="GET" action="{{ url_for('admin.leaves_list') }}" class="row g-3 align-items-end">
+            <!-- Search Query -->
+            <div class="col-md-4">
+                <label class="form-label small fw-bold text-muted">Search Student / Destination</label>
+                <div class="input-group">
+                    <span class="input-group-text bg-white border-end-0"><i class="fa-solid fa-magnifying-glass text-muted"></i></span>
+                    <input type="text" name="q" value="{{ search_query }}" class="form-control border-start-0" placeholder="Name, Enrollment, Destination...">
+                </div>
+            </div>
+
+            <!-- Hostel Filter -->
+            <div class="col-md-3">
+                <label class="form-label small fw-bold text-muted">Hostel Block</label>
+                <select name="hostel_id" class="form-select">
+                    <option value="">All Hostels</option>
+                    {% for h in hostels %}
+                        <option value="{{ h.id }}" {% if selected_hostel == h.id %}selected{% endif %}>{{ h.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <!-- Status Filter -->
+            <div class="col-md-3">
+                <label class="form-label small fw-bold text-muted">Application Status</label>
+                <select name="status" class="form-select">
+                    <option value="all" {% if selected_status == 'all' %}selected{% endif %}>All Statuses</option>
+                    <option value="Pending" {% if selected_status == 'Pending' %}selected{% endif %}>Pending</option>
+                    <option value="Approved" {% if selected_status == 'Approved' %}selected{% endif %}>Approved</option>
+                    <option value="Rejected" {% if selected_status == 'Rejected' %}selected{% endif %}>Rejected</option>
+                    <option value="Cancelled" {% if selected_status == 'Cancelled' %}selected{% endif %}>Cancelled</option>
+                </select>
+            </div>
+
+            <!-- Filter Buttons -->
+            <div class="col-md-2 d-flex gap-2">
+                <button type="submit" class="btn btn-primary-custom flex-grow-1">Filter</button>
+                <a href="{{ url_for('admin.leaves_list') }}" class="btn btn-light border" title="Reset Filters"><i class="fa-solid fa-rotate-left"></i></a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Table Card -->
+<div class="card border-0 shadow-sm rounded-4 overflow-hidden bg-white">
+    <div class="card-header bg-white border-bottom py-3 px-4 d-flex justify-content-between align-items-center">
+        <h5 class="fw-bold text-dark mb-0"><i class="fa-solid fa-table-list text-primary me-2"></i>Leave Records</h5>
+        <span class="badge bg-light text-muted border">{{ leaves|length }} Application(s)</span>
+    </div>
+    <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+            <thead class="table-light">
+                <tr>
+                    <th class="ps-4">App ID</th>
+                    <th>Student Name</th>
+                    <th>Hostel & Room</th>
+                    <th>Leave Category</th>
+                    <th>Dates & Days</th>
+                    <th>Status</th>
+                    <th>Reviewer</th>
+                    <th class="text-end pe-4">Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for l in leaves %}
+                    <tr>
+                        <td class="ps-4 font-monospace fw-bold text-muted">#LVE-{{ l.id }}</td>
+                        <td>
+                            <div class="fw-bold text-dark">{{ l.student.full_name }}</div>
+                            <small class="text-muted font-monospace">{{ l.student.enrollment_no }}</small>
+                        </td>
+                        <td>
+                            <div class="fw-semibold text-dark">{{ l.hostel.name if l.hostel else 'Unallocated' }}</div>
+                            <small class="text-muted">
+                                {% if l.student.current_allocation %}
+                                    Room {{ l.student.current_allocation.room.room_number }} ({{ l.student.current_allocation.bed.bed_number }})
+                                {% else %}
+                                    -
+                                {% endif %}
+                            </small>
+                        </td>
+                        <td>
+                            <span class="badge bg-light text-dark border">{{ l.leave_type }}</span>
+                        </td>
+                        <td>
+                            <div class="fw-semibold text-dark">{{ l.from_date.strftime('%d %b') }} &rarr; {{ l.to_date.strftime('%d %b, %Y') }}</div>
+                            <small class="text-primary font-monospace">{{ l.number_of_days }} Day{% if l.number_of_days > 1 %}s{% endif %}</small>
+                        </td>
+                        <td>
+                            {% if l.status == 'Approved' %}
+                                <span class="badge bg-success-subtle text-success border border-success-subtle px-2 py-1">Approved</span>
+                            {% elif l.status == 'Pending' %}
+                                <span class="badge bg-warning-subtle text-warning border border-warning-subtle px-2 py-1">Pending</span>
+                            {% elif l.status == 'Rejected' %}
+                                <span class="badge bg-danger-subtle text-danger border border-danger-subtle px-2 py-1">Rejected</span>
+                            {% else %}
+                                <span class="badge bg-secondary-subtle text-secondary border border-secondary-subtle px-2 py-1">Cancelled</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if l.reviewer %}
+                                <small class="fw-semibold text-dark">{{ l.reviewer.full_name }}</small>
+                                <small class="text-muted d-block" style="font-size: 0.72rem;">{{ l.reviewed_at.strftime('%d %b %Y') if l.reviewed_at else '' }}</small>
+                            {% else %}
+                                <span class="text-muted small">&mdash;</span>
+                            {% endif %}
+                        </td>
+                        <td class="text-end pe-4">
+                            <a href="{{ url_for('admin.view_leave', id=l.id) }}" class="btn btn-sm btn-outline-primary">
+                                <i class="fa-solid fa-eye me-1"></i>Inspect
+                            </a>
+                        </td>
+                    </tr>
+                {% else %}
+                    <tr>
+                        <td colspan="8" class="text-center py-5 text-muted">
+                            <i class="fa-solid fa-folder-open fs-2 text-secondary opacity-50 mb-3 d-block"></i>
+                            <h5 class="fw-bold text-dark mb-1">No Leave Records Found</h5>
+                            <p class="small text-muted mb-0">Try adjusting your search keywords or hostel filter.</p>
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}
+

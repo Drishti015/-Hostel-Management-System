@@ -1,0 +1,317 @@
+{% extends 'base.html' %}
+
+{% block title %}Security Guard Gate Portal{% endblock %}
+
+{% block content %}
+<div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4">
+    <div>
+        <h2 class="fw-bold text-dark mb-1">Hostel Gate & Security Portal</h2>
+        <p class="text-muted small mb-0">
+            Real-time digital out-pass scanning, gate ingress/egress authorization, and live campus perimeter tracking
+        </p>
+    </div>
+    <div class="d-flex gap-2">
+        <a href="{{ url_for('security.scan', mode='EXIT') }}" class="btn btn-warning px-3">
+            <i class="fa-solid fa-arrow-right-from-bracket me-2"></i>Scan EXIT
+        </a>
+        <a href="{{ url_for('security.scan', mode='ENTRY') }}" class="btn btn-success px-3">
+            <i class="fa-solid fa-arrow-right-to-bracket me-2"></i>Scan ENTRY
+        </a>
+    </div>
+</div>
+
+<!-- Key Stat Cards -->
+<div class="row g-3 mb-4">
+    <div class="col-sm-6 col-xl-3">
+        <div class="stat-card">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <div class="stat-title">Today's Exits</div>
+                    <div class="stat-value text-warning">{{ exits_today }}</div>
+                </div>
+                <div class="stat-icon-wrapper bg-warning-subtle text-warning">
+                    <i class="fa-solid fa-person-walking-dashed-line-arrow-right"></i>
+                </div>
+            </div>
+            <div class="small text-muted mt-2">Students departed campus today</div>
+        </div>
+    </div>
+
+    <div class="col-sm-6 col-xl-3">
+        <div class="stat-card">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <div class="stat-title">Today's Entries</div>
+                    <div class="stat-value text-success">{{ entries_today }}</div>
+                </div>
+                <div class="stat-icon-wrapper bg-success-subtle text-success">
+                    <i class="fa-solid fa-person-shelter"></i>
+                </div>
+            </div>
+            <div class="small text-muted mt-2">Students checked in today</div>
+        </div>
+    </div>
+
+    <div class="col-sm-6 col-xl-3">
+        <div class="stat-card">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <div class="stat-title">Currently Outside</div>
+                    <div class="stat-value text-primary">{{ outside_count }}</div>
+                </div>
+                <div class="stat-icon-wrapper bg-primary-subtle text-primary">
+                    <i class="fa-solid fa-street-view"></i>
+                </div>
+            </div>
+            <div class="small text-muted mt-2">Active students off-campus</div>
+        </div>
+    </div>
+
+    <div class="col-sm-6 col-xl-3">
+        <div class="stat-card">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <div class="stat-title">Overdue Returns</div>
+                    <div class="stat-value text-danger">{{ overdue_count }}</div>
+                </div>
+                <div class="stat-icon-wrapper bg-danger-subtle text-danger">
+                    <i class="fa-solid fa-triangle-exclamation"></i>
+                </div>
+            </div>
+            <div class="small text-muted mt-2">Past expected return time</div>
+        </div>
+    </div>
+</div>
+
+<!-- Quick Scan Launchers & Fast Manual Verify -->
+<div class="row g-4 mb-4">
+    <div class="col-lg-6">
+        <div class="card border-0 shadow-sm rounded-4 p-4 h-100 bg-white">
+            <h5 class="fw-bold text-dark mb-3">
+                <i class="fa-solid fa-qrcode text-primary me-2"></i>Live QR Camera Scanner
+            </h5>
+            <p class="text-muted small">
+                Activate the device camera to instantly scan the student's encrypted digital out-pass QR code at the security gate.
+            </p>
+            <div class="row g-3 mt-auto">
+                <div class="col-6">
+                    <a href="{{ url_for('security.scan', mode='EXIT') }}" class="btn btn-outline-warning w-100 py-3 rounded-3 text-center d-block">
+                        <i class="fa-solid fa-arrow-right-from-bracket fa-2x mb-2 d-block"></i>
+                        <span class="fw-bold">Process EXIT</span>
+                        <div class="small text-muted">Leaving Hostel</div>
+                    </a>
+                </div>
+                <div class="col-6">
+                    <a href="{{ url_for('security.scan', mode='ENTRY') }}" class="btn btn-outline-success w-100 py-3 rounded-3 text-center d-block">
+                        <i class="fa-solid fa-arrow-right-to-bracket fa-2x mb-2 d-block"></i>
+                        <span class="fw-bold">Process ENTRY</span>
+                        <div class="small text-muted">Returning to Hostel</div>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-6">
+        <div class="card border-0 shadow-sm rounded-4 p-4 h-100 bg-white">
+            <h5 class="fw-bold text-dark mb-3">
+                <i class="fa-solid fa-keyboard text-secondary me-2"></i>Manual Pass Verification
+            </h5>
+            <p class="text-muted small">
+                If student's screen is broken or camera cannot focus, enter the secure Pass Reference Code printed on the pass.
+            </p>
+            <form method="POST" action="{{ url_for('security.verify') }}" class="mt-2">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                <div class="mb-3">
+                    <label class="form-label small fw-semibold text-secondary">Gate Event Type</label>
+                    <div class="d-flex gap-3">
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="event_type" id="dash_event_exit" value="EXIT" checked>
+                            <label class="form-check-label fw-bold text-warning" for="dash_event_exit">EXIT (Departure)</label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="event_type" id="dash_event_entry" value="ENTRY">
+                            <label class="form-check-label fw-bold text-success" for="dash_event_entry">ENTRY (Arrival)</label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label small fw-semibold text-secondary">Token or Pass Code</label>
+                    <div class="input-group">
+                        <span class="input-group-text bg-light border-end-0"><i class="fa-solid fa-shield-halved text-muted"></i></span>
+                        <input type="text" name="token" class="form-control font-monospace border-start-0" placeholder="e.g. OP-xxxx or verification token" required>
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label small fw-semibold text-secondary">Gate Location</label>
+                    <input type="text" name="gate_location" class="form-control" value="Main Campus Gate">
+                </div>
+
+                <button type="submit" class="btn btn-primary-custom w-100 py-2">
+                    <i class="fa-solid fa-magnifying-glass me-2"></i>Verify & Record Transaction
+                </button>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Students Currently Outside Table Preview -->
+<div class="card border-0 shadow-sm rounded-4 mb-4 overflow-hidden">
+    <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
+        <div>
+            <h5 class="fw-bold text-dark mb-0">
+                <i class="fa-solid fa-person-walking text-primary me-2"></i>Students Currently Outside Campus
+            </h5>
+            <small class="text-muted">Live perimeter roster of students who passed EXIT gate</small>
+        </div>
+        <a href="{{ url_for('security.outside') }}" class="btn btn-sm btn-outline-primary">
+            View All ({{ outside_count }}) <i class="fa-solid fa-arrow-right ms-1"></i>
+        </a>
+    </div>
+    <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+            <thead class="table-light small text-uppercase text-secondary">
+                <tr>
+                    <th>Student</th>
+                    <th>Hostel & Room</th>
+                    <th>Leave Reason</th>
+                    <th>Departed At</th>
+                    <th>Expected Return</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% if outside_passes %}
+                    {% for p in outside_passes[:6] %}
+                    <tr>
+                        <td>
+                            <div class="fw-bold text-dark">{{ p.student.full_name }}</div>
+                            <div class="small text-muted font-monospace">{{ p.student.enrollment_no }}</div>
+                        </td>
+                        <td>
+                            <div class="small fw-semibold">{{ p.leave_application.hostel.name if p.leave_application.hostel else 'N/A' }}</div>
+                            <div class="small text-muted">Room: {{ p.student.room_number or 'N/A' }}</div>
+                        </td>
+                        <td>
+                            <span class="badge bg-light text-dark border">{{ p.leave_application.leave_type }}</span>
+                            <div class="small text-muted text-truncate" style="max-width: 200px;">{{ p.leave_application.destination }}</div>
+                        </td>
+                        <td>
+                            <div class="small fw-bold text-secondary">
+                                {{ p.actual_departure_time.strftime('%d %b, %I:%M %p') if p.actual_departure_time else 'N/A' }}
+                            </div>
+                        </td>
+                        <td>
+                            <div class="small fw-bold {% if p.is_overdue %}text-danger{% else %}text-muted{% endif %}">
+                                {{ p.expected_return_date.strftime('%d %b %Y') }} (10:00 PM)
+                            </div>
+                        </td>
+                        <td>
+                            {% if p.is_overdue %}
+                                <span class="badge bg-danger-subtle text-danger border border-danger">
+                                    <i class="fa-solid fa-circle-exclamation me-1"></i>OVERDUE
+                                </span>
+                            {% else %}
+                                <span class="badge bg-warning-subtle text-warning border border-warning">
+                                    <i class="fa-solid fa-clock me-1"></i>OUTSIDE
+                                </span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                {% else %}
+                    <tr>
+                        <td colspan="6" class="text-center py-4 text-muted">
+                            <i class="fa-solid fa-circle-check text-success fa-2x mb-2 d-block"></i>
+                            All hostel residents are currently accounted for inside the hostel perimeter.
+                        </td>
+                    </tr>
+                {% endif %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Recent Gate Transactions Table -->
+<div class="card border-0 shadow-sm rounded-4 overflow-hidden">
+    <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
+        <div>
+            <h5 class="fw-bold text-dark mb-0">
+                <i class="fa-solid fa-clock-rotate-left text-secondary me-2"></i>Recent Gate Transactions Log
+            </h5>
+            <small class="text-muted">Real-time audit trail of entry and exit scans</small>
+        </div>
+        <a href="{{ url_for('security.transactions') }}" class="btn btn-sm btn-outline-secondary">
+            View All Logs <i class="fa-solid fa-arrow-right ms-1"></i>
+        </a>
+    </div>
+    <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+            <thead class="table-light small text-uppercase text-secondary">
+                <tr>
+                    <th>Time</th>
+                    <th>Student</th>
+                    <th>Gate Event</th>
+                    <th>Gate Location</th>
+                    <th>Verification</th>
+                    <th>Remarks</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% if recent_transactions %}
+                    {% for t in recent_transactions %}
+                    <tr>
+                        <td>
+                            <div class="small fw-bold text-dark">{{ t.scanned_at.strftime('%I:%M:%S %p') }}</div>
+                            <div class="small text-muted">{{ t.scanned_at.strftime('%d %b %Y') }}</div>
+                        </td>
+                        <td>
+                            <div class="fw-bold text-dark">{{ t.student.full_name }}</div>
+                            <div class="small text-muted font-monospace">{{ t.student.enrollment_no }}</div>
+                        </td>
+                        <td>
+                            {% if t.event_type == 'EXIT' %}
+                                <span class="badge bg-warning text-dark px-2 py-1">
+                                    <i class="fa-solid fa-arrow-right-from-bracket me-1"></i>EXIT
+                                </span>
+                            {% else %}
+                                <span class="badge bg-success px-2 py-1">
+                                    <i class="fa-solid fa-arrow-right-to-bracket me-1"></i>ENTRY
+                                </span>
+                            {% endif %}
+                        </td>
+                        <td><small class="text-muted">{{ t.gate_location }}</small></td>
+                        <td>
+                            {% if t.verification_status == 'Success' %}
+                                <span class="badge bg-success-subtle text-success border border-success">
+                                    <i class="fa-solid fa-check me-1"></i>Verified
+                                </span>
+                            {% else %}
+                                <span class="badge bg-danger-subtle text-danger border border-danger">
+                                    <i class="fa-solid fa-xmark me-1"></i>Failed
+                                </span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <small class="text-muted">{{ t.failure_reason or t.remarks or 'Standard gate scan' }}</small>
+                            {% if t.is_overdue %}
+                                <span class="badge bg-danger ms-1">OVERDUE</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                {% else %}
+                    <tr>
+                        <td colspan="6" class="text-center py-4 text-muted">
+                            No gate scans recorded yet today.
+                        </td>
+                    </tr>
+                {% endif %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}
+

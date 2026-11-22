@@ -1,0 +1,187 @@
+{% extends 'base.html' %}
+
+{% block title %}Admin - Out-Pass #OP-{{ outpass.id }} Inspection{% endblock %}
+
+{% block content %}
+<div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4">
+    <div>
+        <div class="d-flex align-items-center gap-2 mb-1">
+            <h2 class="fw-bold text-dark mb-0">Out-Pass #OP-{{ outpass.id }} Record</h2>
+            {% if outpass.status == 'Active' %}
+                <span class="badge bg-success-subtle text-success border border-success">Active</span>
+            {% elif outpass.status == 'Completed' %}
+                <span class="badge bg-info-subtle text-info border border-info">Completed</span>
+            {% elif outpass.status == 'Revoked' %}
+                <span class="badge bg-danger-subtle text-danger border border-danger">Revoked</span>
+            {% elif outpass.status == 'Expired' %}
+                <span class="badge bg-secondary-subtle text-secondary border border-secondary">Expired</span>
+            {% endif %}
+
+            {% if outpass.is_overdue %}
+                <span class="badge bg-danger">OVERDUE</span>
+            {% elif outpass.is_outside %}
+                <span class="badge bg-warning text-dark">OUTSIDE</span>
+            {% endif %}
+        </div>
+        <p class="text-muted small mb-0">
+            Student: <strong>{{ outpass.student.full_name }}</strong> ({{ outpass.student.enrollment_no }}) &bull; Hostel: {{ outpass.leave_application.hostel.name if outpass.leave_application.hostel else 'N/A' }}
+        </p>
+    </div>
+    <div class="d-flex gap-2">
+        <a href="{{ url_for('admin.outpasses') }}" class="btn btn-outline-secondary">
+            <i class="fa-solid fa-arrow-left me-1"></i>Back to Out-Passes
+        </a>
+    </div>
+</div>
+
+<div class="row g-4">
+    <div class="col-lg-8">
+        <!-- Details Card -->
+        <div class="card border-0 shadow-sm rounded-4 p-4 bg-white mb-4">
+            <h5 class="fw-bold text-dark border-bottom pb-3 mb-3">Resident & Leave Metadata</h5>
+            <div class="row g-3">
+                <div class="col-sm-6">
+                    <label class="small text-muted text-uppercase fw-semibold">Student Name</label>
+                    <div class="fw-bold text-dark">{{ outpass.student.full_name }}</div>
+                </div>
+                <div class="col-sm-6">
+                    <label class="small text-muted text-uppercase fw-semibold">Hostel & Room</label>
+                    <div class="fw-semibold text-secondary">{{ outpass.leave_application.hostel.name if outpass.leave_application.hostel else 'N/A' }} &bull; Room {{ outpass.student.room_number or 'N/A' }}</div>
+                </div>
+                <div class="col-sm-6">
+                    <label class="small text-muted text-uppercase fw-semibold">Departure Window</label>
+                    <div class="fw-bold text-dark">{{ outpass.departure_date.strftime('%d %b %Y') }}</div>
+                </div>
+                <div class="col-sm-6">
+                    <label class="small text-muted text-uppercase fw-semibold">Expected Return Deadline</label>
+                    <div class="fw-bold {% if outpass.is_overdue %}text-danger{% else %}text-dark{% endif %}">
+                        {{ outpass.expected_return_date.strftime('%d %b %Y') }} (10:00 PM)
+                    </div>
+                </div>
+                <div class="col-sm-6">
+                    <label class="small text-muted text-uppercase fw-semibold">Emergency Contact</label>
+                    <div class="fw-bold text-dark">{{ outpass.leave_application.emergency_contact }}</div>
+                </div>
+                <div class="col-sm-6">
+                    <label class="small text-muted text-uppercase fw-semibold">Approved By Warden</label>
+                    <div class="fw-semibold text-secondary">
+                        {{ outpass.leave_application.reviewer.full_name if outpass.leave_application.reviewer else 'N/A' }}
+                    </div>
+                </div>
+                <div class="col-12">
+                    <label class="small text-muted text-uppercase fw-semibold">Destination Address</label>
+                    <div class="text-secondary bg-light p-2 rounded-3">{{ outpass.leave_application.destination }}</div>
+                </div>
+                <div class="col-12">
+                    <label class="small text-muted text-uppercase fw-semibold">Leave Purpose / Reason</label>
+                    <div class="text-secondary bg-light p-2 rounded-3">{{ outpass.leave_application.reason }}</div>
+                </div>
+            </div>
+
+            {% if outpass.status == 'Revoked' %}
+            <div class="alert alert-danger mt-4 mb-0">
+                <h6 class="fw-bold text-danger mb-1"><i class="fa-solid fa-ban me-1"></i>Pass Revoked</h6>
+                <p class="small mb-1"><strong>Reason:</strong> {{ outpass.revoked_reason }}</p>
+                <div class="small text-muted">Revoked on: {{ outpass.revoked_at.strftime('%d %b %Y, %I:%M %p') if outpass.revoked_at else 'N/A' }}</div>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Gate Audit Trail -->
+        <div class="card border-0 shadow-sm rounded-4 overflow-hidden bg-white">
+            <div class="card-header bg-white py-3 border-bottom">
+                <h5 class="fw-bold text-dark mb-0">
+                    <i class="fa-solid fa-timeline text-primary me-2"></i>Security Gate Audit Log
+                </h5>
+            </div>
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="table-light small text-uppercase text-secondary">
+                        <tr>
+                            <th>Scan Time</th>
+                            <th>Event</th>
+                            <th>Gate</th>
+                            <th>Result</th>
+                            <th>Guard Account</th>
+                            <th>Remarks</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% if transactions %}
+                            {% for t in transactions %}
+                            <tr>
+                                <td>
+                                    <div class="small fw-bold text-dark">{{ t.scanned_at.strftime('%d %b %Y, %I:%M %p') }}</div>
+                                </td>
+                                <td>
+                                    {% if t.event_type == 'EXIT' %}
+                                        <span class="badge bg-warning text-dark px-2 py-1">EXIT</span>
+                                    {% else %}
+                                        <span class="badge bg-success px-2 py-1">ENTRY</span>
+                                    {% endif %}
+                                </td>
+                                <td><small class="text-muted">{{ t.gate_location }}</small></td>
+                                <td>
+                                    {% if t.verification_status == 'Success' %}
+                                        <span class="badge bg-success-subtle text-success border border-success">Success</span>
+                                    {% else %}
+                                        <span class="badge bg-danger-subtle text-danger border border-danger">Failed</span>
+                                    {% endif %}
+                                </td>
+                                <td><small class="text-secondary">{{ t.security_user.username }}</small></td>
+                                <td><small class="text-muted">{{ t.failure_reason or t.remarks or 'Gate scan completed' }}</small></td>
+                            </tr>
+                            {% endfor %}
+                        {% else %}
+                            <tr>
+                                <td colspan="6" class="text-center py-4 text-muted">
+                                    No gate transactions recorded yet for this out-pass.
+                                </td>
+                            </tr>
+                        {% endif %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-4">
+        <div class="card border-0 shadow-sm rounded-4 p-4 bg-white text-center mb-4">
+            <h6 class="fw-bold text-muted text-uppercase mb-3">Cryptographic QR Pass</h6>
+            {% if outpass.qr_code_file %}
+                <img src="{{ outpass.qr_code_url or url_for('static', filename='uploads/qrcodes/' + outpass.qr_code_file) }}" alt="QR Code" class="img-fluid border rounded-3 p-2 mb-3 mx-auto" style="max-width: 220px;">
+            {% else %}
+                <div class="p-4 bg-light text-muted rounded-3 mb-3">No QR Generated</div>
+            {% endif %}
+
+            <div class="small text-muted font-monospace mb-2">Token Hash: {{ outpass.pass_token_hash[:16] }}...</div>
+            <div class="badge bg-light text-secondary border px-3 py-2">
+                Expires: {{ outpass.expires_at.strftime('%d %b %Y, %I:%M %p') }}
+            </div>
+        </div>
+
+        <div class="card border-0 shadow-sm rounded-4 p-4 bg-light">
+            <h6 class="fw-bold text-dark mb-3">Perimeter Summary</h6>
+            <div class="d-flex justify-content-between mb-2">
+                <span class="small text-muted">Current Location:</span>
+                <span class="small fw-bold {% if outpass.is_outside %}text-warning{% else %}text-success{% endif %}">
+                    {% if outpass.is_outside %}Outside Campus{% else %}Inside Hostel{% endif %}
+                </span>
+            </div>
+            <div class="d-flex justify-content-between mb-2">
+                <span class="small text-muted">Actual Departure:</span>
+                <span class="small fw-semibold text-dark">
+                    {{ outpass.actual_departure_time.strftime('%d %b, %I:%M %p') if outpass.actual_departure_time else 'Pending' }}
+                </span>
+            </div>
+            <div class="d-flex justify-content-between">
+                <span class="small text-muted">Actual Return:</span>
+                <span class="small fw-semibold text-dark">
+                    {{ outpass.actual_return_time.strftime('%d %b, %I:%M %p') if outpass.actual_return_time else 'Pending' }}
+                </span>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+

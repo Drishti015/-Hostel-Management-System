@@ -1,0 +1,35 @@
+{% extends 'base.html' %}
+
+{% block title %}Campus Notices & Bulletins{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h2 class="fw-bold text-dark mb-1">Campus Bulletins & Notices</h2>
+        <p class="text-muted small mb-0">Official updates, mess menus, timing changes, and circulars</p>
+    </div>
+</div>
+
+<div class="row g-4">
+    {% for n in notices %}
+        <div class="col-md-6">
+            <div class="card border-0 shadow-sm rounded-4 p-4 bg-white h-100 d-flex flex-column">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <span class="badge {% if n.category == 'urgent' %}bg-danger{% elif n.category == 'maintenance' %}bg-warning text-dark{% else %}bg-primary{% endif %} text-uppercase">
+                        {{ n.category }}
+                    </span>
+                    <small class="text-muted">{{ n.created_at.strftime('%d %B, %Y') }}</small>
+                </div>
+                <h5 class="fw-bold text-dark mb-2">{{ n.title }}</h5>
+                <p class="text-secondary small flex-grow-1" style="white-space: pre-line;">{{ n.content }}</p>
+                <div class="border-top pt-2 mt-3 small text-muted">
+                    <i class="fa-solid fa-bullhorn text-primary me-1"></i> Issued by {{ n.author.username }} ({{ n.author.role|capitalize }})
+                </div>
+            </div>
+        </div>
+    {% else %}
+        <div class="col-12 text-center py-5 text-muted">No active notices for your category.</div>
+    {% endfor %}
+</div>
+{% endblock %}
+

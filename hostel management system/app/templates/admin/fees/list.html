@@ -1,0 +1,122 @@
+{% extends 'base.html' %}
+
+{% block title %}Fee Records & Receipts{% endblock %}
+
+{% block content %}
+<div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4">
+    <div>
+        <h2 class="fw-bold text-dark mb-1">Hostel Fee Management</h2>
+        <p class="text-muted small mb-0">Record student fee payments, track pending dues, and issue official receipts</p>
+    </div>
+    <div class="d-flex gap-2">
+        <a href="{{ url_for('admin.add_fee') }}" class="btn btn-primary-custom">
+            <i class="fa-solid fa-receipt me-2"></i>Record New Payment
+        </a>
+    </div>
+</div>
+
+<!-- Financial Summary Cards -->
+<div class="row g-3 mb-4">
+    <div class="col-sm-6 col-xl-4">
+        <div class="stat-card">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <div class="stat-title">Total Collections</div>
+                    <div class="stat-value text-success">₹{{ "{:,.0f}".format(total_collections) }}</div>
+                </div>
+                <div class="stat-icon-wrapper bg-success-subtle text-success">
+                    <i class="fa-solid fa-indian-rupee-sign"></i>
+                </div>
+            </div>
+            <div class="small text-muted mt-2">Verified payment transactions</div>
+        </div>
+    </div>
+
+    <div class="col-sm-6 col-xl-4">
+        <div class="stat-card">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <div class="stat-title">Total Receipts Issued</div>
+                    <div class="stat-value text-dark">{{ total_receipts }}</div>
+                </div>
+                <div class="stat-icon-wrapper bg-primary-subtle text-primary">
+                    <i class="fa-solid fa-file-invoice"></i>
+                </div>
+            </div>
+            <div class="small text-muted mt-2">Unique digital fee slips</div>
+        </div>
+    </div>
+
+    <div class="col-sm-6 col-xl-4">
+        <div class="stat-card">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <div class="stat-title">Pending / In-Clearance</div>
+                    <div class="stat-value text-warning">{{ pending_count }}</div>
+                </div>
+                <div class="stat-icon-wrapper bg-warning-subtle text-warning">
+                    <i class="fa-solid fa-hourglass-half"></i>
+                </div>
+            </div>
+            <div class="small text-muted mt-2">Transactions awaiting bank clearance</div>
+        </div>
+    </div>
+</div>
+
+<!-- Fee Ledger Table -->
+<div class="card border-0 shadow-sm rounded-4 overflow-hidden bg-white">
+    <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+            <thead class="table-light">
+                <tr>
+                    <th class="ps-4">Receipt No</th>
+                    <th>Student Details</th>
+                    <th>Fee Category</th>
+                    <th>Amount Paid</th>
+                    <th>Payment Method</th>
+                    <th>Date</th>
+                    <th>Status</th>
+                    <th class="text-end pe-4">Receipt</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for f in fee_records %}
+                    <tr>
+                        <td class="ps-4">
+                            <span class="font-monospace fw-bold text-primary">{{ f.receipt_no }}</span>
+                        </td>
+                        <td>
+                            <div class="fw-bold text-dark">{{ f.student.full_name }}</div>
+                            <small class="text-muted font-monospace">{{ f.student.enrollment_no }}</small>
+                        </td>
+                        <td>{{ f.fee_type }}</td>
+                        <td class="fw-bold text-dark fs-6">₹{{ "{:,.2f}".format(f.amount) }}</td>
+                        <td>
+                            <span class="badge bg-light text-secondary border">
+                                {{ f.payment_method }}
+                            </span>
+                            {% if f.transaction_id %}
+                                <div class="font-monospace text-muted" style="font-size: 0.75rem;">{{ f.transaction_id[:16] }}...</div>
+                            {% endif %}
+                        </td>
+                        <td>{{ f.payment_date.strftime('%d %b, %Y') }}</td>
+                        <td>
+                            <span class="badge-status badge-{{ f.status }}">{{ f.status|capitalize }}</span>
+                        </td>
+                        <td class="text-end pe-4">
+                            <a href="{{ url_for('admin.print_receipt', id=f.id) }}" target="_blank" class="btn btn-sm btn-outline-primary" title="View / Print Official Receipt">
+                                <i class="fa-solid fa-print me-1"></i>Print
+                            </a>
+                        </td>
+                    </tr>
+                {% else %}
+                    <tr>
+                        <td colspan="8" class="text-center py-5 text-muted">No fee records found.</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}
+

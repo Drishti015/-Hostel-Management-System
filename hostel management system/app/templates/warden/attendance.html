@@ -1,0 +1,95 @@
+{% extends 'base.html' %}
+
+{% block title %}Mark Night Attendance{% endblock %}
+
+{% block content %}
+<div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4">
+    <div>
+        <h2 class="fw-bold text-dark mb-1">Night Roll-Call Attendance</h2>
+        <p class="text-muted small mb-0">
+            Hostel Block: <strong>{{ hostel.name if hostel else 'All Blocks' }}</strong> | Date: <strong>{{ target_date }}</strong>
+        </p>
+    </div>
+    <form method="GET" class="d-flex align-items-center gap-2">
+        <label class="small text-muted fw-semibold">Date:</label>
+        <input type="date" name="date" class="form-control form-control-sm" value="{{ target_date }}" onchange="this.form.submit()">
+    </form>
+</div>
+
+{% if not student_records %}
+    <div class="card border-0 shadow-sm rounded-4 p-5 text-center bg-white">
+        <i class="fa-solid fa-clipboard-user fs-1 text-muted mb-3"></i>
+        <h5 class="fw-bold text-dark">No Allocated Residents Found</h5>
+        <p class="text-muted small">There are currently no active students allocated to this hostel block.</p>
+    </div>
+{% else %}
+    <div class="card border-0 shadow-sm rounded-4 p-4 bg-white">
+        <form method="POST" action="{{ url_for('warden.submit_attendance') }}">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+            <input type="hidden" name="hostel_id" value="{{ hostel.id }}"/>
+            <input type="hidden" name="date" value="{{ target_date }}"/>
+
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-4">
+                    <thead class="table-light">
+                        <tr>
+                            <th class="ps-3">Resident</th>
+                            <th>Room & Bed</th>
+                            <th>Contact</th>
+                            <th class="text-center" style="width: 320px;">Night Roll-Call Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for item in student_records %}
+                            {% set s = item.student %}
+                            {% set cur_status = item.status %}
+                            <tr>
+                                <td class="ps-3">
+                                    <div class="fw-bold text-dark">{{ s.full_name }}</div>
+                                    <small class="text-muted font-monospace">{{ s.enrollment_no }}</small>
+                                </td>
+                                <td>
+                                    <span class="badge bg-light text-dark border">
+                                        <i class="fa-solid fa-door-open me-1 text-primary"></i>
+                                        Room {{ s.current_allocation.room.room_number }} ({{ s.current_allocation.bed.bed_number }})
+                                    </span>
+                                </td>
+                                <td>{{ s.phone }}</td>
+                                <td class="text-center">
+                                    <div class="btn-group w-100" role="group">
+                                        <input type="radio" class="btn-check" name="status_{{ s.id }}" id="pres_{{ s.id }}" value="present" {% if cur_status == 'present' %}checked{% endif %}>
+                                        <label class="btn btn-outline-success btn-sm" for="pres_{{ s.id }}">
+                                            <i class="fa-solid fa-check me-1"></i>Present
+                                        </label>
+
+                                        <input type="radio" class="btn-check" name="status_{{ s.id }}" id="abs_{{ s.id }}" value="absent" {% if cur_status == 'absent' %}checked{% endif %}>
+                                        <label class="btn btn-outline-danger btn-sm" for="abs_{{ s.id }}">
+                                            <i class="fa-solid fa-xmark me-1"></i>Absent
+                                        </label>
+
+                                        <input type="radio" class="btn-check" name="status_{{ s.id }}" id="leave_{{ s.id }}" value="leave" {% if cur_status == 'leave' %}checked{% endif %}>
+                                        <label class="btn btn-outline-warning btn-sm" for="leave_{{ s.id }}">
+                                            <i class="fa-solid fa-plane-departure me-1"></i>On Leave
+                                        </label>
+                                    </div>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="d-flex justify-content-between align-items-center pt-3 border-top">
+                <span class="small text-muted">
+                    <i class="fa-solid fa-circle-info text-info me-1"></i>
+                    Submitting updates will overwrite existing marks for <strong>{{ target_date }}</strong>.
+                </span>
+                <button type="submit" class="btn btn-primary-custom px-4 py-2">
+                    <i class="fa-solid fa-floppy-disk me-2"></i>Save Roll-Call Records
+                </button>
+            </div>
+        </form>
+    </div>
+{% endif %}
+{% endblock %}
+

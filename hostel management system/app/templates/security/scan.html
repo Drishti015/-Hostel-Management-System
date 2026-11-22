@@ -1,0 +1,596 @@
+{% extends 'base.html' %}
+
+{% block title %}Live Gate QR Scanner{% endblock %}
+
+{% block extra_css %}
+<style>
+    #reader {
+        width: 100%;
+        max-width: 500px;
+        margin: 0 auto;
+        border-radius: 14px;
+        overflow: hidden;
+        border: 2px dashed #0d6efd;
+        background: #000;
+        min-height: 280px;
+        position: relative;
+    }
+    #reader video {
+        border-radius: 12px;
+        width: 100% !important;
+        height: auto !important;
+        object-fit: cover;
+    }
+    .scan-mode-active-exit {
+        background-color: #ffc107 !important;
+        border-color: #ffc107 !important;
+        color: #000 !important;
+        box-shadow: 0 4px 10px rgba(255, 193, 7, 0.35);
+    }
+    .scan-mode-active-entry {
+        background-color: #198754 !important;
+        border-color: #198754 !important;
+        color: #fff !important;
+        box-shadow: 0 4px 10px rgba(25, 135, 84, 0.35);
+    }
+    .pulse-dot {
+        display: inline-block;
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+        background-color: #dc3545;
+        animation: pulse 1.2s infinite;
+    }
+    @keyframes pulse {
+        0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(220, 53, 69, 0.7); }
+        70% { transform: scale(1.15); box-shadow: 0 0 0 8px rgba(220, 53, 69, 0); }
+        100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(220, 53, 69, 0); }
+    }
+    .scanner-placeholder {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        color: #adb5bd;
+        text-align: center;
+        width: 90%;
+    }
+</style>
+{% endblock %}
+
+{% block extra_head %}
+<!-- Defensively defined extra_head if needed -->
+{% endblock %}
+
+{% block content %}
+<div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4">
+    <div>
+        <h2 class="fw-bold text-dark mb-1">
+            <i class="fa-solid fa-qrcode text-primary me-2"></i>Digital Out-Pass Gate Scanner
+        </h2>
+        <p class="text-muted small mb-0">
+            Scan student digital out-pass QR code using the device camera or manually verify token.
+        </p>
+    </div>
+    <div class="d-flex gap-2">
+        <a href="{{ url_for('security.dashboard') }}" class="btn btn-outline-secondary">
+            <i class="fa-solid fa-arrow-left me-2"></i>Back to Dashboard
+        </a>
+    </div>
+</div>
+
+<div class="row g-4 justify-content-center">
+    <div class="col-lg-7">
+        <div class="card border-0 shadow-sm rounded-4 p-4 bg-white mb-4">
+            <!-- Event Mode Selector (EXIT vs ENTRY) -->
+            <div class="text-center mb-4">
+                <label class="form-label small fw-bold text-uppercase text-muted d-block mb-2">Gate Action Mode</label>
+                <div class="btn-group w-100" role="group">
+                    <button type="button" id="btn-mode-exit" class="btn btn-lg {% if mode == 'EXIT' %}scan-mode-active-exit{% else %}btn-outline-warning{% endif %} fw-bold py-3" onclick="setScanMode('EXIT')">
+                        <i class="fa-solid fa-arrow-right-from-bracket me-2"></i>EXIT GATE (Departure)
+                    </button>
+                    <button type="button" id="btn-mode-entry" class="btn btn-lg {% if mode == 'ENTRY' %}scan-mode-active-entry{% else %}btn-outline-success{% endif %} fw-bold py-3" onclick="setScanMode('ENTRY')">
+                        <i class="fa-solid fa-arrow-right-to-bracket me-2"></i>ENTRY GATE (Arrival)
+                    </button>
+                </div>
+                <div class="small mt-2" id="mode-help-text">
+                    {% if mode == 'EXIT' %}
+                        <span class="text-warning fw-bold"><i class="fa-solid fa-circle-info me-1"></i> Mode: EXIT</span> — Scanning students leaving the campus perimeter.
+                    {% else %}
+                        <span class="text-success fw-bold"><i class="fa-solid fa-circle-info me-1"></i> Mode: ENTRY</span> — Scanning students returning back inside the hostel.
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Live Camera Scanner Box -->
+            <div class="text-center mb-3">
+                <div id="reader">
+                    <div id="reader-placeholder" class="scanner-placeholder">
+                        <i class="fa-solid fa-camera fa-3x mb-2 text-secondary opacity-50"></i>
+                        <p class="mb-0 small">Camera stream will appear here once started.</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Scanner Controls -->
+            <div class="d-flex flex-wrap justify-content-center gap-2 mb-3">
+                <button id="btn-start-scanner" class="btn btn-primary-custom px-4" onclick="startScanner()">
+                    <i class="fa-solid fa-camera me-2"></i>Start Camera
+                </button>
+                <button id="btn-stop-scanner" class="btn btn-outline-danger px-4" onclick="stopScanner()" style="display:none;">
+                    <i class="fa-solid fa-stop me-2"></i>Stop Camera
+                </button>
+                <button id="btn-switch-camera" class="btn btn-outline-secondary px-3" onclick="switchCamera()" style="display:none;">
+                    <i class="fa-solid fa-repeat me-1"></i>Flip Camera
+                </button>
+            </div>
+
+            <div id="scan-status-indicator" class="alert alert-secondary text-center small py-2 mb-0">
+                <i class="fa-solid fa-video me-1"></i> Camera is idle. Click <strong>Start Camera</strong> to begin scanning.
+            </div>
+        </div>
+
+        <!-- Verification Result Feedback Box (Appears via AJAX or Form Submit) -->
+        <div id="scan-result-card" class="card border-0 shadow rounded-4 p-4 bg-white mb-4" style="display: none;">
+            <div id="scan-result-content"></div>
+        </div>
+    </div>
+
+    <!-- Right Side: Manual Fallback & Quick Help -->
+    <div class="col-lg-5">
+        <div class="card border-0 shadow-sm rounded-4 p-4 bg-white mb-4">
+            <h5 class="fw-bold text-dark mb-3">
+                <i class="fa-solid fa-keyboard text-primary me-2"></i>Manual Verification
+            </h5>
+            <p class="text-muted small">
+                If the student cannot display a clear QR code, verify the pass using the alphanumeric Pass Reference Code.
+            </p>
+
+            <form method="POST" action="{{ url_for('security.verify') }}" id="manual-verify-form">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                <input type="hidden" name="event_type" id="manual_event_type" value="{{ mode }}">
+
+                <div class="mb-3">
+                    <label class="form-label small fw-semibold text-secondary">Token or Pass Code</label>
+                    <div class="input-group">
+                        <span class="input-group-text bg-light border-end-0"><i class="fa-solid fa-key text-muted"></i></span>
+                        <input type="text" name="token" id="manual_token_input" class="form-control font-monospace border-start-0" placeholder="Paste token or enter pass ID" required>
+                    </div>
+                    <div class="form-text small">Accepts raw token or QR payload string.</div>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label small fw-semibold text-secondary">Gate Location</label>
+                    <input type="text" name="gate_location" id="manual_gate_location" class="form-control" value="Main Campus Gate">
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label small fw-semibold text-secondary">Remarks / Observations (Optional)</label>
+                    <input type="text" name="remarks" class="form-control" placeholder="e.g. Carrying travel luggage">
+                </div>
+
+                <button type="submit" class="btn btn-primary-custom w-100 py-2">
+                    <i class="fa-solid fa-shield-check me-2"></i>Verify Out-Pass
+                </button>
+            </form>
+        </div>
+
+        <div class="card border-0 shadow-sm rounded-4 p-4 bg-light">
+            <h6 class="fw-bold text-dark mb-2">
+                <i class="fa-solid fa-circle-question text-info me-1"></i>Security Guard Protocol
+            </h6>
+            <ul class="small text-muted ps-3 mb-0">
+                <li class="mb-1"><strong>EXIT Rule:</strong> Only passes with Active status and valid date window are allowed to depart.</li>
+                <li class="mb-1"><strong>ENTRY Rule:</strong> Only students marked as currently outside can be checked back in.</li>
+                <li class="mb-1"><strong>Overdue Returns:</strong> Flagged automatically in red. Note reason in remarks.</li>
+                <li><strong>Revoked Passes:</strong> Do not permit passage. Instruct student to contact warden immediately.</li>
+            </ul>
+        </div>
+    </div>
+</div>
+
+<!-- Hidden verification form for camera scan result submission fallback -->
+<form id="qr-auto-submit-form" method="POST" action="{{ url_for('security.verify') }}" style="display:none;">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+    <input type="hidden" name="token" id="auto_token">
+    <input type="hidden" name="event_type" id="auto_event_type" value="{{ mode }}">
+    <input type="hidden" name="gate_location" id="auto_gate_location" value="Main Campus Gate">
+    <input type="hidden" name="remarks" id="auto_remarks" value="Scanned via Camera QR Scanner">
+</form>
+
+{% endblock %}
+
+{% block extra_js %}
+<!-- HTML5 QR Code Library with Fallback CDN -->
+<script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+<script>
+    if (typeof Html5Qrcode === 'undefined') {
+        document.write('<script src="https://cdnjs.cloudflare.com/ajax/libs/html5-qrcode/2.3.8/html5-qrcode.min.js"><\/script>');
+    }
+</script>
+
+<script>
+    const csrfToken = "{{ csrf_token() }}";
+    const verifyApiUrl = "{{ url_for('security.verify') }}";
+    let html5QrCode = null;
+    let currentMode = "{{ mode }}";
+    let isScanning = false;
+    let isStarting = false;
+    let cameraList = [];
+    let currentCameraIndex = 0;
+
+    function showStatus(message, type) {
+        const indicator = document.getElementById('scan-status-indicator');
+        indicator.className = `alert alert-${type} text-center small py-2 mb-0`;
+        indicator.innerHTML = message;
+    }
+
+    function setScanMode(mode) {
+        currentMode = mode;
+        document.getElementById('manual_event_type').value = mode;
+        document.getElementById('auto_event_type').value = mode;
+
+        const btnExit = document.getElementById('btn-mode-exit');
+        const btnEntry = document.getElementById('btn-mode-entry');
+        const helpText = document.getElementById('mode-help-text');
+
+        if (mode === 'EXIT') {
+            btnExit.className = 'btn btn-lg scan-mode-active-exit fw-bold py-3';
+            btnEntry.className = 'btn btn-lg btn-outline-success fw-bold py-3';
+            helpText.innerHTML = '<span class="text-warning fw-bold"><i class="fa-solid fa-circle-info me-1"></i> Mode: EXIT</span> — Scanning students leaving the campus perimeter.';
+        } else {
+            btnExit.className = 'btn btn-lg btn-outline-warning fw-bold py-3';
+            btnEntry.className = 'btn btn-lg scan-mode-active-entry fw-bold py-3';
+            helpText.innerHTML = '<span class="text-success fw-bold"><i class="fa-solid fa-circle-info me-1"></i> Mode: ENTRY</span> — Scanning students returning back inside the hostel.';
+        }
+    }
+
+    function handleCameraError(err) {
+        isStarting = false;
+        isScanning = false;
+        document.getElementById('btn-start-scanner').style.display = 'inline-block';
+        document.getElementById('btn-stop-scanner').style.display = 'none';
+        document.getElementById('btn-switch-camera').style.display = 'none';
+
+        const placeholder = document.getElementById('reader-placeholder');
+        if (placeholder) placeholder.style.display = 'block';
+
+        const errStr = (err && (err.name || err.message || err.toString())) || '';
+        console.error("Camera error:", err);
+
+        if (errStr.includes("NotAllowedError") || errStr.includes("PermissionDeniedError")) {
+            showStatus('<i class="fa-solid fa-triangle-exclamation me-1"></i> <strong>Camera permission denied.</strong> Please allow camera access in your browser address bar/settings and try again.', 'danger');
+        } else if (errStr.includes("NotFoundError") || errStr.includes("DevicesNotFoundError")) {
+            showStatus('<i class="fa-solid fa-video-slash me-1"></i> <strong>No camera detected.</strong> Please connect a webcam or use manual token verification.', 'warning');
+        } else if (errStr.includes("NotReadableError") || errStr.includes("TrackStartError")) {
+            showStatus('<i class="fa-solid fa-triangle-exclamation me-1"></i> <strong>Camera in use.</strong> Another application or browser tab is currently using the camera. Please close it and retry.', 'danger');
+        } else if (errStr.includes("OverconstrainedError")) {
+            showStatus('<i class="fa-solid fa-triangle-exclamation me-1"></i> <strong>Camera constraint unsupported.</strong> Default camera settings will be attempted.', 'warning');
+        } else {
+            showStatus('<i class="fa-solid fa-circle-exclamation me-1"></i> <strong>Camera error:</strong> ' + (err.message || err), 'danger');
+        }
+    }
+
+    function startScanner() {
+        if (isScanning || isStarting) return;
+        isStarting = true;
+
+        const placeholder = document.getElementById('reader-placeholder');
+        if (placeholder) placeholder.style.display = 'none';
+
+        // Check Secure Context for camera API
+        if (!window.isSecureContext && location.hostname !== 'localhost' && location.hostname !== '127.0.0.1') {
+            showStatus('<i class="fa-solid fa-lock text-danger me-1"></i> <strong>Insecure Origin:</strong> Camera access requires HTTPS or localhost. Please access via localhost or enable SSL.', 'danger');
+            isStarting = false;
+            if (placeholder) placeholder.style.display = 'block';
+            return;
+        }
+
+        // Check browser getUserMedia support
+        if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+            showStatus('<i class="fa-solid fa-ban me-1"></i> Your browser does not support camera capture (<code>getUserMedia</code> unavailable). Please use a modern browser.', 'danger');
+            isStarting = false;
+            if (placeholder) placeholder.style.display = 'block';
+            return;
+        }
+
+        // Check library loaded
+        if (typeof Html5Qrcode === 'undefined') {
+            showStatus('<i class="fa-solid fa-wifi me-1"></i> QR Scanner library failed to load. Please check your internet connection and refresh the page.', 'danger');
+            isStarting = false;
+            if (placeholder) placeholder.style.display = 'block';
+            return;
+        }
+
+        showStatus('<i class="fa-solid fa-spinner fa-spin me-1"></i> Initializing camera hardware...', 'info');
+
+        if (!html5QrCode) {
+            html5QrCode = new Html5Qrcode("reader");
+        }
+
+        // Query available cameras
+        Html5Qrcode.getCameras().then(devices => {
+            if (devices && devices.length > 0) {
+                cameraList = devices;
+                // Choose camera: prefer environment-facing if detected, else by index
+                let selectedCameraId = cameraList[currentCameraIndex].id;
+                
+                // If on mobile and multiple cameras, prioritize back camera by label
+                for (let i = 0; i < devices.length; i++) {
+                    const label = (devices[i].label || '').toLowerCase();
+                    if (label.includes('back') || label.includes('rear') || label.includes('environment')) {
+                        selectedCameraId = devices[i].id;
+                        currentCameraIndex = i;
+                        break;
+                    }
+                }
+
+                const config = {
+                    fps: 15,
+                    qrbox: function(viewfinderWidth, viewfinderHeight) {
+                        const minEdge = Math.min(viewfinderWidth, viewfinderHeight);
+                        const qrboxSize = Math.floor(minEdge * 0.72);
+                        return { width: Math.max(qrboxSize, 200), height: Math.max(qrboxSize, 200) };
+                    },
+                    aspectRatio: 1.0
+                };
+
+                html5QrCode.start(
+                    selectedCameraId,
+                    config,
+                    onScanSuccess,
+                    onScanFailure
+                ).then(() => {
+                    isScanning = true;
+                    isStarting = false;
+                    document.getElementById('btn-start-scanner').style.display = 'none';
+                    document.getElementById('btn-stop-scanner').style.display = 'inline-block';
+                    if (cameraList.length > 1) {
+                        document.getElementById('btn-switch-camera').style.display = 'inline-block';
+                    }
+                    showStatus('<span class="pulse-dot me-2"></span><strong>Camera active</strong> — scanning for student out-pass QR code...', 'success');
+                }).catch(err => {
+                    handleCameraError(err);
+                });
+            } else {
+                // Try facingMode constraint as fallback if enumeration returns empty
+                const config = { fps: 15, qrbox: { width: 250, height: 250 } };
+                html5QrCode.start(
+                    { facingMode: "environment" },
+                    config,
+                    onScanSuccess,
+                    onScanFailure
+                ).then(() => {
+                    isScanning = true;
+                    isStarting = false;
+                    document.getElementById('btn-start-scanner').style.display = 'none';
+                    document.getElementById('btn-stop-scanner').style.display = 'inline-block';
+                    showStatus('<span class="pulse-dot me-2"></span><strong>Camera active</strong> — scanning for student out-pass QR code...', 'success');
+                }).catch(err => {
+                    handleCameraError(err);
+                });
+            }
+        }).catch(err => {
+            handleCameraError(err);
+        });
+    }
+
+    function stopScanner() {
+        if (html5QrCode && (isScanning || html5QrCode.isScanning)) {
+            html5QrCode.stop().then(() => {
+                isScanning = false;
+                isStarting = false;
+                document.getElementById('btn-start-scanner').style.display = 'inline-block';
+                document.getElementById('btn-stop-scanner').style.display = 'none';
+                document.getElementById('btn-switch-camera').style.display = 'none';
+                
+                const placeholder = document.getElementById('reader-placeholder');
+                if (placeholder) placeholder.style.display = 'block';
+
+                showStatus('<i class="fa-solid fa-video me-1"></i> Camera stopped. Click <strong>Start Camera</strong> to begin scanning.', 'secondary');
+            }).catch(err => {
+                console.error("Error stopping scanner:", err);
+                isScanning = false;
+                isStarting = false;
+                document.getElementById('btn-start-scanner').style.display = 'inline-block';
+                document.getElementById('btn-stop-scanner').style.display = 'none';
+            });
+        }
+    }
+
+    function switchCamera() {
+        if (cameraList.length > 1) {
+            currentCameraIndex = (currentCameraIndex + 1) % cameraList.length;
+            if (isScanning) {
+                stopScanner();
+                setTimeout(() => {
+                    startScanner();
+                }, 350);
+            }
+        }
+    }
+
+    function onScanFailure(error) {
+        // Continuous frame scan — ignore standard misses
+    }
+
+    function onScanSuccess(decodedText, decodedResult) {
+        if (!isScanning) return;
+        isScanning = false;
+
+        // Visual feedback
+        showStatus('<i class="fa-solid fa-spinner fa-spin me-2"></i>QR code detected! Verifying with security server...', 'info');
+
+        // Stop camera cleanly to free hardware
+        if (html5QrCode) {
+            html5QrCode.stop().then(() => {
+                document.getElementById('btn-start-scanner').style.display = 'inline-block';
+                document.getElementById('btn-stop-scanner').style.display = 'none';
+                document.getElementById('btn-switch-camera').style.display = 'none';
+                const placeholder = document.getElementById('reader-placeholder');
+                if (placeholder) placeholder.style.display = 'block';
+            }).catch(err => console.log(err));
+        }
+
+        const gateLocation = document.getElementById('manual_gate_location').value || 'Main Campus Gate';
+
+        // Perform AJAX Verification against backend
+        fetch(verifyApiUrl, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': csrfToken
+            },
+            body: JSON.stringify({
+                token: decodedText,
+                event_type: currentMode,
+                gate_location: gateLocation,
+                remarks: 'Scanned via Camera QR Scanner'
+            })
+        })
+        .then(response => {
+            if (!response.ok && response.status !== 400 && response.status !== 422) {
+                throw new Error("HTTP " + response.status);
+            }
+            return response.json();
+        })
+        .then(result => {
+            renderVerificationResult(result, decodedText);
+        })
+        .catch(err => {
+            console.warn("AJAX verification failed, falling back to standard submission:", err);
+            document.getElementById('auto_token').value = decodedText;
+            document.getElementById('auto_event_type').value = currentMode;
+            document.getElementById('auto_gate_location').value = gateLocation;
+            document.getElementById('qr-auto-submit-form').submit();
+        });
+    }
+
+    function renderVerificationResult(result, scannedToken) {
+        const card = document.getElementById('scan-result-card');
+        const content = document.getElementById('scan-result-content');
+        card.style.display = 'block';
+
+        if (result.success) {
+            const data = result.data || {};
+            const isOverdue = result.is_overdue;
+            const eventBadge = result.event_type === 'EXIT' 
+                ? '<span class="badge bg-warning text-dark px-3 py-2 fs-6"><i class="fa-solid fa-arrow-right-from-bracket me-1"></i> EXIT PERMITTED</span>'
+                : '<span class="badge bg-success px-3 py-2 fs-6"><i class="fa-solid fa-arrow-right-to-bracket me-1"></i> ENTRY RECORDED</span>';
+
+            let overdueNotice = '';
+            if (isOverdue) {
+                overdueNotice = `
+                    <div class="alert alert-danger d-flex align-items-center mb-3 py-2">
+                        <i class="fa-solid fa-triangle-exclamation fs-4 me-3"></i>
+                        <div>
+                            <strong>OVERDUE RETURN DETECTED!</strong> Student return date has passed. Please record detailed remarks.
+                        </div>
+                    </div>
+                `;
+            }
+
+            content.innerHTML = `
+                <div class="d-flex justify-content-between align-items-center border-bottom pb-3 mb-3">
+                    <div>
+                        <h4 class="fw-bold text-success mb-1">
+                            <i class="fa-solid fa-circle-check me-2"></i>Out-Pass Verified Successfully
+                        </h4>
+                        <div class="text-muted small">${result.message || 'Pass verified and logged.'}</div>
+                    </div>
+                    <div>${eventBadge}</div>
+                </div>
+
+                ${overdueNotice}
+
+                <div class="row g-3 mb-3">
+                    <div class="col-md-6">
+                        <div class="p-3 bg-light rounded-3">
+                            <div class="text-uppercase small text-muted fw-semibold">Student Name</div>
+                            <div class="fs-5 fw-bold text-dark">${data.student_name || 'N/A'}</div>
+                            <div class="small text-secondary">
+                                Roll No: <span class="fw-semibold text-dark">${data.roll_no || 'N/A'}</span> | 
+                                Enroll: <span class="fw-semibold text-dark">${data.enrollment_no || 'N/A'}</span>
+                            </div>
+                            <div class="small text-secondary">Branch: ${data.branch || 'N/A'}</div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="p-3 bg-light rounded-3">
+                            <div class="text-uppercase small text-muted fw-semibold">Hostel & Room</div>
+                            <div class="fs-5 fw-bold text-dark">${data.hostel || 'N/A'}</div>
+                            <div class="small text-secondary">Room: <strong>${data.room_number || 'N/A'}</strong> | Bed: <strong>${data.bed_number || 'N/A'}</strong></div>
+                            <div class="small text-secondary">Phone: ${data.phone || 'N/A'}</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="p-3 border rounded-3 mb-3 bg-white">
+                    <div class="row g-2 small">
+                        <div class="col-6 col-md-3">
+                            <span class="text-muted d-block">Destination:</span>
+                            <strong>${data.destination || 'N/A'}</strong>
+                        </div>
+                        <div class="col-6 col-md-3">
+                            <span class="text-muted d-block">Departure Date:</span>
+                            <strong>${data.departure_date || 'N/A'}</strong>
+                        </div>
+                        <div class="col-6 col-md-3">
+                            <span class="text-muted d-block">Expected Return:</span>
+                            <strong>${data.expected_return_date || 'N/A'}</strong>
+                        </div>
+                        <div class="col-6 col-md-3">
+                            <span class="text-muted d-block">Pass Status:</span>
+                            <span class="badge bg-success-subtle text-success border border-success-subtle">${data.pass_status || 'Active'}</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="d-flex justify-content-end gap-2">
+                    <button class="btn btn-primary-custom px-4" onclick="scanNextPass()">
+                        <i class="fa-solid fa-camera me-2"></i>Scan Next Student
+                    </button>
+                </div>
+            `;
+            showStatus('<i class="fa-solid fa-check-circle me-1"></i> Scan processed. Ready for next student.', 'success');
+        } else {
+            content.innerHTML = `
+                <div class="text-center py-3">
+                    <div class="text-danger mb-2">
+                        <i class="fa-solid fa-circle-xmark fa-3x"></i>
+                    </div>
+                    <h4 class="fw-bold text-danger mb-2">Out-Pass Verification Failed</h4>
+                    <p class="text-dark fw-semibold mb-3">${result.error || 'The scanned pass is invalid, expired, or already used.'}</p>
+                    <div class="badge bg-danger-subtle text-danger px-3 py-2 mb-3">Error Code: ${result.code || 'GATE_VERIFICATION_FAILED'}</div>
+                    <div>
+                        <button class="btn btn-outline-danger px-4" onclick="scanNextPass()">
+                            <i class="fa-solid fa-camera me-2"></i>Try Scanning Again
+                        </button>
+                    </div>
+                </div>
+            `;
+            showStatus('<i class="fa-solid fa-triangle-exclamation me-1"></i> Verification failed: ' + (result.error || 'Invalid token'), 'danger');
+        }
+
+        // Smooth scroll to result card
+        card.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
+
+    function scanNextPass() {
+        document.getElementById('scan-result-card').style.display = 'none';
+        startScanner();
+    }
+
+    // Stop camera if user navigates away or closes tab
+    window.addEventListener('beforeunload', () => {
+        if (html5QrCode && (isScanning || html5QrCode.isScanning)) {
+            try { html5QrCode.stop(); } catch(e) {}
+        }
+    });
+    window.addEventListener('pagehide', () => {
+        if (html5QrCode && (isScanning || html5QrCode.isScanning)) {
+            try { html5QrCode.stop(); } catch(e) {}
+        }
+    });
+</script>
+{% endblock %}

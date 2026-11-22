@@ -1,0 +1,218 @@
+{% extends 'base.html' %}
+
+{% block title %}Apply for Leave{% endblock %}
+
+{% block content %}
+<div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4">
+    <div>
+        <h2 class="fw-bold text-dark mb-1">Apply for Leave / Out-Pass</h2>
+        <p class="text-muted small mb-0">Submit out-station travel or medical permission to your hostel warden</p>
+    </div>
+    <div>
+        <a href="{{ url_for('student.leaves_list') }}" class="btn btn-outline-secondary d-inline-flex align-items-center gap-2">
+            <i class="fa-solid fa-arrow-left"></i> Back to Leave Desk
+        </a>
+    </div>
+</div>
+
+<div class="row g-4 justify-content-center">
+    <!-- Read-Only Auto-Populated Student Resident Profile Banner -->
+    <div class="col-lg-4">
+        <div class="card border-0 shadow-sm rounded-4 p-4 bg-white mb-4 position-sticky" style="top: 1rem;">
+            <div class="d-flex align-items-center gap-3 mb-3 pb-3 border-bottom">
+                <div class="stat-icon-wrapper bg-primary-subtle text-primary rounded-circle">
+                    <i class="fa-solid fa-user-graduate"></i>
+                </div>
+                <div>
+                    <h6 class="fw-bold text-dark mb-0">{{ student.full_name }}</h6>
+                    <small class="text-muted font-monospace">{{ student.enrollment_no }}</small>
+                </div>
+            </div>
+
+            <h6 class="fw-bold text-dark small text-uppercase letter-spacing-1 mb-3">
+                <i class="fa-solid fa-circle-info text-primary me-2"></i>Auto-Verified Resident Profile
+            </h6>
+
+            <div class="row g-2 small">
+                <div class="col-5 text-muted">Hostel Block:</div>
+                <div class="col-7 fw-semibold text-dark">
+                    {% if allocation %}
+                        {{ allocation.hostel.name }}
+                    {% else %}
+                        <span class="text-warning">Unallocated</span>
+                    {% endif %}
+                </div>
+
+                <div class="col-5 text-muted">Room & Bed:</div>
+                <div class="col-7 fw-semibold text-dark">
+                    {% if allocation %}
+                        Room {{ allocation.room.room_number }} ({{ allocation.bed.bed_number }})
+                    {% else %}
+                        <span class="text-muted">-</span>
+                    {% endif %}
+                </div>
+
+                <div class="col-5 text-muted">Branch / Dept:</div>
+                <div class="col-7 fw-semibold text-dark">{{ student.branch }}</div>
+
+                <div class="col-5 text-muted">Year / Semester:</div>
+                <div class="col-7 text-dark">Year {{ student.year }}, Sem {{ student.semester }}</div>
+
+                <div class="col-5 text-muted">Student Mobile:</div>
+                <div class="col-7 text-dark">{{ student.phone }}</div>
+
+                <div class="col-5 text-muted">Guardian Phone:</div>
+                <div class="col-7 text-dark">{{ student.guardian_phone }}</div>
+            </div>
+
+            <div class="alert alert-info border-0 rounded-3 mt-3 py-2 px-3 small mb-0">
+                <i class="fa-solid fa-shield-halved me-1"></i> These details are automatically attached to your application and forwarded to your assigned hostel warden.
+            </div>
+        </div>
+    </div>
+
+    <!-- Application Form Card -->
+    <div class="col-lg-8">
+        <div class="card border-0 shadow-sm rounded-4 p-4 p-md-5 bg-white">
+            <h5 class="fw-bold text-dark mb-4">
+                <i class="fa-solid fa-file-pen text-primary me-2"></i>Leave Application Details
+            </h5>
+
+            <form method="POST" enctype="multipart/form-data" id="leaveApplicationForm" onsubmit="return handleFormSubmit(this);">
+                {{ form.hidden_tag() }}
+
+                <!-- Leave Type -->
+                <div class="mb-4">
+                    <label class="form-label small fw-bold text-dark">{{ form.leave_type.label.text }} <span class="text-danger">*</span></label>
+                    {{ form.leave_type(class="form-select " + ("is-invalid" if form.leave_type.errors else "")) }}
+                    {% for error in form.leave_type.errors %}
+                        <div class="invalid-feedback">{{ error }}</div>
+                    {% endfor %}
+                </div>
+
+                <!-- Date Range -->
+                <div class="row g-3 mb-4">
+                    <div class="col-md-6">
+                        <label class="form-label small fw-bold text-dark">{{ form.from_date.label.text }} <span class="text-danger">*</span></label>
+                        {{ form.from_date(class="form-control " + ("is-invalid" if form.from_date.errors else ""), type="date", id="from_date_input") }}
+                        {% for error in form.from_date.errors %}
+                            <div class="invalid-feedback">{{ error }}</div>
+                        {% endfor %}
+                        <small class="form-text text-muted">Date of departure from hostel campus</small>
+                    </div>
+
+                    <div class="col-md-6">
+                        <label class="form-label small fw-bold text-dark">{{ form.to_date.label.text }} <span class="text-danger">*</span></label>
+                        {{ form.to_date(class="form-control " + ("is-invalid" if form.to_date.errors else ""), type="date", id="to_date_input") }}
+                        {% for error in form.to_date.errors %}
+                            <div class="invalid-feedback">{{ error }}</div>
+                        {% endfor %}
+                        <small class="form-text text-muted">Expected date of return to hostel</small>
+                    </div>
+                </div>
+
+                <!-- Dynamic Duration Preview Indicator -->
+                <div id="durationBadge" class="alert alert-light border py-2 px-3 small d-none mb-4 d-flex align-items-center justify-content-between">
+                    <span><i class="fa-regular fa-clock me-1 text-primary"></i> Total Out-Pass Duration:</span>
+                    <strong id="durationDays" class="text-primary font-monospace fs-6">0 Days</strong>
+                </div>
+
+                <!-- Reason for Leave -->
+                <div class="mb-4">
+                    <label class="form-label small fw-bold text-dark">{{ form.reason.label.text }} <span class="text-danger">*</span></label>
+                    {{ form.reason(class="form-control " + ("is-invalid" if form.reason.errors else ""), rows="3", placeholder="Specify clear details (e.g. visiting hometown for Diwali vacation, medical appointment at Civil Hospital, family wedding)...") }}
+                    {% for error in form.reason.errors %}
+                        <div class="invalid-feedback">{{ error }}</div>
+                    {% endfor %}
+                    <small class="form-text text-muted">Must be at least 10 characters long.</small>
+                </div>
+
+                <!-- Destination / Address -->
+                <div class="mb-4">
+                    <label class="form-label small fw-bold text-dark">{{ form.destination.label.text }} <span class="text-danger">*</span></label>
+                    {{ form.destination(class="form-control " + ("is-invalid" if form.destination.errors else ""), placeholder="Full destination city, home address, or hospital name...") }}
+                    {% for error in form.destination.errors %}
+                        <div class="invalid-feedback">{{ error }}</div>
+                    {% endfor %}
+                </div>
+
+                <!-- Emergency Contact Number -->
+                <div class="mb-4">
+                    <label class="form-label small fw-bold text-dark">{{ form.emergency_contact.label.text }} <span class="text-danger">*</span></label>
+                    {{ form.emergency_contact(class="form-control " + ("is-invalid" if form.emergency_contact.errors else ""), placeholder="Parent, guardian, or primary emergency contact number") }}
+                    {% for error in form.emergency_contact.errors %}
+                        <div class="invalid-feedback">{{ error }}</div>
+                    {% endfor %}
+                    <small class="form-text text-muted">Wardens may contact this number to verify out-station travel permission.</small>
+                </div>
+
+                <!-- Supporting Document Upload (Optional) -->
+                <div class="mb-4 p-3 bg-light rounded-3 border">
+                    <label class="form-label small fw-bold text-dark mb-1">
+                        <i class="fa-solid fa-paperclip text-secondary me-1"></i>{{ form.supporting_document.label.text }}
+                    </label>
+                    {{ form.supporting_document(class="form-control " + ("is-invalid" if form.supporting_document.errors else "")) }}
+                    {% for error in form.supporting_document.errors %}
+                        <div class="invalid-feedback">{{ error }}</div>
+                    {% endfor %}
+                    <small class="form-text text-muted d-block mt-1">
+                        Recommended for Medical Leave (Prescription / Hospital slip) or official AKTU academic permissions. Max 5MB (PDF, PNG, JPG).
+                    </small>
+                </div>
+
+                <!-- Form Action Buttons -->
+                <div class="d-flex justify-content-end align-items-center gap-3 pt-2">
+                    <a href="{{ url_for('student.leaves_list') }}" class="btn btn-light border rounded-pill px-4">Cancel</a>
+                    <button type="submit" id="submitBtn" class="btn btn-primary-custom rounded-pill px-4 shadow-sm">
+                        <i class="fa-solid fa-paper-plane me-1"></i> Submit Leave Application
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Live date calculation & duration preview
+    const fromInput = document.getElementById('from_date_input');
+    const toInput = document.getElementById('to_date_input');
+    const durationBadge = document.getElementById('durationBadge');
+    const durationDays = document.getElementById('durationDays');
+
+    function updateDuration() {
+        if (fromInput.value && toInput.value) {
+            const start = new Date(fromInput.value);
+            const end = new Date(toInput.value);
+            if (end >= start) {
+                const diffTime = Math.abs(end - start);
+                const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1;
+                durationDays.textContent = diffDays + (diffDays === 1 ? ' Day' : ' Days');
+                durationBadge.classList.remove('d-none');
+            } else {
+                durationBadge.classList.add('d-none');
+            }
+        } else {
+            durationBadge.classList.add('d-none');
+        }
+    }
+
+    if (fromInput && toInput) {
+        fromInput.addEventListener('change', updateDuration);
+        toInput.addEventListener('change', updateDuration);
+        updateDuration();
+    }
+
+    // Double-click submission prevention
+    function handleFormSubmit(form) {
+        const btn = document.getElementById('submitBtn');
+        if (btn) {
+            btn.disabled = true;
+            btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>Submitting...';
+        }
+        return true;
+    }
+</script>
+{% endblock %}
+

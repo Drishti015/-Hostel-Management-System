@@ -1,0 +1,55 @@
+{% extends 'base.html' %}
+
+{% block title %}Notice Board Management{% endblock %}
+
+{% block content %}
+<div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4">
+    <div>
+        <h2 class="fw-bold text-dark mb-1">Hostel Bulletins & Circulars</h2>
+        <p class="text-muted small mb-0">Publish official announcements, maintenance schedules, and disciplinary notices</p>
+    </div>
+    <a href="{{ url_for('admin.add_notice') }}" class="btn btn-primary-custom">
+        <i class="fa-solid fa-bullhorn me-2"></i>Publish New Notice
+    </a>
+</div>
+
+<div class="row g-4">
+    {% for n in notices %}
+        <div class="col-md-6 col-xl-4">
+            <div class="card border-0 shadow-sm rounded-4 p-4 bg-white h-100 d-flex flex-column">
+                <div class="d-flex justify-content-between align-items-start mb-2">
+                    <span class="badge {% if n.category == 'urgent' %}bg-danger{% elif n.category == 'maintenance' %}bg-warning text-dark{% else %}bg-primary{% endif %} text-uppercase">
+                        {{ n.category }}
+                    </span>
+                    <div class="dropdown">
+                        <button class="btn btn-sm btn-light border" type="button" data-bs-toggle="dropdown">
+                            <i class="fa-solid fa-ellipsis-vertical"></i>
+                        </button>
+                        <ul class="dropdown-menu dropdown-menu-end shadow-sm">
+                            <li><a class="dropdown-item" href="{{ url_for('admin.edit_notice', id=n.id) }}"><i class="fa-solid fa-pen me-2 text-warning"></i>Edit</a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li>
+                                <form method="POST" action="{{ url_for('admin.delete_notice', id=n.id) }}" onsubmit="return confirm('Delete this notice?');">
+                                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                                    <button type="submit" class="dropdown-item text-danger"><i class="fa-solid fa-trash me-2"></i>Delete</button>
+                                </form>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+
+                <h5 class="fw-bold text-dark mb-2">{{ n.title }}</h5>
+                <p class="text-muted small flex-grow-1" style="white-space: pre-line;">{{ n.content }}</p>
+
+                <div class="border-top pt-3 mt-3 d-flex justify-content-between align-items-center small text-muted">
+                    <span><i class="fa-solid fa-users me-1"></i>Audience: <strong class="text-dark">{{ n.target_audience|capitalize }}</strong></span>
+                    <span>{{ n.created_at.strftime('%d %b, %Y') }}</span>
+                </div>
+            </div>
+        </div>
+    {% else %}
+        <div class="col-12 text-center py-5 text-muted">No notices published yet.</div>
+    {% endfor %}
+</div>
+{% endblock %}
+

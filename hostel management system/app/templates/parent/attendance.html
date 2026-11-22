@@ -1,0 +1,235 @@
+{% extends 'base.html' %}
+
+{% block title %}Child Attendance Records{% endblock %}
+
+{% block content %}
+<div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4">
+    <div>
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb mb-1 small">
+                <li class="breadcrumb-item"><a href="{{ url_for('parent.dashboard') }}">Dashboard</a></li>
+                <li class="breadcrumb-item active" aria-current="page">Attendance Records</li>
+            </ol>
+        </nav>
+        <h2 class="fw-bold text-dark mb-1">Ward Attendance & Night Roll-Call Monitoring</h2>
+        <p class="text-muted small mb-0">Daily biometric / night roll-call compliance report for <strong>{{ student.full_name }}</strong></p>
+    </div>
+    <div class="d-flex align-items-center gap-2">
+        <span class="badge bg-success-subtle text-success border border-success-subtle px-3 py-2 fs-6">
+            <i class="fa-solid fa-chart-pie me-1"></i>{{ percentage }}% Overall Attendance
+        </span>
+    </div>
+</div>
+
+<!-- Stat Cards -->
+<div class="row g-3 mb-4">
+    <div class="col-sm-6 col-xl-3">
+        <div class="stat-card">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <div class="stat-title">Total Marked Days</div>
+                    <div class="stat-value text-dark">{{ total_days }}</div>
+                </div>
+                <div class="stat-icon-wrapper bg-primary-subtle text-primary">
+                    <i class="fa-solid fa-calendar"></i>
+                </div>
+            </div>
+            <div class="small text-muted mt-2">Recorded roll-call entries</div>
+        </div>
+    </div>
+
+    <div class="col-sm-6 col-xl-3">
+        <div class="stat-card">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <div class="stat-title">Present Days</div>
+                    <div class="stat-value text-success">{{ present_days }}</div>
+                </div>
+                <div class="stat-icon-wrapper bg-success-subtle text-success">
+                    <i class="fa-solid fa-user-check"></i>
+                </div>
+            </div>
+            <div class="small text-muted mt-2">Verified in hostel at night</div>
+        </div>
+    </div>
+
+    <div class="col-sm-6 col-xl-3">
+        <div class="stat-card">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <div class="stat-title">Absent Days</div>
+                    <div class="stat-value text-danger">{{ absent_days }}</div>
+                </div>
+                <div class="stat-icon-wrapper bg-danger-subtle text-danger">
+                    <i class="fa-solid fa-user-xmark"></i>
+                </div>
+            </div>
+            <div class="small text-muted mt-2">Unexcused night absence</div>
+        </div>
+    </div>
+
+    <div class="col-sm-6 col-xl-3">
+        <div class="stat-card">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <div class="stat-title">On Approved Leave</div>
+                    <div class="stat-value text-info">{{ leave_days }}</div>
+                </div>
+                <div class="stat-icon-wrapper bg-info-subtle text-info">
+                    <i class="fa-solid fa-plane-departure"></i>
+                </div>
+            </div>
+            <div class="small text-muted mt-2">Authorized out-pass status</div>
+        </div>
+    </div>
+</div>
+
+<!-- Chart & Filter Row -->
+<div class="row g-4 mb-4">
+    <div class="col-lg-8">
+        <div class="card shadow-sm border-0 h-100">
+            <div class="card-header bg-white py-3 border-bottom d-flex justify-content-between align-items-center">
+                <h6 class="fw-bold mb-0 text-dark"><i class="fa-solid fa-chart-line me-2 text-primary"></i>Monthly Attendance Compliance Trend</h6>
+                <span class="small text-muted">Percentage Present</span>
+            </div>
+            <div class="card-body">
+                <div style="height: 260px;">
+                    <canvas id="attendanceTrendChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-4">
+        <div class="card shadow-sm border-0 h-100">
+            <div class="card-header bg-white py-3 border-bottom">
+                <h6 class="fw-bold mb-0 text-dark"><i class="fa-solid fa-filter me-2 text-primary"></i>Filter by Month</h6>
+            </div>
+            <div class="card-body">
+                <form method="GET" action="{{ url_for('parent.attendance_view') }}">
+                    <div class="mb-3">
+                        <label class="form-label small text-muted">Select Specific Month</label>
+                        <input type="month" name="month" class="form-control form-control-sm" value="{{ month_filter }}">
+                    </div>
+                    <div class="d-grid gap-2">
+                        <button type="submit" class="btn btn-primary btn-sm">
+                            <i class="fa-solid fa-magnifying-glass me-1"></i>Apply Filter
+                        </button>
+                        {% if month_filter %}
+                            <a href="{{ url_for('parent.attendance_view') }}" class="btn btn-outline-secondary btn-sm">
+                                Clear Filter
+                            </a>
+                        {% endif %}
+                    </div>
+                </form>
+                <hr class="my-4">
+                <div class="small text-muted">
+                    <p class="mb-2"><strong>Instituted Protocol:</strong></p>
+                    <p class="mb-0">Night roll-call is marked by the designated hostel warden daily between 9:00 PM and 10:00 PM. Absence without an approved out-pass is flagged immediately to wardens and parents.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Daily Attendance Logs Table Card -->
+<div class="card shadow-sm border-0">
+    <div class="card-header bg-white py-3 border-bottom d-flex justify-content-between align-items-center">
+        <h6 class="fw-bold mb-0 text-dark"><i class="fa-solid fa-list-check me-2 text-primary"></i>Daily Roll-Call Entries</h6>
+        <span class="text-muted small">{{ records|length }} record(s)</span>
+    </div>
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0 small">
+                <thead class="table-light">
+                    <tr>
+                        <th>Date</th>
+                        <th>Day of Week</th>
+                        <th>Hostel Building</th>
+                        <th>Status</th>
+                        <th>Verified By</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for r in records %}
+                        <tr>
+                            <td class="fw-semibold">{{ r.date.strftime('%d %b, %Y') }}</td>
+                            <td class="text-muted">{{ r.date.strftime('%A') }}</td>
+                            <td>{{ r.hostel.name if r.hostel else 'Campus Hostel' }}</td>
+                            <td>
+                                {% if r.status == 'present' %}
+                                    <span class="badge bg-success-subtle text-success border border-success-subtle">
+                                        <i class="fa-solid fa-check me-1"></i>Present
+                                    </span>
+                                {% elif r.status == 'absent' %}
+                                    <span class="badge bg-danger-subtle text-danger border border-danger-subtle">
+                                        <i class="fa-solid fa-xmark me-1"></i>Absent
+                                    </span>
+                                {% else %}
+                                    <span class="badge bg-info-subtle text-info border border-info-subtle">
+                                        <i class="fa-solid fa-plane-departure me-1"></i>On Leave
+                                    </span>
+                                {% endif %}
+                            </td>
+                            <td class="text-muted">{{ r.marked_by_warden.full_name if r.marked_by_warden else 'Hostel Warden' }}</td>
+                        </tr>
+                    {% else %}
+                        <tr>
+                            <td colspan="5" class="text-center py-5 text-muted">
+                                <i class="fa-regular fa-calendar-xmark fs-3 d-block mb-2 text-secondary opacity-50"></i>
+                                No attendance records found for this period.
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document += document.addEventListener('DOMContentLoaded', function() {
+    const ctx = document.getElementById('attendanceTrendChart');
+    if (!ctx) return;
+
+    const labels = {{ chart_labels|tojson }};
+    const values = {{ chart_values|tojson }};
+
+    new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: labels.length ? labels : ['Current Month'],
+            datasets: [{
+                label: 'Attendance %',
+                data: values.length ? values : [{{ percentage }}],
+                borderColor: '#198754',
+                backgroundColor: 'rgba(25, 135, 84, 0.1)',
+                fill: true,
+                tension: 0.3,
+                pointBackgroundColor: '#198754',
+                pointRadius: 5
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                y: {
+                    min: 0,
+                    max: 100,
+                    ticks: {
+                        callback: function(value) { return value + '%'; }
+                    }
+                }
+            },
+            plugins: {
+                legend: { display: false }
+            }
+        }
+    });
+});
+</script>
+{% endblock %}
+

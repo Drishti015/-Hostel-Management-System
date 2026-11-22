@@ -1,0 +1,135 @@
+{% extends 'base.html' %}
+
+{% block title %}Leave Application #{{ leave.id }}{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb mb-1 small">
+                <li class="breadcrumb-item"><a href="{{ url_for('parent.dashboard') }}">Dashboard</a></li>
+                <li class="breadcrumb-item"><a href="{{ url_for('parent.leaves_list') }}">Leave Applications</a></li>
+                <li class="breadcrumb-item active" aria-current="page">#LV-{{ leave.id }}</li>
+            </ol>
+        </nav>
+        <h2 class="fw-bold text-dark mb-0">Leave Application Details</h2>
+    </div>
+    <a href="{{ url_for('parent.leaves_list') }}" class="btn btn-outline-secondary btn-sm">
+        <i class="fa-solid fa-arrow-left me-1"></i>Back to List
+    </a>
+</div>
+
+<div class="row g-4">
+    <div class="col-lg-8">
+        <div class="card shadow-sm border-0 mb-4">
+            <div class="card-header bg-white py-3 border-bottom d-flex justify-content-between align-items-center">
+                <h6 class="fw-bold mb-0 text-dark"><i class="fa-solid fa-file-lines me-2 text-primary"></i>Application Record</h6>
+                <span class="badge {{ leave.status_badge_class }} fs-6">{{ leave.status }}</span>
+            </div>
+            <div class="card-body">
+                <div class="row g-3 mb-4">
+                    <div class="col-sm-6">
+                        <label class="text-muted small d-block">Student Resident</label>
+                        <span class="fw-semibold text-dark">{{ student.full_name }} ({{ student.enrollment_no }})</span>
+                    </div>
+                    <div class="col-sm-6">
+                        <label class="text-muted small d-block">Leave Category</label>
+                        <span class="fw-semibold text-primary">{{ leave.leave_type }}</span>
+                    </div>
+                    <div class="col-sm-6">
+                        <label class="text-muted small d-block">Departure Date</label>
+                        <span class="fw-semibold">{{ leave.from_date.strftime('%d %b, %Y') }}</span>
+                    </div>
+                    <div class="col-sm-6">
+                        <label class="text-muted small d-block">Expected Return Date</label>
+                        <span class="fw-semibold">{{ leave.to_date.strftime('%d %b, %Y') }}</span>
+                    </div>
+                    <div class="col-sm-6">
+                        <label class="text-muted small d-block">Total Duration</label>
+                        <span class="fw-semibold">{{ leave.number_of_days }} day(s)</span>
+                    </div>
+                    <div class="col-sm-6">
+                        <label class="text-muted small d-block">Destination Address</label>
+                        <span class="fw-semibold">{{ leave.destination }}</span>
+                    </div>
+                    <div class="col-sm-6">
+                        <label class="text-muted small d-block">Emergency Contact Provided</label>
+                        <span class="fw-semibold font-monospace">{{ leave.emergency_contact }}</span>
+                    </div>
+                    <div class="col-sm-6">
+                        <label class="text-muted small d-block">Submission Timestamp</label>
+                        <span class="fw-semibold">{{ leave.created_at.strftime('%d %b %Y, %I:%M %p') }}</span>
+                    </div>
+                </div>
+
+                <div class="mb-4">
+                    <label class="text-muted small d-block mb-1">Stated Reason for Leave</label>
+                    <div class="p-3 bg-light rounded text-dark small border">
+                        {{ leave.reason }}
+                    </div>
+                </div>
+
+                {% if leave.supporting_document %}
+                    <div class="mb-3">
+                        <label class="text-muted small d-block mb-1">Attached Supporting Document</label>
+                        <a href="{{ url_for('main.download_leave_doc', filename=leave.supporting_document) }}" class="btn btn-sm btn-outline-primary" target="_blank">
+                            <i class="fa-solid fa-paperclip me-1"></i>View Uploaded Document
+                        </a>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Right Column: Warden Review Status & Out-Pass Link -->
+    <div class="col-lg-4">
+        <!-- Review Card -->
+        <div class="card shadow-sm border-0 mb-4">
+            <div class="card-header bg-white py-3 border-bottom">
+                <h6 class="fw-bold mb-0 text-dark"><i class="fa-solid fa-clipboard-check me-2 text-primary"></i>Administration Review</h6>
+            </div>
+            <div class="card-body small">
+                <div class="mb-3">
+                    <span class="text-muted d-block">Decision Status:</span>
+                    <span class="badge {{ leave.status_badge_class }} mt-1 px-3 py-2">{{ leave.status }}</span>
+                </div>
+                {% if leave.reviewed_at %}
+                    <div class="mb-3">
+                        <span class="text-muted d-block">Reviewed At:</span>
+                        <span class="fw-semibold">{{ leave.reviewed_at.strftime('%d %b %Y at %I:%M %p') }}</span>
+                    </div>
+                {% endif %}
+                <div class="mb-3">
+                    <span class="text-muted d-block">Warden Remarks / Justification:</span>
+                    <div class="p-2 bg-light rounded mt-1 border">
+                        {{ leave.review_comment or 'Pending review by hostel administration.' }}
+                    </div>
+                </div>
+                {% if leave.status == 'Approved' and leave.out_pass %}
+                    <hr>
+                    <div class="text-center">
+                        <p class="text-muted mb-2">A Digital Out-Pass has been generated for this leave.</p>
+                        <a href="{{ url_for('parent.view_outpass', id=leave.out_pass.id) }}" class="btn btn-primary btn-sm w-100">
+                            <i class="fa-solid fa-qrcode me-1"></i>View Digital Out-Pass
+                        </a>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Parent Note -->
+        <div class="card shadow-sm border-0 bg-light">
+            <div class="card-body small">
+                <div class="d-flex gap-2">
+                    <i class="fa-solid fa-shield-halved text-primary fs-5 mt-1"></i>
+                    <div>
+                        <strong>Notice to Parents:</strong><br>
+                        Students submit leave applications independently via their student portal. Hostel wardens evaluate applications according to university and hostel residential guidelines.
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+

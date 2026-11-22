@@ -1,0 +1,189 @@
+{% extends 'base.html' %}
+
+{% block title %}Parent & Guardian Directory{% endblock %}
+
+{% block content %}
+<div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4">
+    <div>
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb mb-1 small">
+                <li class="breadcrumb-item"><a href="{{ url_for('admin.dashboard') }}">Dashboard</a></li>
+                <li class="breadcrumb-item active" aria-current="page">Parents & Guardians</li>
+            </ol>
+        </nav>
+        <h2 class="fw-bold text-dark mb-1">Parent & Guardian Management</h2>
+        <p class="text-muted small mb-0">Create, link, verify, and administer parent portal user accounts and student associations</p>
+    </div>
+    <div>
+        <a href="{{ url_for('admin.create_parent') }}" class="btn btn-primary-custom d-inline-flex align-items-center gap-2 shadow-sm">
+            <i class="fa-solid fa-user-plus"></i> Create & Link Parent Account
+        </a>
+    </div>
+</div>
+
+<!-- Metrics Cards -->
+<div class="row g-3 mb-4">
+    <div class="col-sm-4">
+        <div class="stat-card">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <div class="stat-title">Total Parents</div>
+                    <div class="stat-value text-dark">{{ total_parents }}</div>
+                </div>
+                <div class="stat-icon-wrapper bg-primary-subtle text-primary">
+                    <i class="fa-solid fa-users"></i>
+                </div>
+            </div>
+            <div class="small text-muted mt-2">Registered parent accounts</div>
+        </div>
+    </div>
+    <div class="col-sm-4">
+        <div class="stat-card">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <div class="stat-title">Active Accounts</div>
+                    <div class="stat-value text-success">{{ active_parents }}</div>
+                </div>
+                <div class="stat-icon-wrapper bg-success-subtle text-success">
+                    <i class="fa-solid fa-user-check"></i>
+                </div>
+            </div>
+            <div class="small text-muted mt-2">Verified portal access</div>
+        </div>
+    </div>
+    <div class="col-sm-4">
+        <div class="stat-card">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <div class="stat-title">Inactive / Suspended</div>
+                    <div class="stat-value text-danger">{{ inactive_parents }}</div>
+                </div>
+                <div class="stat-icon-wrapper bg-danger-subtle text-danger">
+                    <i class="fa-solid fa-user-lock"></i>
+                </div>
+            </div>
+            <div class="small text-muted mt-2">Access suspended</div>
+        </div>
+    </div>
+</div>
+
+<!-- Search & Filtering Bar -->
+<div class="card border-0 shadow-sm rounded-4 p-3 bg-white mb-4">
+    <form method="GET" action="{{ url_for('admin.parents_list') }}" class="row g-2 align-items-center">
+        <div class="col-md-5">
+            <div class="input-group">
+                <span class="input-group-text bg-light border-end-0"><i class="fa-solid fa-magnifying-glass text-muted"></i></span>
+                <input type="text" name="q" class="form-control border-start-0" placeholder="Search Parent Name, Phone, Student Name, Enrollment..." value="{{ search_query or '' }}">
+            </div>
+        </div>
+        <div class="col-md-3">
+            <select name="hostel_id" class="form-select">
+                <option value="">All Hostels</option>
+                {% for h in hostels %}
+                    <option value="{{ h.id }}" {% if selected_hostel == h.id %}selected{% endif %}>{{ h.name }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="col-md-2">
+            <select name="status" class="form-select">
+                <option value="all">All Statuses</option>
+                <option value="active" {% if status_filter == 'active' %}selected{% endif %}>Active</option>
+                <option value="inactive" {% if status_filter == 'inactive' %}selected{% endif %}>Inactive</option>
+            </select>
+        </div>
+        <div class="col-md-2 d-flex gap-2">
+            <button type="submit" class="btn btn-secondary w-100">Filter</button>
+            {% if search_query or selected_hostel or status_filter != 'all' %}
+                <a href="{{ url_for('admin.parents_list') }}" class="btn btn-outline-danger" title="Clear Filters">
+                    <i class="fa-solid fa-xmark"></i>
+                </a>
+            {% endif %}
+        </div>
+    </form>
+</div>
+
+<!-- Parents Table Card -->
+<div class="card shadow-sm border-0">
+    <div class="card-header bg-white py-3 border-bottom d-flex justify-content-between align-items-center">
+        <h6 class="fw-bold mb-0 text-dark"><i class="fa-solid fa-users me-2 text-primary"></i>Parent Accounts & Linkages</h6>
+        <span class="text-muted small">{{ parents|length }} parent record(s)</span>
+    </div>
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0 small">
+                <thead class="table-light">
+                    <tr>
+                        <th class="ps-4">Parent Details</th>
+                        <th>Relationship</th>
+                        <th>Linked Student</th>
+                        <th>Hostel & Room</th>
+                        <th>Contact Phone</th>
+                        <th>Status</th>
+                        <th class="text-end pe-4">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for p in parents %}
+                        <tr>
+                            <td class="ps-4">
+                                <div class="fw-bold text-dark">{{ p.parent_name }}</div>
+                                <div class="text-muted" style="font-size: 0.72rem;">User: {{ p.user_account.username }} ({{ p.user_account.email }})</div>
+                            </td>
+                            <td>
+                                <span class="badge bg-light text-dark border">{{ p.relationship_to_student }}</span>
+                            </td>
+                            <td>
+                                {% if p.student %}
+                                    <div class="fw-semibold text-dark">{{ p.student.full_name }}</div>
+                                    <div class="text-muted font-monospace" style="font-size: 0.72rem;">{{ p.student.enrollment_no }}</div>
+                                {% else %}
+                                    <span class="text-danger small fst-italic">Unlinked</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if p.student and p.student.current_allocation %}
+                                    <div>{{ p.student.current_allocation.hostel.name }}</div>
+                                    <div class="text-muted" style="font-size: 0.72rem;">Room {{ p.student.current_allocation.room.room_number }}</div>
+                                {% else %}
+                                    <span class="text-muted">-</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <a href="tel:{{ p.phone_number }}" class="text-decoration-none text-dark">{{ p.phone_number }}</a>
+                            </td>
+                            <td>
+                                {% if p.account_status == 'active' %}
+                                    <span class="badge bg-success-subtle text-success border border-success-subtle">Active</span>
+                                {% else %}
+                                    <span class="badge bg-danger-subtle text-danger border border-danger-subtle">Inactive</span>
+                                {% endif %}
+                            </td>
+                            <td class="text-end pe-4">
+                                <div class="btn-group btn-group-sm">
+                                    <a href="{{ url_for('admin.edit_parent', id=p.id) }}" class="btn btn-outline-secondary" title="Edit Profile & Link">
+                                        <i class="fa-solid fa-pen-to-square"></i>
+                                    </a>
+                                    <form method="POST" action="{{ url_for('admin.toggle_parent_status', id=p.id) }}" class="d-inline" onsubmit="return confirm('Change portal access status for this parent?');">
+                                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                        <button type="submit" class="btn btn-outline-{% if p.account_status == 'active' %}warning{% else %}success{% endif %}" title="{% if p.account_status == 'active' %}Deactivate Account{% else %}Activate Account{% endif %}">
+                                            <i class="fa-solid fa-{% if p.account_status == 'active' %}ban{% else %}check{% endif %}"></i>
+                                        </button>
+                                    </form>
+                                </div>
+                            </td>
+                        </tr>
+                    {% else %}
+                        <tr>
+                            <td colspan="7" class="text-center py-5 text-muted">
+                                <i class="fa-regular fa-users fs-3 d-block mb-2 text-secondary opacity-50"></i>
+                                No parent accounts found matching your query.
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}
+

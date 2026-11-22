@@ -1,0 +1,103 @@
+{% extends 'base.html' %}
+
+{% block title %}Create & Link Parent Account{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb mb-1 small">
+                <li class="breadcrumb-item"><a href="{{ url_for('admin.dashboard') }}">Dashboard</a></li>
+                <li class="breadcrumb-item"><a href="{{ url_for('admin.parents_list') }}">Parents & Guardians</a></li>
+                <li class="breadcrumb-item active" aria-current="page">Create Parent Account</li>
+            </ol>
+        </nav>
+        <h2 class="fw-bold text-dark mb-0">Create & Link Parent User Account</h2>
+        <p class="text-muted small mb-0">Set up login credentials and establish verified relationship link to resident student</p>
+    </div>
+    <a href="{{ url_for('admin.parents_list') }}" class="btn btn-outline-secondary btn-sm">
+        <i class="fa-solid fa-arrow-left me-1"></i>Back to Directory
+    </a>
+</div>
+
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <div class="card shadow-sm border-0">
+            <div class="card-header bg-white py-3 border-bottom">
+                <h6 class="fw-bold mb-0 text-dark"><i class="fa-solid fa-user-plus me-2 text-primary"></i>Account Particulars & Student Association</h6>
+            </div>
+            <div class="card-body p-4">
+                <form method="POST" action="{{ url_for('admin.create_parent') }}">
+                    {{ form.hidden_tag() }}
+
+                    <!-- Section 1: User Login Credentials -->
+                    <h6 class="fw-bold text-primary mb-3 pb-2 border-bottom">1. Login Credentials</h6>
+                    <div class="row g-3 mb-4">
+                        <div class="col-md-6">
+                            <label class="form-label small fw-semibold">Portal Username *</label>
+                            {{ form.username(class="form-control form-control-sm", placeholder="e.g. parent_rahul") }}
+                            {% for error in form.username.errors %}
+                                <div class="text-danger small">{{ error }}</div>
+                            {% endfor %}
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label small fw-semibold">Email Address *</label>
+                            {{ form.email(class="form-control form-control-sm", placeholder="parent@example.com") }}
+                            {% for error in form.email.errors %}
+                                <div class="text-danger small">{{ error }}</div>
+                            {% endfor %}
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label small fw-semibold">Initial Temporary Password *</label>
+                            {{ form.password(class="form-control form-control-sm", placeholder="Minimum 6 characters") }}
+                            {% for error in form.password.errors %}
+                                <div class="text-danger small">{{ error }}</div>
+                            {% endfor %}
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label small fw-semibold">Account Status *</label>
+                            {{ form.account_status(class="form-select form-select-sm") }}
+                        </div>
+                    </div>
+
+                    <!-- Section 2: Parent Profile & Relationship -->
+                    <h6 class="fw-bold text-primary mb-3 pb-2 border-bottom">2. Parent / Guardian Demographics</h6>
+                    <div class="row g-3 mb-4">
+                        <div class="col-md-6">
+                            <label class="form-label small fw-semibold">Parent / Guardian Full Name *</label>
+                            {{ form.parent_name(class="form-control form-control-sm", placeholder="e.g. Ramesh Sharma") }}
+                            {% for error in form.parent_name.errors %}
+                                <div class="text-danger small">{{ error }}</div>
+                            {% endfor %}
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label small fw-semibold">Primary Contact Phone *</label>
+                            {{ form.phone_number(class="form-control form-control-sm", placeholder="e.g. 9876543210") }}
+                            {% for error in form.phone_number.errors %}
+                                <div class="text-danger small">{{ error }}</div>
+                            {% endfor %}
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label small fw-semibold">Relationship to Student *</label>
+                            {{ form.relationship_to_student(class="form-select form-select-sm") }}
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label small fw-semibold">Select Resident Student (Child) *</label>
+                            {{ form.student_id(class="form-select form-select-sm") }}
+                            {% for error in form.student_id.errors %}
+                                <div class="text-danger small">{{ error }}</div>
+                            {% endfor %}
+                        </div>
+                    </div>
+
+                    <div class="d-flex justify-content-end gap-2 pt-3 border-top">
+                        <a href="{{ url_for('admin.parents_list') }}" class="btn btn-outline-secondary btn-sm">Cancel</a>
+                        {{ form.submit(class="btn btn-primary btn-sm px-4") }}
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+

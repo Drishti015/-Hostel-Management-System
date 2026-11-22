@@ -1,0 +1,143 @@
+{% extends 'base.html' %}
+
+{% block title %}Contact Warden & Inquiries{% endblock %}
+
+{% block content %}
+<div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4">
+    <div>
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb mb-1 small">
+                <li class="breadcrumb-item"><a href="{{ url_for('parent.dashboard') }}">Dashboard</a></li>
+                <li class="breadcrumb-item active" aria-current="page">Contact Warden</li>
+            </ol>
+        </nav>
+        <h2 class="fw-bold text-dark mb-1">Hostel Warden Communication Desk</h2>
+        <p class="text-muted small mb-0">Direct official inquiries and administrative communication regarding <strong>{{ student.full_name }}</strong></p>
+    </div>
+</div>
+
+<div class="row g-4 mb-4">
+    <!-- Left Column: Assigned Warden Contact Card -->
+    <div class="col-lg-4">
+        <div class="card shadow-sm border-0 mb-4">
+            <div class="card-header bg-white py-3 border-bottom">
+                <h6 class="fw-bold mb-0 text-dark"><i class="fa-solid fa-user-shield me-2 text-primary"></i>Designated Hostel Warden</h6>
+            </div>
+            <div class="card-body">
+                {% if warden %}
+                    <div class="d-flex align-items-center gap-3 mb-3">
+                        <div class="rounded-circle bg-primary text-white d-flex align-items-center justify-content-center fw-bold fs-4" style="width: 52px; height: 52px;">
+                            {{ warden.full_name[:1].upper() }}
+                        </div>
+                        <div>
+                            <div class="fw-bold text-dark fs-6">{{ warden.full_name }}</div>
+                            <small class="text-muted">{{ warden.designation }}</small>
+                            <div class="small text-primary fw-semibold">{{ hostel.name if hostel else 'Campus Hostel' }}</div>
+                        </div>
+                    </div>
+                    <ul class="list-group list-group-flush small mb-3">
+                        <li class="list-group-item px-0 d-flex justify-content-between">
+                            <span class="text-muted"><i class="fa-solid fa-phone me-2 text-primary"></i>Official Phone:</span>
+                            <a href="tel:{{ warden.phone }}" class="fw-semibold text-decoration-none text-dark">{{ warden.phone }}</a>
+                        </li>
+                        <li class="list-group-item px-0 d-flex justify-content-between">
+                            <span class="text-muted"><i class="fa-solid fa-envelope me-2 text-primary"></i>Official Email:</span>
+                            <a href="mailto:{{ warden.user_account.email }}" class="fw-semibold text-decoration-none text-dark">{{ warden.user_account.email }}</a>
+                        </li>
+                    </ul>
+                {% else %}
+                    <p class="text-muted small">No warden assigned to this hostel block currently.</p>
+                {% endif %}
+
+                <div class="bg-light p-3 rounded small text-muted">
+                    <i class="fa-solid fa-circle-info text-primary me-1"></i>
+                    <strong>Response Timeline:</strong> Inquiries submitted through this portal are dispatched directly to the warden's administration dashboard. Typical response time is within 24-48 business hours.
+                </div>
+            </div>
+        </div>
+
+        <!-- Submit New Inquiry Form Card -->
+        <div class="card shadow-sm border-0">
+            <div class="card-header bg-white py-3 border-bottom">
+                <h6 class="fw-bold mb-0 text-dark"><i class="fa-solid fa-paper-plane me-2 text-primary"></i>Send Message to Warden</h6>
+            </div>
+            <div class="card-body">
+                <form method="POST" action="{{ url_for('parent.inquiries_list') }}">
+                    {{ form.hidden_tag() }}
+                    <div class="mb-3">
+                        <label class="form-label small fw-semibold text-dark">Subject / Topic *</label>
+                        {{ form.subject(class="form-control form-control-sm", placeholder="e.g. Health update, room maintenance, leave question") }}
+                        {% for error in form.subject.errors %}
+                            <div class="text-danger small">{{ error }}</div>
+                        {% endfor %}
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label small fw-semibold text-dark">Message Details *</label>
+                        {{ form.message(class="form-control form-control-sm", rows="4", placeholder="Explain your inquiry or request clearly...") }}
+                        {% for error in form.message.errors %}
+                            <div class="text-danger small">{{ error }}</div>
+                        {% endfor %}
+                    </div>
+                    <div class="d-grid">
+                        {{ form.submit(class="btn btn-primary btn-sm") }}
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Right Column: Inquiry History & Responses -->
+    <div class="col-lg-8">
+        <div class="card shadow-sm border-0">
+            <div class="card-header bg-white py-3 border-bottom d-flex justify-content-between align-items-center">
+                <h6 class="fw-bold mb-0 text-dark"><i class="fa-solid fa-clock-rotate-left me-2 text-primary"></i>Inquiry History & Warden Replies</h6>
+                <span class="text-muted small">{{ inquiries|length }} inquiry/inquiries</span>
+            </div>
+            <div class="card-body p-0">
+                {% for inq in inquiries %}
+                    <div class="p-3 border-bottom {% if inq.status == 'Pending' %}bg-white{% else %}bg-light-subtle{% endif %}">
+                        <div class="d-flex justify-content-between align-items-start mb-2">
+                            <div>
+                                <h6 class="fw-bold text-dark mb-1">{{ inq.subject }}</h6>
+                                <small class="text-muted">Submitted {{ inq.created_at.strftime('%d %b %Y at %I:%M %p') }}</small>
+                            </div>
+                            <div>
+                                {% if inq.status == 'Pending' %}
+                                    <span class="badge bg-warning text-dark"><i class="fa-solid fa-clock me-1"></i>Pending Review</span>
+                                {% elif inq.status == 'In Progress' %}
+                                    <span class="badge bg-info text-dark"><i class="fa-solid fa-spinner me-1"></i>In Progress</span>
+                                {% else %}
+                                    <span class="badge bg-success"><i class="fa-solid fa-check-double me-1"></i>Resolved</span>
+                                {% endif %}
+                            </div>
+                        </div>
+                        <p class="small text-secondary mb-2 p-2 bg-light rounded border">{{ inq.message }}</p>
+
+                        {% if inq.response %}
+                            <div class="ms-3 p-3 bg-white rounded border-start border-4 border-success shadow-sm">
+                                <div class="d-flex justify-content-between align-items-center mb-1">
+                                    <span class="small fw-bold text-success"><i class="fa-solid fa-reply me-1"></i>Warden Response:</span>
+                                    {% if inq.responded_at %}
+                                        <small class="text-muted" style="font-size: 0.72rem;">{{ inq.responded_at.strftime('%d %b %Y, %I:%M %p') }}</small>
+                                    {% endif %}
+                                </div>
+                                <p class="small text-dark mb-0">{{ inq.response }}</p>
+                            </div>
+                        {% else %}
+                            <div class="small text-muted fst-italic">
+                                <i class="fa-solid fa-hourglass-half me-1"></i>Awaiting response from warden...
+                            </div>
+                        {% endif %}
+                    </div>
+                {% else %}
+                    <div class="text-center py-5 text-muted">
+                        <i class="fa-regular fa-comments fs-3 d-block mb-2 text-secondary opacity-50"></i>
+                        No inquiries submitted yet. Use the form on the left to reach out to the warden.
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+

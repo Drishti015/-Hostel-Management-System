@@ -1,0 +1,57 @@
+{% extends 'base.html' %}
+
+{% block title %}Track Ticket #{{ complaint.id }}{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h2 class="fw-bold text-dark mb-1">Ticket #{{ complaint.id }} Progress</h2>
+        <p class="text-muted small mb-0">{{ complaint.title }}</p>
+    </div>
+    <a href="{{ url_for('student.complaints_list') }}" class="btn btn-outline-secondary">
+        <i class="fa-solid fa-arrow-left me-2"></i>Back to My Tickets
+    </a>
+</div>
+
+<div class="row g-4">
+    <div class="col-lg-7">
+        <div class="card border-0 shadow-sm rounded-4 p-4 bg-white mb-4">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <span class="badge bg-light text-dark border">{{ complaint.category|capitalize }}</span>
+                <span class="badge-status badge-{{ complaint.status }}">
+                    {{ complaint.status|replace('_', ' ')|capitalize }}
+                </span>
+            </div>
+            <h4 class="fw-bold text-dark mb-2">{{ complaint.title }}</h4>
+            <div class="p-3 bg-light rounded-3 text-dark mb-3">{{ complaint.description }}</div>
+            <div class="small text-muted">
+                Filed on {{ complaint.created_at.strftime('%d %B, %Y %I:%M %p') }}
+            </div>
+        </div>
+
+        <!-- Warden/Admin Response History -->
+        <div class="card border-0 shadow-sm rounded-4 p-4 bg-white">
+            <h5 class="fw-bold text-dark mb-3"><i class="fa-solid fa-comments text-primary me-2"></i>Hostel Staff Updates</h5>
+            <div class="list-group list-group-flush">
+                {% for r in complaint.responses %}
+                    <div class="list-group-item px-0 py-3">
+                        <div class="d-flex justify-content-between align-items-center mb-1">
+                            <span class="fw-bold text-dark">{{ r.responder.username }} ({{ r.responder.role|capitalize }})</span>
+                            <small class="text-muted">{{ r.created_at.strftime('%d %b, %Y %I:%M %p') }}</small>
+                        </div>
+                        <p class="text-secondary small mb-1">{{ r.response_text }}</p>
+                        <span class="badge-status badge-{{ r.status_updated_to }} small">
+                            Status: {{ r.status_updated_to|replace('_', ' ')|capitalize }}
+                        </span>
+                    </div>
+                {% else %}
+                    <div class="text-muted small py-3">
+                        <i class="fa-solid fa-hourglass-start me-1"></i> Awaiting warden review and maintenance assignment.
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+

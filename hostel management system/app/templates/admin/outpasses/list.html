@@ -1,0 +1,231 @@
+{% extends 'base.html' %}
+
+{% block title %}Admin Out-Pass Management{% endblock %}
+
+{% block content %}
+<div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4">
+    <div>
+        <h2 class="fw-bold text-dark mb-1">Campus-Wide Digital Out-Pass Register</h2>
+        <p class="text-muted small mb-0">
+            Administrative oversight of all student gate passes, movements, and perimeter status across all hostel blocks
+        </p>
+    </div>
+    <div class="d-flex gap-2">
+        <a href="{{ url_for('admin.gate_transactions') }}" class="btn btn-outline-secondary">
+            <i class="fa-solid fa-list-check me-1"></i>Gate Logs
+        </a>
+        <a href="{{ url_for('admin.export_gate_transactions') }}" class="btn btn-outline-success">
+            <i class="fa-solid fa-file-csv me-1"></i>Export CSV
+        </a>
+    </div>
+</div>
+
+<!-- Key Stat Cards -->
+<div class="row g-3 mb-4">
+    <div class="col-sm-6 col-xl-3">
+        <div class="stat-card">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <div class="stat-title">Total Out-Passes</div>
+                    <div class="stat-value text-dark">{{ total_count }}</div>
+                </div>
+                <div class="stat-icon-wrapper bg-primary-subtle text-primary">
+                    <i class="fa-solid fa-ticket"></i>
+                </div>
+            </div>
+            <div class="small text-muted mt-2">All campus passes issued</div>
+        </div>
+    </div>
+
+    <div class="col-sm-6 col-xl-3">
+        <div class="stat-card">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <div class="stat-title">Active Passes</div>
+                    <div class="stat-value text-success">{{ active_count }}</div>
+                </div>
+                <div class="stat-icon-wrapper bg-success-subtle text-success">
+                    <i class="fa-solid fa-circle-check"></i>
+                </div>
+            </div>
+            <div class="small text-muted mt-2">Currently valid permissions</div>
+        </div>
+    </div>
+
+    <div class="col-sm-6 col-xl-3">
+        <div class="stat-card">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <div class="stat-title">Currently Outside</div>
+                    <div class="stat-value text-warning">{{ outside_count }}</div>
+                </div>
+                <div class="stat-icon-wrapper bg-warning-subtle text-warning">
+                    <i class="fa-solid fa-street-view"></i>
+                </div>
+            </div>
+            <div class="small text-muted mt-2">Residents outside perimeter</div>
+        </div>
+    </div>
+
+    <div class="col-sm-6 col-xl-3">
+        <div class="stat-card">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <div class="stat-title">Overdue Returns</div>
+                    <div class="stat-value text-danger">{{ overdue_count }}</div>
+                </div>
+                <div class="stat-icon-wrapper bg-danger-subtle text-danger">
+                    <i class="fa-solid fa-triangle-exclamation"></i>
+                </div>
+            </div>
+            <div class="small text-muted mt-2">Passed expected return time</div>
+        </div>
+    </div>
+</div>
+
+<!-- Filter Bar -->
+<div class="card border-0 shadow-sm rounded-4 mb-4 p-3 bg-white">
+    <form method="GET" action="{{ url_for('admin.outpasses') }}" class="row g-2 align-items-center">
+        <div class="col-md-4">
+            <div class="input-group">
+                <span class="input-group-text bg-light border-end-0"><i class="fa-solid fa-magnifying-glass text-muted"></i></span>
+                <input type="text" name="q" value="{{ search_query or '' }}" class="form-control border-start-0" placeholder="Student name or roll number...">
+            </div>
+        </div>
+        <div class="col-md-3">
+            <select name="hostel_id" class="form-select">
+                <option value="">All Hostel Blocks</option>
+                {% for h in hostels %}
+                <option value="{{ h.id }}" {% if hostel_id == h.id %}selected{% endif %}>{{ h.name }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="col-md-3">
+            <select name="status" class="form-select">
+                <option value="all" {% if active_filter == 'all' %}selected{% endif %}>All Statuses</option>
+                <option value="active" {% if active_filter == 'active' %}selected{% endif %}>Active</option>
+                <option value="outside" {% if active_filter == 'outside' %}selected{% endif %}>Currently Outside</option>
+                <option value="overdue" {% if active_filter == 'overdue' %}selected{% endif %}>Overdue</option>
+                <option value="completed" {% if active_filter == 'completed' %}selected{% endif %}>Completed</option>
+                <option value="revoked" {% if active_filter == 'revoked' %}selected{% endif %}>Revoked</option>
+                <option value="expired" {% if active_filter == 'expired' %}selected{% endif %}>Expired</option>
+            </select>
+        </div>
+        <div class="col-md-2 d-flex gap-1">
+            <button type="submit" class="btn btn-primary-custom w-100"><i class="fa-solid fa-filter me-1"></i>Filter</button>
+            <a href="{{ url_for('admin.outpasses') }}" class="btn btn-outline-secondary" title="Reset"><i class="fa-solid fa-rotate"></i></a>
+        </div>
+    </form>
+</div>
+
+<!-- Passes Table -->
+<div class="card border-0 shadow-sm rounded-4 overflow-hidden">
+    <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+            <thead class="table-light small text-uppercase text-secondary">
+                <tr>
+                    <th>Pass ID</th>
+                    <th>Student Name</th>
+                    <th>Hostel</th>
+                    <th>Leave Type</th>
+                    <th>Departure Date</th>
+                    <th>Return Date</th>
+                    <th>Perimeter</th>
+                    <th>Status</th>
+                    <th class="text-end">Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% if outpasses.items %}
+                    {% for op in outpasses.items %}
+                    <tr {% if op.is_overdue %}class="table-danger-subtle"{% endif %}>
+                        <td class="font-monospace fw-bold text-muted">#OP-{{ op.id }}</td>
+                        <td>
+                            <div class="fw-bold text-dark">{{ op.student.full_name }}</div>
+                            <div class="small text-muted font-monospace">{{ op.student.enrollment_no }} &bull; {{ op.student.phone }}</div>
+                        </td>
+                        <td>
+                            <div class="small fw-semibold text-secondary">{{ op.leave_application.hostel.name if op.leave_application.hostel else 'N/A' }}</div>
+                            <div class="small text-muted">Room: {{ op.student.room_number or 'N/A' }}</div>
+                        </td>
+                        <td><span class="badge bg-light text-dark border">{{ op.leave_application.leave_type }}</span></td>
+                        <td>
+                            <div class="small fw-semibold">{{ op.departure_date.strftime('%d %b %Y') }}</div>
+                        </td>
+                        <td>
+                            <div class="small fw-semibold {% if op.is_overdue %}text-danger{% else %}text-dark{% endif %}">
+                                {{ op.expected_return_date.strftime('%d %b %Y') }}
+                            </div>
+                        </td>
+                        <td>
+                            {% if op.is_overdue %}
+                                <span class="badge bg-danger text-white">OVERDUE</span>
+                            {% elif op.is_outside %}
+                                <span class="badge bg-warning text-dark">OUTSIDE</span>
+                            {% else %}
+                                <span class="badge bg-light text-secondary border">INSIDE</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if op.status == 'Active' %}
+                                <span class="badge bg-success-subtle text-success border border-success">Active</span>
+                            {% elif op.status == 'Completed' %}
+                                <span class="badge bg-info-subtle text-info border border-info">Completed</span>
+                            {% elif op.status == 'Revoked' %}
+                                <span class="badge bg-danger-subtle text-danger border border-danger">Revoked</span>
+                            {% elif op.status == 'Expired' %}
+                                <span class="badge bg-secondary-subtle text-secondary border border-secondary">Expired</span>
+                            {% else %}
+                                <span class="badge bg-light text-dark border">{{ op.status }}</span>
+                            {% endif %}
+                        </td>
+                        <td class="text-end">
+                            <a href="{{ url_for('admin.view_outpass', id=op.id) }}" class="btn btn-sm btn-outline-primary">
+                                <i class="fa-solid fa-eye me-1"></i>Inspect
+                            </a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                {% else %}
+                    <tr>
+                        <td colspan="9" class="text-center py-5 text-muted">
+                            <i class="fa-regular fa-ticket fa-2x mb-2 d-block"></i>
+                            No out-passes match your search or filter selection.
+                        </td>
+                    </tr>
+                {% endif %}
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Pagination -->
+    {% if outpasses.pages > 1 %}
+    <div class="card-footer bg-white py-3">
+        <ul class="pagination justify-content-center mb-0">
+            {% if outpasses.has_prev %}
+            <li class="page-item">
+                <a class="page-link" href="{{ url_for('admin.outpasses', page=outpasses.prev_num, status=active_filter, hostel_id=hostel_id, q=search_query) }}">Previous</a>
+            </li>
+            {% endif %}
+            
+            {% for page_num in outpasses.iter_pages(left_edge=1, right_edge=1, left_current=2, right_current=2) %}
+                {% if page_num %}
+                    <li class="page-item {% if page_num == outpasses.page %}active{% endif %}">
+                        <a class="page-link" href="{{ url_for('admin.outpasses', page=page_num, status=active_filter, hostel_id=hostel_id, q=search_query) }}">{{ page_num }}</a>
+                    </li>
+                {% else %}
+                    <li class="page-item disabled"><span class="page-link">&hellip;</span></li>
+                {% endif %}
+            {% endfor %}
+
+            {% if outpasses.has_next %}
+            <li class="page-item">
+                <a class="page-link" href="{{ url_for('admin.outpasses', page=outpasses.next_num, status=active_filter, hostel_id=hostel_id, q=search_query) }}">Next</a>
+            </li>
+            {% endif %}
+        </ul>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
+
