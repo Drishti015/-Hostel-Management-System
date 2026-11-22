@@ -1,0 +1,99 @@
+{% extends 'base.html' %}
+
+{% block title %}Meal Bookings Register{% endblock %}
+
+{% block content %}
+<div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4">
+    <div>
+        <h2 class="fw-bold text-dark mb-1">
+            <i class="fa-solid fa-bookmark text-primary me-2"></i>Resident Meal Reservations
+        </h2>
+        <p class="text-muted small mb-0">Monitor pre-ordered meals, kitchen headcount estimates, and cancellations.</p>
+    </div>
+    <div class="d-flex gap-2">
+        <a href="{{ url_for('mess_manager.dashboard') }}" class="btn btn-outline-secondary">
+            <i class="fa-solid fa-arrow-left me-2"></i>Dashboard
+        </a>
+    </div>
+</div>
+
+<!-- Date & Status Filter -->
+<div class="card border-0 shadow-sm rounded-4 p-3 bg-white mb-4">
+    <form method="GET" action="{{ url_for('mess_manager.bookings_list') }}" class="row g-2 align-items-end">
+        <div class="col-md-4">
+            <label class="form-label small fw-semibold text-secondary">Target Date</label>
+            <input type="date" name="date" class="form-control form-control-sm" value="{{ selected_date.strftime('%Y-%m-%d') }}">
+        </div>
+        <div class="col-md-4">
+            <label class="form-label small fw-semibold text-secondary">Booking Status</label>
+            <select name="status" class="form-select form-select-sm">
+                <option value="">All Statuses</option>
+                <option value="Booked" {% if status_filter == 'Booked' %}selected{% endif %}>Booked (Active)</option>
+                <option value="Consumed" {% if status_filter == 'Consumed' %}selected{% endif %}>Consumed</option>
+                <option value="Cancelled" {% if status_filter == 'Cancelled' %}selected{% endif %}>Cancelled</option>
+                <option value="Missed" {% if status_filter == 'Missed' %}selected{% endif %}>Missed</option>
+            </select>
+        </div>
+        <div class="col-md-4">
+            <button type="submit" class="btn btn-primary-custom btn-sm w-100">
+                <i class="fa-solid fa-filter me-1"></i>Apply Filters
+            </button>
+        </div>
+    </form>
+</div>
+
+<!-- Bookings Register -->
+<div class="card border-0 shadow-sm rounded-4 p-4 bg-white">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h6 class="fw-bold text-dark mb-0">Total Reservations: <span class="text-primary">{{ bookings|length }}</span></h6>
+    </div>
+
+    {% if not bookings %}
+    <div class="text-center py-5">
+        <i class="fa-solid fa-calendar-xmark fa-3x text-muted opacity-50 mb-3"></i>
+        <h6 class="text-muted fw-bold">No meal reservations found</h6>
+        <p class="text-secondary small mb-0">No bookings match the selected date and status filters.</p>
+    </div>
+    {% else %}
+    <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0 small">
+            <thead class="table-light">
+                <tr>
+                    <th>Student Name</th>
+                    <th>Enrollment No</th>
+                    <th>Hostel & Room</th>
+                    <th>Meal Slot</th>
+                    <th>Menu Title</th>
+                    <th>Booked At</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for b in bookings %}
+                {% set alloc = b.student.current_allocation %}
+                <tr>
+                    <td class="fw-bold text-dark">{{ b.student.full_name }}</td>
+                    <td class="font-monospace text-muted">{{ b.student.enrollment_no }}</td>
+                    <td>{{ alloc.hostel.name if alloc else 'N/A' }} - Rm {{ alloc.room.room_number if alloc else 'N/A' }}</td>
+                    <td><span class="badge bg-light text-dark border">{{ b.meal_menu.meal_type }}</span></td>
+                    <td>{{ b.meal_menu.title }}</td>
+                    <td class="font-monospace text-muted">{{ b.booking_date.strftime('%d %b %I:%M %p') }}</td>
+                    <td>
+                        {% if b.booking_status == 'Booked' %}
+                            <span class="badge bg-success-subtle text-success border border-success-subtle">Booked</span>
+                        {% elif b.booking_status == 'Consumed' %}
+                            <span class="badge bg-primary-subtle text-primary border border-primary-subtle">Consumed</span>
+                        {% elif b.booking_status == 'Cancelled' %}
+                            <span class="badge bg-secondary-subtle text-secondary border border-secondary-subtle">Cancelled</span>
+                        {% elif b.booking_status == 'Missed' %}
+                            <span class="badge bg-danger-subtle text-danger border border-danger-subtle">Missed</span>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

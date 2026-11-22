@@ -1,6 +1,6 @@
 import os
 import uuid
-from datetime import datetime
+from datetime import datetime, date, timedelta
 from flask import Blueprint, render_template, redirect, url_for, flash, request, abort, current_app, send_from_directory
 from flask_login import login_required, current_user
 from app.utils.decorators import student_required
@@ -446,3 +446,307 @@ def download_qr(id):
     upload_base = current_app.config.get('UPLOAD_FOLDER', os.path.join(current_app.root_path, 'static', 'uploads'))
     qr_dir = os.path.join(upload_base, 'qrcodes')
     return send_from_directory(qr_dir, outpass.qr_code_file, as_attachment=True, download_name=f"HostelEase_OutPass_{outpass.id}.png")
+
+
+# =====================================================================
+# MESS & DINING MANAGEMENT SYSTEM - STUDENT PORTAL
+# =====================================================================
+
+@student_bp.route('/mess')
+@login_required
+@student_required
+def mess_dashboard():
+    """Digital Mess Dashboard for students: today's menus, stats, active notices"""
+    student = current_user.student_profile
+    if not student:
+        flash('Student profile not found.', 'warning')
+        return redirect(url_for('student.dashboard'))
+
+    from app.services.mess_service import MessService
+    from app.models.mess import MealMenu, MealBooking, MealAttendance, MealFeedback, MessNotice
+
+    mess = MessService.get_student_mess(student)
+    today_menus = MessService.get_today_menus(mess.id)
+
+    # Key statistics
+    today = date.today()
+    first_day_of_month = date(today.year, today.month, 1)
+
+    today_bookings = MealBooking.query.filter(
+        MealBooking.student_id == student.id,
+        MealBooking.booking_status == 'Booked',
+        MealBooking.meal_menu_id.in_([m.id for m in today_menus])
+    ).all() if today_menus else []
+    today_booked_menu_ids = {b.meal_menu_id for b in today_bookings}
+
+    consumed_this_month = MealAttendance.query.filter(
+        MealAttendance.student_id == student.id,
+        MealAttendance.check_in_time >= datetime(today.year, today.month, 1),
+        MealAttendance.attendance_status.in_(['Present', 'Walk-in'])
+    ).count()
+
+    missed_this_month = MealBooking.query.join(MealMenu).filter(
+        MealBooking.student_id == student.id,
+        MealBooking.booking_status == 'Missed',
+        MealMenu.meal_date >= first_day_of_month
+    ).count()
+
+    feedback_count = MealFeedback.query.filter_by(student_id=student.id).count()
+
+    notices = MessNotice.query.filter(
+        (MessNotice.mess_id == mess.id) | (MessNotice.mess_id == None),
+        MessNotice.is_active == True
+    ).order_by(MessNotice.created_at.desc()).limit(3).all()
+
+    upcoming_bookings = MealBooking.query.join(MealMenu).filter(
+        MealBooking.student_id == student.id,
+        MealBooking.booking_status == 'Booked',
+        MealMenu.meal_date >= today
+    ).order_by(MealMenu.meal_date.asc(), MealMenu.id.asc()).limit(5).all()
+
+    return render_template('student/mess/dashboard.html',
+                           student=student,
+                           mess=mess,
+                           today_menus=today_menus,
+                           today_booked_menu_ids=today_booked_menu_ids,
+                           today_bookings_count=len(today_bookings),
+                           consumed_this_month=consumed_this_month,
+                           missed_this_month=missed_this_month,
+                           feedback_count=feedback_count,
+                           notices=notices,
+                           upcoming_bookings=upcoming_bookings)
+
+
+@student_bp.route('/mess/menu')
+@login_required
+@student_required
+def mess_menu():
+    """Daily and weekly meal schedule views"""
+    student = current_user.student_profile
+    if not student:
+        flash('Student profile not found.', 'warning')
+        return redirect(url_for('student.dashboard'))
+
+    from app.services.mess_service import MessService
+    from app.models.mess import MealBooking
+
+    mess = MessService.get_student_mess(student)
+    view_type = request.args.get('view', 'weekly')  # 'daily' or 'weekly'
+    selected_date_str = request.args.get('date', '')
+
+    if selected_date_str:
+        try:
+            current_date = datetime.strptime(selected_date_str, '%Y-%m-%d').date()
+        except ValueError:
+            current_date = date.today()
+    else:
+        current_date = date.today()
+
+    today_menus = MessService.get_today_menus(mess.id, current_date)
+    weekly_calendar = MessService.get_weekly_menus(mess.id, current_date)
+
+    # Active student bookings for display
+    student_bookings = MealBooking.query.filter_by(
+        student_id=student.id,
+        booking_status='Booked'
+    ).all()
+    booked_menu_ids = {b.meal_menu_id: b.id for b in student_bookings}
+
+    return render_template('student/mess/menu.html',
+                           student=student,
+                           mess=mess,
+                           view_type=view_type,
+                           current_date=current_date,
+                           today_menus=today_menus,
+                           weekly_calendar=weekly_calendar,
+                           booked_menu_ids=booked_menu_ids)
+
+
+@student_bp.route('/mess/book/<int:menu_id>', methods=['POST'])
+@login_required
+@student_required
+def book_meal(menu_id):
+    """Books a published meal before cutoff deadline"""
+    student = current_user.student_profile
+    if not student:
+        return {'success': False, 'message': 'Student profile not found.'}, 404
+
+    from app.services.mess_service import MessService
+    result = MessService.book_meal(student.id, menu_id)
+
+    if request.is_json:
+        return result
+
+    if result['success']:
+        flash(result['message'], 'success')
+    else:
+        flash(result['message'], 'danger')
+
+    return redirect(request.referrer or url_for('student.mess_dashboard'))
+
+
+@student_bp.route('/mess/cancel-booking/<int:booking_id>', methods=['POST'])
+@login_required
+@student_required
+def cancel_meal_booking(booking_id):
+    """Cancels a booked meal prior to cutoff deadline"""
+    student = current_user.student_profile
+    if not student:
+        return {'success': False, 'message': 'Student profile not found.'}, 404
+
+    from app.services.mess_service import MessService
+    result = MessService.cancel_booking(student.id, booking_id)
+
+    if request.is_json:
+        return result
+
+    if result['success']:
+        flash(result['message'], 'success')
+    else:
+        flash(result['message'], 'danger')
+
+    return redirect(request.referrer or url_for('student.mess_bookings'))
+
+
+@student_bp.route('/mess/bookings')
+@login_required
+@student_required
+def mess_bookings():
+    """Historical and upcoming meal booking log for student"""
+    student = current_user.student_profile
+    if not student:
+        abort(404)
+
+    from app.models.mess import MealBooking, MealMenu
+    status_filter = request.args.get('status', '')
+
+    query = MealBooking.query.join(MealMenu).filter(MealBooking.student_id == student.id)
+    if status_filter:
+        query = query.filter(MealBooking.booking_status == status_filter)
+
+    bookings = query.order_by(MealMenu.meal_date.desc(), MealMenu.id.desc()).all()
+
+    return render_template('student/mess/bookings.html',
+                           student=student,
+                           bookings=bookings,
+                           current_status=status_filter)
+
+
+@student_bp.route('/mess/qr')
+@login_required
+@student_required
+def mess_qr():
+    """Display student cryptographic mess QR card for dining hall counter check-in"""
+    student = current_user.student_profile
+    if not student:
+        abort(404)
+
+    from app.services.mess_service import MessService
+    qr_payload = MessService.generate_student_qr_payload(student)
+    qr_rel_path = MessService.generate_student_qr_image(student, current_app.root_path)
+
+    allocation = student.current_allocation
+    mess = MessService.get_student_mess(student)
+
+    return render_template('student/mess/qr.html',
+                           student=student,
+                           qr_payload=qr_payload,
+                           qr_image_url=url_for('static', filename=qr_rel_path),
+                           allocation=allocation,
+                           mess=mess)
+
+
+@student_bp.route('/mess/attendance')
+@login_required
+@student_required
+def mess_attendance():
+    """Student meal attendance and dining activity audit trail"""
+    student = current_user.student_profile
+    if not student:
+        abort(404)
+
+    from app.models.mess import MealAttendance, MealMenu
+    attendances = MealAttendance.query.join(MealMenu).filter(
+        MealAttendance.student_id == student.id
+    ).order_by(MealAttendance.check_in_time.desc()).all()
+
+    return render_template('student/mess/attendance.html',
+                           student=student,
+                           attendances=attendances)
+
+
+@student_bp.route('/mess/feedback', methods=['GET', 'POST'])
+@login_required
+@student_required
+def mess_feedback():
+    """Submit quality ratings and reviews for consumed meals"""
+    student = current_user.student_profile
+    if not student:
+        abort(404)
+
+    from app.services.mess_service import MessService
+    from app.models.mess import MealFeedback, MealAttendance, MealMenu
+
+    if request.method == 'POST':
+        meal_menu_id = request.form.get('meal_menu_id', type=int)
+        rating = request.form.get('rating', type=int)
+        food_quality = request.form.get('food_quality', 5, type=int)
+        taste = request.form.get('taste', 5, type=int)
+        hygiene = request.form.get('hygiene', 5, type=int)
+        portion = request.form.get('portion', 5, type=int)
+        comments = request.form.get('comments', '').strip()
+        is_anonymous = bool(request.form.get('is_anonymous'))
+
+        result = MessService.submit_feedback(
+            student_id=student.id,
+            meal_menu_id=meal_menu_id,
+            rating=rating,
+            food_quality=food_quality,
+            taste=taste,
+            hygiene=hygiene,
+            portion=portion,
+            comments=comments,
+            is_anonymous=is_anonymous
+        )
+
+        if result['success']:
+            flash(result['message'], 'success')
+            return redirect(url_for('student.mess_feedback'))
+        else:
+            flash(result['message'], 'danger')
+
+    # Eligible meals for feedback (meals student attended in last 7 days)
+    seven_days_ago = date.today() - timedelta(days=7)
+    recent_attendances = MealAttendance.query.join(MealMenu).filter(
+        MealAttendance.student_id == student.id,
+        MealMenu.meal_date >= seven_days_ago
+    ).order_by(MealAttendance.check_in_time.desc()).all()
+
+    existing_feedbacks = MealFeedback.query.filter_by(student_id=student.id).all()
+    reviewed_menu_ids = {f.meal_menu_id for f in existing_feedbacks}
+
+    return render_template('student/mess/feedback.html',
+                           student=student,
+                           recent_attendances=recent_attendances,
+                           reviewed_menu_ids=reviewed_menu_ids,
+                           feedbacks=existing_feedbacks)
+
+
+@student_bp.route('/mess/billing')
+@login_required
+@student_required
+def mess_billing():
+    """Monthly student dining billing and rebate breakdown"""
+    student = current_user.student_profile
+    if not student:
+        abort(404)
+
+    from app.models.mess import MessBillingRecord
+    bills = MessBillingRecord.query.filter_by(student_id=student.id).order_by(
+        MessBillingRecord.billing_month.desc()
+    ).all()
+
+    return render_template('student/mess/billing.html',
+                           student=student,
+                           bills=bills)
+

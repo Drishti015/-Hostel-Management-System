@@ -1,0 +1,135 @@
+{% extends 'base.html' %}
+
+{% block title %}Meal Ratings & Feedback{% endblock %}
+
+{% block content %}
+<div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4">
+    <div>
+        <h2 class="fw-bold text-dark mb-1">
+            <i class="fa-solid fa-star text-warning me-2"></i>Food Quality & Dining Feedback
+        </h2>
+        <p class="text-muted small mb-0">Help improve residential dining standards by rating recent meals.</p>
+    </div>
+    <div>
+        <a href="{{ url_for('student.mess_dashboard') }}" class="btn btn-outline-secondary">
+            <i class="fa-solid fa-arrow-left me-2"></i>Back to Dashboard
+        </a>
+    </div>
+</div>
+
+<div class="row g-4">
+    <!-- Submit Feedback Form -->
+    <div class="col-lg-6">
+        <div class="card border-0 shadow-sm rounded-4 p-4 bg-white">
+            <h5 class="fw-bold text-dark mb-3">
+                <i class="fa-solid fa-pen-to-square text-primary me-2"></i>Submit Meal Rating
+            </h5>
+
+            {% if not recent_attendances %}
+            <div class="alert alert-info small py-3 mb-0">
+                <i class="fa-solid fa-circle-info me-1"></i> You have no attended meals in the past 7 days to review. Attend dining hall meals with your Mess QR code to submit ratings.
+            </div>
+            {% else %}
+            <form method="POST" action="{{ url_for('student.mess_feedback') }}">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+                <div class="mb-3">
+                    <label class="form-label small fw-semibold text-secondary">Select Attended Meal</label>
+                    <select name="meal_menu_id" class="form-select" required>
+                        <option value="">Choose a meal to rate...</option>
+                        {% for a in recent_attendances %}
+                            <option value="{{ a.meal_menu.id }}" {% if a.meal_menu.id in reviewed_menu_ids %}disabled{% endif %}>
+                                {{ a.meal_menu.meal_date.strftime('%d %b') }} &bull; {{ a.meal_menu.meal_type }} - {{ a.meal_menu.title }}
+                                {% if a.meal_menu.id in reviewed_menu_ids %}(Reviewed){% endif %}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label small fw-semibold text-secondary">Overall Star Rating (1 to 5 Stars)</label>
+                    <select name="rating" class="form-select" required>
+                        <option value="5" selected>⭐⭐⭐⭐⭐ - 5 Stars (Excellent)</option>
+                        <option value="4">⭐⭐⭐⭐ - 4 Stars (Good)</option>
+                        <option value="3">⭐⭐⭐ - 3 Stars (Average)</option>
+                        <option value="2">⭐⭐ - 2 Stars (Needs Improvement)</option>
+                        <option value="1">⭐ - 1 Star (Poor)</option>
+                    </select>
+                </div>
+
+                <div class="row g-2 mb-3">
+                    <div class="col-6">
+                        <label class="form-label small text-muted">Taste (1-5)</label>
+                        <input type="number" name="taste" class="form-control form-control-sm" min="1" max="5" value="5">
+                    </div>
+                    <div class="col-6">
+                        <label class="form-label small text-muted">Hygiene (1-5)</label>
+                        <input type="number" name="hygiene" class="form-control form-control-sm" min="1" max="5" value="5">
+                    </div>
+                    <div class="col-6">
+                        <label class="form-label small text-muted">Food Quality (1-5)</label>
+                        <input type="number" name="food_quality" class="form-control form-control-sm" min="1" max="5" value="5">
+                    </div>
+                    <div class="col-6">
+                        <label class="form-label small text-muted">Portion Size (1-5)</label>
+                        <input type="number" name="portion" class="form-control form-control-sm" min="1" max="5" value="5">
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label small fw-semibold text-secondary">Comments & Suggestions (Optional)</label>
+                    <textarea name="comments" rows="3" class="form-control" placeholder="Share your experience regarding food temperature, spice level, or dining hall cleanliness..."></textarea>
+                </div>
+
+                <div class="form-check mb-4">
+                    <input class="form-check-input" type="checkbox" name="is_anonymous" id="is_anonymous" value="1">
+                    <label class="form-check-label small text-muted" for="is_anonymous">
+                        Submit feedback anonymously (author identity hidden from mess staff)
+                    </label>
+                </div>
+
+                <button type="submit" class="btn btn-primary-custom w-100 py-2">
+                    <i class="fa-solid fa-paper-plane me-2"></i>Submit Feedback
+                </button>
+            </form>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Feedback History -->
+    <div class="col-lg-6">
+        <div class="card border-0 shadow-sm rounded-4 p-4 bg-white">
+            <h5 class="fw-bold text-dark mb-3">
+                <i class="fa-solid fa-clock-rotate-left text-info me-2"></i>My Feedback History
+            </h5>
+
+            {% if not feedbacks %}
+            <div class="text-center py-4 text-muted small">
+                You have not submitted any food reviews yet.
+            </div>
+            {% else %}
+            <div class="d-flex flex-column gap-3">
+                {% for f in feedbacks %}
+                <div class="p-3 bg-light rounded-3 border">
+                    <div class="d-flex justify-content-between align-items-center mb-1">
+                        <strong class="text-dark small">{{ f.meal_menu.meal_date.strftime('%d %b') }} &bull; {{ f.meal_menu.meal_type }} ({{ f.meal_menu.title }})</strong>
+                        <span class="text-warning">
+                            {% for i in range(f.rating) %}⭐{% endfor %}
+                        </span>
+                    </div>
+                    {% if f.comments %}
+                    <p class="small text-muted mb-1 fst-italic">"{{ f.comments }}"</p>
+                    {% endif %}
+                    <div class="small text-secondary d-flex gap-3">
+                        <span>Taste: {{ f.taste_rating }}/5</span>
+                        <span>Hygiene: {{ f.hygiene_rating }}/5</span>
+                        <span>Quality: {{ f.food_quality_rating }}/5</span>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

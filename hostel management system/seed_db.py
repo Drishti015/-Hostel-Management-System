@@ -1,7 +1,10 @@
-from datetime import datetime, date
+from datetime import datetime, date, timedelta
+from decimal import Decimal
 from app import create_app, db
 from app.models import User, Hostel, Room, Bed, Student, Warden, BedAllocation, FeeRecord, Attendance, Complaint, ComplaintResponse, Notice, LeaveApplication, Notification, DigitalOutPass, GateTransaction, ParentProfile, ParentInquiry
+from app.models.mess import MessProfile, MessStaffProfile, Supplier, MessInventory, MealMenu, MessNotice
 from app.services.outpass_service import OutPassService
+from app.services.mess_service import MessService
 
 app = create_app()
 
@@ -54,6 +57,7 @@ def seed():
                     db.session.add(parent_profile)
                     db.session.commit()
                     print("✓ Demo parent account parent_rahul created.")
+            seed_mess_demo_data()
             return
 
         print("Seeding initial administrator, wardens, and students...")
@@ -262,6 +266,141 @@ def seed():
 
         db.session.commit()
         print("✓ All demo data seeded successfully!")
+        seed_mess_demo_data()
+
+
+def seed_mess_demo_data():
+    """Seeds Mess Manager, Mess Staff, default MessProfile, sample menus, and pantry stock"""
+    print("Checking and seeding Mess Management System demo accounts and datasets...")
+
+    # 1. Mess Manager Account
+    manager_user = User.query.filter_by(username='mess_manager').first()
+    if not manager_user:
+        print("Creating demo Mess Manager account (mess_manager)...")
+        manager_user = User(
+            username='mess_manager',
+            email='manager.mess@aktu-hostel.edu.in',
+            role='mess_manager',
+            is_active=True
+        )
+        manager_user.set_password('Manager@123')
+        db.session.add(manager_user)
+        db.session.commit()
+        print("✓ Mess Manager mess_manager created.")
+
+    # 2. Mess Facility Profile
+    mess = MessService.get_or_create_default_mess()
+
+    # 3. Mess Staff Account & Profile
+    staff_user = User.query.filter_by(username='mess_staff').first()
+    if not staff_user:
+        print("Creating demo Mess Staff account (mess_staff)...")
+        staff_user = User(
+            username='mess_staff',
+            email='staff.counter@aktu-hostel.edu.in',
+            role='mess_staff',
+            is_active=True
+        )
+        staff_user.set_password('Staff@123')
+        db.session.add(staff_user)
+        db.session.flush()
+
+        staff_profile = MessStaffProfile(
+            user_id=staff_user.id,
+            mess_id=mess.id,
+            staff_name='Dinesh Kumar',
+            role_designation='Head Counter Attendant',
+            employment_status='Active'
+        )
+        db.session.add(staff_profile)
+        db.session.commit()
+        print("✓ Mess Staff mess_staff created.")
+
+    # 4. Sample Suppliers
+    if Supplier.query.count() == 0:
+        print("Seeding sample food suppliers...")
+        s1 = Supplier(
+            supplier_name='Apex Agro Wholesale Provisions',
+            contact_person='Sunil Aggarwal',
+            phone_number='+91 9811223344',
+            email='supply@apexagro.com',
+            address='Mandi Yard Shop #14, Sector 18, Lucknow'
+        )
+        s2 = Supplier(
+            supplier_name='Amul & Mother Dairy Depot',
+            contact_person='Rakesh Yadav',
+            phone_number='+91 9822334455',
+            email='dairy.dist@amullko.in',
+            address='Cold Storage Complex, Transport Nagar, Lucknow'
+        )
+        db.session.add_all([s1, s2])
+        db.session.commit()
+        print("✓ Suppliers seeded.")
+
+    # 5. Sample Inventory
+    if MessInventory.query.count() == 0:
+        print("Seeding sample pantry inventory...")
+        sup1 = Supplier.query.first()
+        items = [
+            MessInventory(mess_id=mess.id, item_name='Basmati Rice', category='Grains & Cereals', quantity=Decimal('250.00'), unit='kg', minimum_stock_level=Decimal('50.00'), purchase_price=Decimal('62.50'), supplier_id=sup1.id if sup1 else None),
+            MessInventory(mess_id=mess.id, item_name='Sharbati Wheat Flour (Atta)', category='Grains & Cereals', quantity=Decimal('300.00'), unit='kg', minimum_stock_level=Decimal('60.00'), purchase_price=Decimal('34.00'), supplier_id=sup1.id if sup1 else None),
+            MessInventory(mess_id=mess.id, item_name='Full Cream Pasteurized Milk', category='Dairy', quantity=Decimal('80.00'), unit='litres', minimum_stock_level=Decimal('30.00'), purchase_price=Decimal('56.00'), supplier_id=sup1.id if sup1 else None),
+            MessInventory(mess_id=mess.id, item_name='Toor / Arhar Dal', category='Pulses & Legumes', quantity=Decimal('120.00'), unit='kg', minimum_stock_level=Decimal('25.00'), purchase_price=Decimal('135.00'), supplier_id=sup1.id if sup1 else None),
+            MessInventory(mess_id=mess.id, item_name='Mustard Cooking Oil', category='Spices & Oils', quantity=Decimal('60.00'), unit='litres', minimum_stock_level=Decimal('20.00'), purchase_price=Decimal('140.00'), supplier_id=sup1.id if sup1 else None),
+            MessInventory(mess_id=mess.id, item_name='Commercial LPG Cylinder 19kg', category='Gas & Kitchen Supplies', quantity=Decimal('8.00'), unit='cylinders', minimum_stock_level=Decimal('3.00'), purchase_price=Decimal('1750.00'), supplier_id=sup1.id if sup1 else None),
+        ]
+        db.session.add_all(items)
+        db.session.commit()
+        print("✓ Pantry stock seeded.")
+
+    # 6. Sample Menus for Today and the Week
+    today = date.today()
+    if MealMenu.query.filter_by(mess_id=mess.id, meal_date=today).count() == 0:
+        print("Seeding daily meal menus for today and upcoming days...")
+        menu_templates = [
+            ('Breakfast', 'Aloo Paratha with Curd & Mint Chutney', 'Fresh hot stuffed aloo parathas served with creamy curd, mint-coriander chutney, pickle, and hot tea/coffee.', 'Vegetarian', '7:30 AM - 9:30 AM', 250),
+            ('Lunch', 'Rajma Masala, Steamed Rice & Seasonal Veg', 'Classic Punjabi rajma cooked with aromatic spices, steamed jeera rice, chapati, boondi raita, and seasonal salad.', 'Vegetarian', '12:30 PM - 2:30 PM', 280),
+            ('Snacks', 'Vegetable Samosa with Masala Chai', 'Crispy spiced potato samosas served with sweet tamarind chutney and freshly brewed cardamom tea.', 'Vegetarian', '4:30 PM - 6:00 PM', 200),
+            ('Dinner', 'Paneer Butter Masala, Dal Tadka & Tandoori Roti', 'Rich paneer butter masala, yellow dal tadka, soft tawa phulkas, gulab jamun sweet dessert, and green salad.', 'Vegetarian', '8:00 PM - 10:00 PM', 280),
+        ]
+
+        for offset in range(0, 3):
+            meal_day = today + timedelta(days=offset)
+            for m_type, title, desc, cat, timing, cap in menu_templates:
+                deadline = datetime.combine(meal_day, datetime.min.time()) + timedelta(hours=6)
+                menu = MealMenu(
+                    mess_id=mess.id,
+                    meal_date=meal_day,
+                    meal_type=m_type,
+                    title=title,
+                    description=desc,
+                    food_category=cat,
+                    meal_timing=timing,
+                    booking_deadline=deadline,
+                    capacity=cap,
+                    is_published=True,
+                    created_by=manager_user.id if manager_user else 1
+                )
+                db.session.add(menu)
+        db.session.commit()
+        print("✓ Weekly meal schedules seeded.")
+
+    # 7. Sample Notice
+    if MessNotice.query.count() == 0:
+        print("Posting welcome dining notice...")
+        notice = MessNotice(
+            mess_id=mess.id,
+            title='HostelEase Digital QR Mess System Active',
+            message='Residents are requested to pre-book meals in advance on the portal and present their digital dining QR code at the counter scanner.',
+            notice_type='General',
+            expires_at=today + timedelta(days=30),
+            posted_by=manager_user.id if manager_user else 1
+        )
+        db.session.add(notice)
+        db.session.commit()
+        print("✓ Dining notice posted.")
+
+    print("✓ Mess Management System seed verification complete.")
 
 if __name__ == '__main__':
     seed()

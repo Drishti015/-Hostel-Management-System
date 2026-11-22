@@ -29,7 +29,7 @@ hostel_management_system/
 ├── app/
 │   ├── __init__.py           # Application Factory (create_app, extensions, blueprints)
 │   ├── config.py             # Multi-environment configuration (Dev, Test, Prod)
-│   ├── models/               # SQLAlchemy ORM Data Models (12 Normalized Entities)
+│   ├── models/               # SQLAlchemy ORM Data Models (Normalized Entities)
 │   │   ├── __init__.py
 │   │   ├── user.py           # User entity & Werkzeug password hashing
 │   │   ├── hostel.py         # Hostel, Room, and Bed entities
@@ -38,32 +38,44 @@ hostel_management_system/
 │   │   ├── fee.py            # FeeRecord ledger & receipts
 │   │   ├── attendance.py     # Attendance roll-call entity
 │   │   ├── complaint.py      # Complaints & ComplaintResponse
-│   │   └── notice.py         # Digital Bulletin Board notices
+│   │   ├── notice.py         # Digital Bulletin Board notices
+│   │   ├── parent.py         # ParentProfile & communication
+│   │   └── mess.py           # 12 Mess models (Menu, Bookings, Attendance, Inventory, etc.)
 │   ├── routes/               # Modular Flask Blueprints
 │   │   ├── __init__.py
 │   │   ├── main.py           # Public landing, about, emergency directory
 │   │   ├── auth.py           # Login, student self-registration, logout
 │   │   ├── admin.py          # Admin dashboard, master management, analytics
-│   │   ├── warden.py         # Warden dashboard, attendance, complaints
-│   │   └── student.py        # Student dashboard, profile, fees, room view
+│   │   ├── warden.py         # Warden dashboard, attendance, complaints, mess review
+│   │   ├── student.py        # Student dashboard, profile, fees, QR dining, bookings
+│   │   ├── parent.py         # Parent portal & ward monitoring
+│   │   ├── mess_manager.py   # Mess Manager dashboard, menu, inventory, reports
+│   │   └── mess_staff.py     # Mess Staff camera QR scanner & manual check-in
 │   ├── services/             # Core Business Logic services
+│   │   ├── mess_service.py   # Atomic dining checks, inventory, rebates, analytics
+│   │   └── outpass_service.py# Cryptographic out-pass token engine
 │   ├── forms/                # Flask-WTF validation forms
-│   ├── utils/                # Custom decorators (@admin_required, @warden_required)
+│   ├── utils/                # Custom decorators (@admin_required, @mess_manager_required, etc.)
 │   ├── templates/            # Jinja2 Modular HTML5 Templates
 │   │   ├── base.html         # Master application layout
 │   │   ├── components/       # Reusable UI elements (navbar, sidebar, alerts, errors)
 │   │   ├── auth/             # Login and Registration views
 │   │   ├── admin/            # Admin dashboard and data tables
 │   │   ├── warden/           # Warden desk and operations
-│   │   └── student/          # Student portal and grievance views
+│   │   ├── student/          # Student portal and grievance views
+│   │   ├── parent/           # Parent ward monitoring views
+│   │   ├── mess_manager/     # Mess Manager operations, menus, pantry, reports
+│   │   └── mess_staff/       # Mess Staff QR scanner and attendance register
 │   └── static/               # Assets (CSS, JS, Fonts, Images)
 │       ├── css/style.css     # Clean SaaS design system
 │       └── js/main.js        # Dynamic UI interactions & confirmations
 ├── database/
-│   ├── schema.sql            # Normalized MySQL 8.0 DDL script (12 InnoDB tables)
+│   ├── schema.sql            # Normalized MySQL 8.0 DDL script
 │   └── seed.sql              # Realistic seed data for demonstration
 ├── tests/
-│   └── test_basic.py         # Unit testing suite
+│   ├── test_basic.py         # Core unit testing suite
+│   ├── test_parent_portal.py # Parent portal test suite
+│   └── test_mess_system.py   # Mess management test suite (9 comprehensive tests)
 ├── .env                      # Local environment configuration
 ├── .env.example              # Template environment configuration
 ├── requirements.txt          # Python package dependencies
@@ -114,11 +126,14 @@ Open your web browser and visit: **`http://127.0.0.1:5000`**
 
 | Role | Username | Password | Access Scope |
 | :--- | :--- | :--- | :--- |
-| **Admin** | `admin` | `Admin@123` | Full System Access, All Hostels, Reports, Audit Logs |
-| **Warden (Boys)** | `warden_boys` | `Warden@123` | Block A Attendance, Grievances, Out-Pass Desk |
-| **Warden (Girls)** | `warden_girls` | `Warden@123` | Block B Attendance, Grievances, Out-Pass Desk |
-| **Student** | `rahul_sharma` | `Student@123` | Personal Room Info, Out-Passes, Grievances |
+| **Admin** | `admin` | `Admin@123` | Full System Access, All Hostels, Reports, Audit Logs, Master Mess Policies |
+| **Warden (Boys)** | `warden_boys` | `Warden@123` | Block A Attendance, Grievances, Out-Pass Desk, Mess Quality Oversight |
+| **Warden (Girls)** | `warden_girls` | `Warden@123` | Block B Attendance, Grievances, Out-Pass Desk, Mess Quality Oversight |
+| **Student** | `rahul_sharma` | `Student@123` | Personal Room Info, Out-Passes, Dining QR Wallet, Meal Bookings, Feedback |
+| **Parent** | `rajesh_sharma` | `Parent@123` | Ward Digital Out-Pass Tracking, Leave Decisions, Fee Receipts, Attendance |
 | **Security Guard** | `guard_main` | `Guard@123` | Gate Camera QR Terminal, Manual Token Verify, Live Perimeter |
+| **Mess Manager** | `mess_manager` | `Manager@123` | Dynamic Weekly Menus, Pantry Inventory, Suppliers, Expenses, Feedback & Wastage Analytics |
+| **Mess Staff** | `mess_staff` | `Staff@123` | HTML5 Dining QR Scanner, Live Check-in Desk, Meal Attendance Register |
 
 ---
 
@@ -425,7 +440,10 @@ Execute the complete test suite including Parent Portal verification:
 # Run parent portal test suite
 python -m unittest tests/test_parent_portal.py -v
 
-# Run complete application test suite (43 tests)
+# Run mess management test suite (9 tests)
+python -m unittest tests/test_mess_system.py -v
+
+# Run complete application test suite (52 tests across all modules)
 python -m unittest discover -s tests -p "test_*.py" -v
 ```
 
@@ -437,11 +455,13 @@ python -m unittest discover -s tests -p "test_*.py" -v
 
 | Portal | Primary URL | Target Role | Key Capabilities |
 | :--- | :--- | :--- | :--- |
-| **Admin Portal** | `/admin/dashboard` | Administrator | System-wide statistics, hostel block provisioning, room & bed allocations, fee tariffs, master security logs, CSV audit export. |
-| **Warden Desk** | `/warden/dashboard` | Warden | Block-scoped leave review desk, out-pass issuance & revocation, night roll-call attendance, maintenance ticketing, parent inquiries. |
-| **Student Portal** | `/student/dashboard` | Student | Leave applications with file uploads, digital QR out-pass wallet, night attendance percentage, fee dues & receipt download, grievances. |
+| **Admin Portal** | `/admin/dashboard` | Administrator | System-wide statistics, hostel block provisioning, room & bed allocations, fee tariffs, master security logs, mess profiles & staff allocation, CSV audit export. |
+| **Warden Desk** | `/warden/dashboard` | Warden | Block-scoped leave review desk, out-pass issuance & revocation, night roll-call attendance, maintenance ticketing, parent inquiries, mess dining quality oversight. |
+| **Student Portal** | `/student/dashboard` | Student | Leave applications with file uploads, digital QR out-pass wallet, night attendance percentage, fee dues & receipts, dining QR wallet, meal bookings, food feedback. |
 | **Security Gate Terminal** | `/security/scan` | Security Guard | Live camera QR scanner, flip camera support, auto-verification of cryptographic tokens, EXIT/ENTRY tracking, overdue returns flag, manual token fallback. |
 | **Parent Portal** | `/parent/dashboard` | Parent / Guardian | Real-time perimeter tracking (inside/outside badge), ward profile, leave history, gate scan timeline, attendance charts, fee receipts, warden communication desk. |
+| **Mess Manager Portal** | `/mess-manager/dashboard` | Mess Manager | Dynamic weekly menu scheduling, pantry inventory tracking with reorder thresholds, supplier database, kitchen expense accounting, multidimensional feedback analysis, physical vs unconsumed wastage metrics, attendance CSV exports. |
+| **Mess Staff Portal** | `/mess-staff/scanner` | Mess Staff | Live HTML5 dining camera scanner, front/rear camera flip, cryptographic student token verification, atomic meal check-in, duplicate scan rejection, manual enrollment search. |
 
 ### 9.2 Key Workflow Previews
 
@@ -465,6 +485,26 @@ python -m unittest discover -s tests -p "test_*.py" -v
  [ Status: Used ]     [ Status: Completed ]
  [ is_outside: True]  [ is_outside: False ]
                       [ Checks Overdue Curfew ]
+
+==================================================================================
+  STUDENT DINING QR & MEAL ATTENDANCE WORKFLOW
+==================================================================================
+ [ Manager Publishes Menu ]  -->  [ Student Books Meal / Walk-in ]
+                                             |
+                                             v
+                                  [ Cryptographic Dining QR ]
+                                  [ "MESS:<id>:<hash>" Token ]
+                                             |
+                                             v
+ [ Mess Staff Camera Scanner ]  <--  [ Student Displays QR at Mess Gate ]
+       |
+       +---> [ Cryptographic Verification (HMAC-SHA256) ]
+       +---> [ Policy Check: Walk-in Allowed OR Active Booking Validated ]
+       +---> [ Duplicate Scan Prevention: Checks if Already Availed Today ]
+       |
+       v
+ [ Check-in Granted (GREEN) ]  -->  [ Atomic Attendance Record Created ]
+                               -->  [ Real-Time Wastage Analytics Updated ]
 ```
 
 ### 9.3 UI Screenshots & Layouts
@@ -475,10 +515,108 @@ python -m unittest discover -s tests -p "test_*.py" -v
 - **Digital Out-Pass Slip:** High-resolution QR code, security verification badge, departure & return timestamps, student photo & room particulars.
 - **Live Camera Scanner:** HTML5 webcam viewport with focus frame, auto-detection, instant AJAX verification response, and camera switching.
 - **Parent Ward Monitor:** Live status card (Green = Inside Hostel, Amber = Outside on Leave), historical timeline of departures and arrivals.
+- **Mess Staff Live QR Scanner:** Instant WebRTC video viewport, rear-camera priority for mobile tablets, desktop fallback, real-time audio/visual alert badges (GREEN = Granted, YELLOW = Duplicate, RED = Invalid).
+- **Mess Management Analytics:** Chart.js meal attendance trend charts, monthly expense breakdown pie chart, and physical kitchen scrap vs unconsumed meal wastage comparison.
 
 ---
 
-## 10. Technology Stack Reference
+## 10. Complete Mess Management System Implementation
+
+HostelEase features an enterprise-grade, integrated **Mess Management System** designed to streamline campus dining, optimize food procurement, eliminate unconsumed meal wastage, and automate student billing with leave-based rebates.
+
+### 10.1 Key System Features
+
+1. **Two Dedicated User Roles (RBAC):**
+   - **Mess Manager (`mess_manager`):** Full operational control over weekly menus, meal capacities, dietary flags, pantry inventory with minimum threshold alerts, vendor profiles, kitchen operational expenses, multidimensional food feedback, dining notices, and monthly billing generation.
+   - **Mess Staff (`mess_staff`):** Fast-paced dining entrance desk operations, featuring an HTML5 live camera QR scanner, rear/front camera switching, cryptographic student QR token verification, atomic meal check-in, duplicate scan prevention, and manual roll/enrollment number search.
+
+2. **12 Normalized SQLAlchemy Database Models (`app/models/mess.py`):**
+   - `MessProfile`: Hostel dining facilities with operational status, daily capacity, and booking policies (`walk_in` vs `booking_required`).
+   - `Supplier`: Vendor directory with GSTIN, contact numbers, supply categories, and active contract status.
+   - `MealMenu`: Date and meal type (`Breakfast`, `Lunch`, `Snacks`, `Dinner`) schedule with dish items, calorie counts, dietary flags (`Vegetarian`, `Non-Vegetarian`, `Vegan`, `Jain`), booking cutoffs, and maximum capacity.
+   - `MealBooking`: Student meal reservations with validation deadlines, status tracking (`booked`, `cancelled`, `availed`, `no_show`), and dietary preferences.
+   - `MealAttendance`: High-throughput dining check-in ledger recording student ID, menu ID, scanning staff ID, check-in method (`qr_scan`, `manual`), verification status, and timestamps.
+   - `MealFeedback`: Student rating engine supporting 1–5 star ratings across overall taste, hygiene, quantity, and preparation, with optional anonymity.
+   - `MessInventory`: Pantry stock ledger tracking items, categories (`Grains`, `Vegetables`, `Dairy`, `Spices`, `Oil`, `Gas`), units, quantities, unit prices, and auto-flagged reorder threshold levels.
+   - `InventoryTransaction`: Inflow/outflow audit trail logging stock receipts, daily cooking kitchen consumption, spoilage write-offs, and wastage.
+   - `MessExpense`: Comprehensive accounting ledger capturing vegetable market runs, milk supply, pantry groceries, fuel, maintenance, staff wages, and utility bills.
+   - `MessStaffProfile`: Auxiliary staff details including shift timings, assigned mess hall, phone numbers, and active service status.
+   - `MessNotice`: Dining circulars and notices displayed on the student dining dashboard.
+   - `MessBillingRecord`: Monthly dining bills factoring base subscription rates, extra a-la-carte meal charges, and automatically calculated approved leave rebates.
+
+3. **Cryptographic Dining QR Identity (`app/services/mess_service.py`):**
+   - Students receive an instant, self-refreshing digital dining token encoded as `MESS:<student_id>:<token_hash>`.
+   - The token hash is derived using HMAC-SHA256 seeded with secret application entropy, protecting against screenshot sharing, tampering, and impersonation without leaking sensitive student PII.
+
+4. **Fast HTML5 Webcam Dining Scanner (`/mess-staff/scanner`):**
+   - Built on `html5-qrcode` 2.3.8 WebRTC engine.
+   - Priority selection for mobile/tablet rear cameras (`facingMode: "environment"`) with seamless desktop webcam fallback and a dynamic camera toggle switch.
+   - Instant visual response cards:
+     - **GREEN (Success):** Valid meal entitlement verified. Displays student name, roll number, room number, and meal type.
+     - **YELLOW (Warning):** Duplicate scan detected! Clearly shows the exact prior check-in timestamp to prevent double-dipping.
+     - **RED (Error):** Invalid QR token, wrong meal window, or unbooked meal under strict booking policy.
+   - Manual search fallback by Student Roll Number or Enrollment Number for damaged phone screens or dead batteries.
+
+5. **Food Wastage Analytics & Differentiated Metrics:**
+   - Separates **Physical Kitchen Wastage** (measured in kilograms from vegetable peels, expired raw ingredients, and prepared leftover food recorded via inventory transactions) from **Unconsumed Booked Meals** (students who reserved a meal but did not attend).
+   - Generates visual comparison bar charts in the Mess Manager and Warden dashboards to assist chefs in adjusting preparation portions.
+
+6. **Automated Leave Rebate & Billing Engine:**
+   - Seamlessly integrates with the **Student Leave Application** system.
+   - Calculates total continuous days for all `Approved` leave requests during the billing month.
+   - If approved leave duration is 3 or more days, the engine applies a daily rebate formula:
+     $$\text{Total Rebate} = \text{Leave Days} \times \text{Daily Rebate Rate}$$
+   - Deducts the rebate from base mess fees and adds any approved extra meals to calculate the net payable amount.
+
+7. **Warden & Admin Oversight:**
+   - **Warden Portal (`/warden/mess`):** Read-only transparency dashboard showing today's dining menus, real-time student check-in counters, pantry low-stock warnings, and student food satisfaction metrics.
+   - **Admin Master Desk (`/admin/mess`):** Ability to configure hostel dining halls, toggle booking policies (`walk_in` vs `booking_required`), create Mess Staff accounts, and execute batch monthly billing generations.
+
+### 10.2 Mess Management Route Matrix
+
+| Endpoint | HTTP Method | Protected Role | Functionality |
+| :--- | :--- | :--- | :--- |
+| `/student/mess` | GET | `student` | Student dining home: today's menu, active bookings, dining notice bulletin |
+| `/student/mess/menu` | GET | `student` | Weekly menu calendar with dietary tags, calories, and booking buttons |
+| `/student/mess/book/<id>` | POST | `student` | Reserve meal slot within cutoff deadline |
+| `/student/mess/cancel-booking/<id>` | POST | `student` | Cancel booked meal before preparation cutoff |
+| `/student/mess/bookings` | GET | `student` | Personal booking history and status ledger |
+| `/student/mess/qr` | GET | `student` | Digital Dining QR Wallet with high-resolution token |
+| `/student/mess/attendance` | GET | `student` | Personal dining check-in history and timestamps |
+| `/student/mess/feedback` | GET, POST | `student` | Submit multidimensional meal ratings and reviews |
+| `/student/mess/billing` | GET | `student` | View monthly mess bills, breakdown, and leave rebates |
+| `/mess-staff/dashboard` | GET | `mess_staff` | Quick shift overview, today's check-in metrics |
+| `/mess-staff/scanner` | GET | `mess_staff` | Live WebRTC camera QR scanner & manual check-in form |
+| `/mess-staff/verify` | POST (AJAX) | `mess_staff` | Cryptographic QR validation and atomic attendance registration |
+| `/mess-staff/attendance` | GET | `mess_staff` | Today's complete dining attendance roll |
+| `/mess-manager/dashboard` | GET | `mess_manager` | Operational analytics, attendance trends, low stock alerts |
+| `/mess-manager/menu` | GET | `mess_manager` | Weekly menu management overview |
+| `/mess-manager/menu/create` | GET, POST | `mess_manager` | Schedule new breakfast, lunch, snacks, or dinner menu |
+| `/mess-manager/menu/<id>/edit` | GET, POST | `mess_manager` | Modify menu items, capacity, and deadlines |
+| `/mess-manager/menu/<id>/delete`| POST | `mess_manager` | Remove unpublished or obsolete menu entry |
+| `/mess-manager/bookings` | GET | `mess_manager` | Live booking status table with student details |
+| `/mess-manager/attendance` | GET | `mess_manager` | Real-time attendance ledger with check-in timestamps |
+| `/mess-manager/inventory` | GET | `mess_manager` | Pantry stock management and reorder status indicators |
+| `/mess-manager/inventory/add` | GET, POST | `mess_manager` | Add new pantry raw material / stock item |
+| `/mess-manager/inventory/transaction` | GET, POST | `mess_manager` | Record stock received, daily kitchen issue, or spoilage |
+| `/mess-manager/suppliers` | GET, POST | `mess_manager` | Vendor directory and contract management |
+| `/mess-manager/expenses` | GET, POST | `mess_manager` | Record kitchen operational costs, grocery invoices, fuel bills |
+| `/mess-manager/feedback` | GET | `mess_manager` | Student feedback review desk with average rating breakdowns |
+| `/mess-manager/notices` | GET, POST | `mess_manager` | Publish dining circulars to student portals |
+| `/mess-manager/reports` | GET | `mess_manager` | Chart.js wastage analysis, meal popularity, and financial totals |
+| `/mess-manager/reports/export-attendance` | GET | `mess_manager` | Download attendance log as standardized CSV spreadsheet |
+| `/mess-manager/staff` | GET | `mess_manager` | View mess kitchen personnel and shift allocations |
+| `/warden/mess` | GET | `warden` | Warden dining oversight, food quality review, inventory status |
+| `/admin/mess` | GET | `admin` | Mess facility list, policy controls, dining overview |
+| `/admin/mess/create` | GET, POST | `admin` | Register a new hostel dining mess hall |
+| `/admin/mess/<id>/edit` | GET, POST | `admin` | Update mess hall profile and capacity |
+| `/admin/mess/<id>/toggle-policy` | POST | `admin` | Toggle between Walk-in Allowed and Mandatory Pre-Booking |
+| `/admin/mess/staff/create` | GET, POST | `admin` | Provision user account for Mess Staff or Mess Manager |
+| `/admin/mess/billing/generate` | POST | `admin` | Batch generate monthly mess billing with leave rebates |
+
+---
+
+## 11. Technology Stack Reference
 
 - **Backend:** Python 3.12, Flask 3.0.3, Flask-Login 0.6.3, Flask-WTF 1.2.1, Flask-SQLAlchemy 3.1.1
 - **Database:** SQLite 3 (Development & Automated Testing) / MySQL 8.0 (Production)

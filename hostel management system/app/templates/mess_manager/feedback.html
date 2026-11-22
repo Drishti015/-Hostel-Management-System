@@ -1,0 +1,100 @@
+{% extends 'base.html' %}
+
+{% block title %}Student Food Feedback & Ratings{% endblock %}
+
+{% block content %}
+<div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4">
+    <div>
+        <h2 class="fw-bold text-dark mb-1">
+            <i class="fa-solid fa-star-half-stroke text-warning me-2"></i>Student Dining Feedback
+        </h2>
+        <p class="text-muted small mb-0">Review meal satisfaction ratings, culinary feedback, and hygiene comments from residents.</p>
+    </div>
+    <div class="d-flex gap-2">
+        <a href="{{ url_for('mess_manager.dashboard') }}" class="btn btn-outline-secondary">
+            <i class="fa-solid fa-arrow-left me-2"></i>Dashboard
+        </a>
+    </div>
+</div>
+
+<!-- Average Score KPI -->
+<div class="row g-3 mb-4">
+    <div class="col-md-4">
+        <div class="card border-0 shadow-sm rounded-4 p-4 bg-white text-center">
+            <div class="text-muted small fw-semibold text-uppercase mb-2">Overall Quality Rating</div>
+            <div class="display-5 fw-bold text-dark mb-1">
+                {{ avg_score }} <span class="fs-4 text-muted fw-normal">/ 5.0</span>
+            </div>
+            <div>
+                {% for i in range(1, 6) %}
+                <i class="fa-solid fa-star {% if i <= avg_score %}text-warning{% else %}text-muted opacity-25{% endif %}"></i>
+                {% endfor %}
+            </div>
+            <div class="text-muted small mt-2">Based on {{ feedbacks|length }} student reviews</div>
+        </div>
+    </div>
+</div>
+
+<!-- Feedback Table -->
+<div class="card border-0 shadow-sm rounded-4 p-4 bg-white">
+    <h5 class="fw-bold text-dark mb-3">Feedback Audit Trail</h5>
+
+    {% if feedbacks %}
+    <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+            <thead class="table-light text-secondary small text-uppercase">
+                <tr>
+                    <th>Date & Time</th>
+                    <th>Resident</th>
+                    <th>Meal Particulars</th>
+                    <th>Rating</th>
+                    <th>Aspect Scores</th>
+                    <th>Comments & Suggestions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for fb in feedbacks %}
+                <tr>
+                    <td>
+                        <span class="small fw-semibold text-dark">{{ fb.created_at.strftime('%d %b, %Y') }}</span>
+                        <div class="small text-muted">{{ fb.created_at.strftime('%I:%M %p') }}</div>
+                    </td>
+                    <td>
+                        {% if fb.is_anonymous %}
+                        <span class="badge bg-secondary-subtle text-secondary"><i class="fa-solid fa-user-secret me-1"></i>Anonymous</span>
+                        {% else %}
+                        <div class="fw-semibold text-dark">{{ fb.student.full_name }}</div>
+                        <div class="small text-muted">{{ fb.student.enrollment_no }}</div>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <span class="badge bg-light text-dark border">{{ fb.meal_menu.meal_type }}</span>
+                        <div class="small text-dark fw-semibold mt-1">{{ fb.meal_menu.title }}</div>
+                    </td>
+                    <td>
+                        <span class="fw-bold {% if fb.rating >= 4 %}text-success{% elif fb.rating == 3 %}text-warning{% else %}text-danger{% endif %} fs-6">
+                            {{ fb.rating }} <i class="fa-solid fa-star"></i>
+                        </span>
+                    </td>
+                    <td>
+                        <div class="small text-muted">Taste: <strong>{{ fb.taste_rating or '-' }}</strong>/5</div>
+                        <div class="small text-muted">Quantity: <strong>{{ fb.quantity_rating or '-' }}</strong>/5</div>
+                        <div class="small text-muted">Hygiene: <strong>{{ fb.hygiene_rating or '-' }}</strong>/5</div>
+                    </td>
+                    <td>
+                        <span class="small text-dark">{{ fb.comments or 'No written comments.' }}</span>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <div class="text-center py-5">
+        <i class="fa-solid fa-comments fa-3x text-muted mb-3 opacity-50"></i>
+        <h5 class="fw-bold text-dark">No Food Feedback Yet</h5>
+        <p class="text-muted small">Resident feedback will appear here as students review daily meals.</p>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

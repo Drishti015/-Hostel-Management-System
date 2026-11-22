@@ -1,0 +1,133 @@
+{% extends 'base.html' %}
+
+{% block title %}Mess Operational Expenditures{% endblock %}
+
+{% block content %}
+<div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4">
+    <div>
+        <h2 class="fw-bold text-dark mb-1">
+            <i class="fa-solid fa-receipt text-primary me-2"></i>Mess Kitchen Expenses
+        </h2>
+        <p class="text-muted small mb-0">Maintain audit trails for kitchen groceries, milk, fuel, maintenance, and staff wages.</p>
+    </div>
+    <div class="d-flex gap-2">
+        <button type="button" class="btn btn-primary-custom" data-bs-toggle="modal" data-bs-target="#addExpenseModal">
+            <i class="fa-solid fa-plus me-2"></i>Log Expense
+        </button>
+    </div>
+</div>
+
+<!-- Total Spent Summary Card -->
+<div class="row g-3 mb-4">
+    <div class="col-md-6 col-lg-4">
+        <div class="card border-0 shadow-sm rounded-4 p-4 bg-white border-start border-4 border-primary">
+            <div class="text-muted small fw-semibold text-uppercase">Total Recorded Spend</div>
+            <div class="fs-2 fw-bold text-dark mt-1">₹{{ "%.2f"|format(total_spent) }}</div>
+            <div class="text-muted small mt-1">{{ expenses|length }} entries logged</div>
+        </div>
+    </div>
+</div>
+
+<!-- Expenses Table -->
+<div class="card border-0 shadow-sm rounded-4 p-4 bg-white">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h6 class="fw-bold text-dark mb-0">Expenditure Log</h6>
+    </div>
+
+    {% if expenses %}
+    <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+            <thead class="table-light text-secondary small text-uppercase">
+                <tr>
+                    <th>Date</th>
+                    <th>Category</th>
+                    <th>Description</th>
+                    <th>Receipt / Ref #</th>
+                    <th>Amount</th>
+                    <th>Logged By</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for exp in expenses %}
+                <tr>
+                    <td>
+                        <span class="fw-semibold text-dark">{{ exp.transaction_date.strftime('%d %b, %Y') }}</span>
+                    </td>
+                    <td>
+                        <span class="badge bg-light text-dark border">{{ exp.expense_category }}</span>
+                    </td>
+                    <td>
+                        <span class="text-dark small">{{ exp.description or 'N/A' }}</span>
+                    </td>
+                    <td>
+                        <span class="badge bg-secondary-subtle text-secondary font-monospace small">
+                            {{ exp.receipt_reference or 'N/A' }}
+                        </span>
+                    </td>
+                    <td>
+                        <span class="fw-bold text-danger">₹{{ "%.2f"|format(exp.amount) }}</span>
+                    </td>
+                    <td>
+                        <span class="small text-muted">{{ exp.recorded_by_user.full_name if exp.recorded_by_user else 'Manager' }}</span>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <div class="text-center py-5">
+        <i class="fa-solid fa-receipt fa-3x text-muted mb-3 opacity-50"></i>
+        <h5 class="fw-bold text-dark">No Expenses Logged</h5>
+        <p class="text-muted small">No kitchen expenses have been recorded for this mess yet.</p>
+        <button type="button" class="btn btn-sm btn-primary-custom" data-bs-toggle="modal" data-bs-target="#addExpenseModal">
+            <i class="fa-solid fa-plus me-1"></i>Log First Expense
+        </button>
+    </div>
+    {% endif %}
+</div>
+
+<!-- Log Expense Modal -->
+<div class="modal fade" id="addExpenseModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content rounded-4 border-0 shadow">
+            <form method="POST" action="{{ url_for('mess_manager.expenses') }}">
+                <div class="modal-header border-0 pb-0">
+                    <h5 class="modal-title fw-bold">Log Kitchen Expense</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label small fw-semibold">Expense Category *</label>
+                        <select name="category" class="form-select" required>
+                            {% for cat in categories %}
+                            <option value="{{ cat }}">{{ cat }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label small fw-semibold">Amount (₹) *</label>
+                        <input type="number" step="0.01" name="amount" class="form-control" placeholder="0.00" required min="0.01">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label small fw-semibold">Transaction Date *</label>
+                        <input type="date" name="transaction_date" class="form-control" value="{{ today.strftime('%Y-%m-%d') }}" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label small fw-semibold">Receipt / Invoice Number</label>
+                        <input type="text" name="receipt_reference" class="form-control" placeholder="e.g. BILL-9982">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label small fw-semibold">Description / Remarks</label>
+                        <textarea name="description" class="form-control" rows="2" placeholder="Item description, quantity purchased..."></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer border-0 pt-0">
+                    <button type="button" class="btn btn-light btn-sm" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary-custom btn-sm">Save Expense</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

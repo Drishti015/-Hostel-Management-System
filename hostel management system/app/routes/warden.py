@@ -507,3 +507,59 @@ def reply_inquiry(id):
 
     return redirect(url_for('warden.parent_inquiries'))
 
+
+@warden_bp.route('/mess')
+@login_required
+@warden_required
+def mess_view():
+    """Warden Dining & Mess Monitoring Portal"""
+    from app.models.mess import MessProfile, MealMenu, MealBooking, MealAttendance, MealFeedback, MessNotice, MessInventory
+    from app.services.mess_service import MessService
+
+    warden_profile = current_user.warden_profile
+    assigned_hostel = warden_profile.assigned_hostel if warden_profile else None
+
+    # Get mess corresponding to warden's hostel, or default mess
+    if assigned_hostel and assigned_hostel.messes.first():
+        mess = assigned_hostel.messes.first()
+    else:
+        mess = MessService.get_or_create_default_mess()
+
+    today = date.today()
+    today_menus = MealMenu.query.filter_by(mess_id=mess.id, meal_date=today).all()
+
+    today_bookings = MealBooking.query.join(MealMenu).filter(
+        MealMenu.mess_id == mess.id,
+        MealMenu.meal_date == today
+    ).count()
+
+    today_attendance = MealAttendance.query.join(MealMenu).filter(
+        MealMenu.mess_id == mess.id,
+        MealMenu.meal_date == today,
+        MealAttendance.attendance_status.in_(['Present', 'Walk-in'])
+    ).count()
+
+    recent_feedbacks = MealFeedback.query.join(MealMenu).filter(
+        MealMenu.mess_id == mess.id
+    ).order_by(MealFeedback.created_at.desc()).limit(5).all()
+
+    notices = MessNotice.query.filter(
+        (MessNotice.mess_id == mess.id) | (MessNotice.mess_id == None)
+    ).order_by(MessNotice.created_at.desc()).limit(5).all()
+
+    low_stock_items = MessInventory.query.filter(
+        MessInventory.mess_id == mess.id,
+        MessInventory.quantity <= MessInventory.minimum_stock_level
+    ).all()
+
+    return render_template('warden/mess.html',
+                           mess=mess,
+                           assigned_hostel=assigned_hostel,
+                           today_menus=today_menus,
+                           today_bookings=today_bookings,
+                           today_attendance=today_attendance,
+                           recent_feedbacks=recent_feedbacks,
+                           notices=notices,
+                           low_stock_items=low_stock_items,
+                           today=today)
+

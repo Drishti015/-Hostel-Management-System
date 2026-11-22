@@ -1,0 +1,128 @@
+{% extends 'base.html' %}
+
+{% block title %}Food Wastage & Attendance Analytics{% endblock %}
+
+{% block content %}
+<div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4">
+    <div>
+        <h2 class="fw-bold text-dark mb-1">
+            <i class="fa-solid fa-chart-pie text-primary me-2"></i>Food Wastage & Turnout Analytics
+        </h2>
+        <p class="text-muted small mb-0">Monitor pre-booking turnout, measure unconsumed portions, and audit physical food wastage.</p>
+    </div>
+    <div class="d-flex gap-2">
+        <a href="{{ url_for('mess_manager.export_attendance_csv') }}" class="btn btn-outline-success">
+            <i class="fa-solid fa-file-csv me-2"></i>Export Attendance CSV
+        </a>
+    </div>
+</div>
+
+<!-- Date Filter -->
+<div class="card border-0 shadow-sm rounded-4 p-3 bg-white mb-4">
+    <form method="GET" action="{{ url_for('mess_manager.reports') }}" class="row g-2 align-items-end">
+        <div class="col-md-6 col-lg-4">
+            <label class="form-label small fw-semibold text-secondary">Inspection Date</label>
+            <input type="date" name="date" class="form-control form-control-sm" value="{{ report.date.strftime('%Y-%m-%d') }}">
+        </div>
+        <div class="col-md-4 col-lg-2">
+            <button type="submit" class="btn btn-primary-custom btn-sm w-100">
+                <i class="fa-solid fa-calendar-check me-1"></i>Analyze
+            </button>
+        </div>
+    </form>
+</div>
+
+<!-- KPI Cards -->
+<div class="row g-3 mb-4">
+    <div class="col-md-3">
+        <div class="card border-0 shadow-sm rounded-4 p-3 bg-white">
+            <div class="text-muted small fw-semibold text-uppercase">Total Pre-Bookings</div>
+            <div class="fs-2 fw-bold text-dark mt-1">{{ report.total_bookings }}</div>
+            <div class="text-muted small">Registered meals</div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card border-0 shadow-sm rounded-4 p-3 bg-white">
+            <div class="text-muted small fw-semibold text-uppercase">Meals Consumed</div>
+            <div class="fs-2 fw-bold text-success mt-1">{{ report.total_attendances }}</div>
+            <div class="text-muted small">Actual verified diners</div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card border-0 shadow-sm rounded-4 p-3 bg-white border-start border-4 border-warning">
+            <div class="text-muted small fw-semibold text-uppercase">Unconsumed Booked Meals</div>
+            <div class="fs-2 fw-bold text-warning mt-1">{{ report.unconsumed_booked_meals }}</div>
+            <div class="text-muted small">No-shows (est. ₹{{ "%.2f"|format(report.estimated_unconsumed_cost) }})</div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card border-0 shadow-sm rounded-4 p-3 bg-white border-start border-4 border-danger">
+            <div class="text-muted small fw-semibold text-uppercase">Measured Kitchen Wastage</div>
+            <div class="fs-2 fw-bold text-danger mt-1">{{ "%.1f"|format(report.measured_kitchen_wastage_kg) }} <span class="fs-6 text-muted">kg</span></div>
+            <div class="text-muted small">Discarded raw & prepared food</div>
+        </div>
+    </div>
+</div>
+
+<!-- Slot-by-Slot Breakdown -->
+<div class="card border-0 shadow-sm rounded-4 p-4 bg-white">
+    <h5 class="fw-bold text-dark mb-3">Meal Slot Turnout Breakdown</h5>
+
+    {% if report.slots %}
+    <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+            <thead class="table-light text-secondary small text-uppercase">
+                <tr>
+                    <th>Meal Slot</th>
+                    <th>Menu Title</th>
+                    <th>Bookings</th>
+                    <th>Attendance</th>
+                    <th>Turnout %</th>
+                    <th>Unconsumed Meals</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for s in report.slots %}
+                {% set turnout = ((s.attendances / s.bookings * 100)|round(1)) if s.bookings > 0 else 0 %}
+                <tr>
+                    <td>
+                        <span class="badge bg-light text-dark border fw-bold">{{ s.slot }}</span>
+                    </td>
+                    <td>
+                        <span class="text-dark fw-semibold">{{ s.menu_title }}</span>
+                    </td>
+                    <td>
+                        <span class="fw-semibold text-dark">{{ s.bookings }}</span>
+                    </td>
+                    <td>
+                        <span class="fw-bold text-success">{{ s.attendances }}</span>
+                    </td>
+                    <td>
+                        <div class="d-flex align-items-center gap-2">
+                            <div class="progress flex-grow-1" style="height: 6px;">
+                                <div class="progress-bar {% if turnout >= 80 %}bg-success{% elif turnout >= 50 %}bg-warning{% else %}bg-danger{% endif %}" style="width: {{ turnout }}%;"></div>
+                            </div>
+                            <span class="small fw-semibold text-dark">{{ turnout }}%</span>
+                        </div>
+                    </td>
+                    <td>
+                        {% if s.unconsumed > 0 %}
+                        <span class="badge bg-warning text-dark"><i class="fa-solid fa-triangle-exclamation me-1"></i>{{ s.unconsumed }} missed</span>
+                        {% else %}
+                        <span class="badge bg-success-subtle text-success">0 missed</span>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <div class="text-center py-5">
+        <i class="fa-solid fa-utensils fa-3x text-muted mb-3 opacity-50"></i>
+        <h6 class="fw-bold text-dark">No Meal Menus for this Date</h6>
+        <p class="text-muted small">No meal sessions were recorded on {{ report.date.strftime('%d %b, %Y') }}.</p>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

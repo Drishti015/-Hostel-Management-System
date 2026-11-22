@@ -1,0 +1,245 @@
+{% extends 'base.html' %}
+
+{% block title %}Mess Manager Executive Dashboard{% endblock %}
+
+{% block content %}
+<div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4">
+    <div>
+        <h2 class="fw-bold text-dark mb-1">
+            <i class="fa-solid fa-chart-line text-primary me-2"></i>Mess Manager Operations Center
+        </h2>
+        <p class="text-muted small mb-0">
+            Executive Dining Management &bull; Facility: <strong>{{ mess.mess_name }}</strong> &bull; Capacity: <strong>{{ mess.daily_capacity }}</strong>
+        </p>
+    </div>
+    <div class="d-flex gap-2">
+        <a href="{{ url_for('mess_manager.menu_create') }}" class="btn btn-primary-custom">
+            <i class="fa-solid fa-plus me-2"></i>Schedule Meal
+        </a>
+        <a href="{{ url_for('mess_manager.reports') }}" class="btn btn-outline-secondary">
+            <i class="fa-solid fa-chart-pie me-2"></i>Wastage Reports
+        </a>
+    </div>
+</div>
+
+<!-- Stat KPI Cards -->
+<div class="row g-3 mb-4">
+    <div class="col-md-3">
+        <div class="stat-card">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <div class="stat-title">Active Bookings Today</div>
+                    <div class="stat-value text-primary">{{ total_active_bookings }}</div>
+                </div>
+                <div class="stat-icon-wrapper bg-primary-subtle text-primary">
+                    <i class="fa-solid fa-calendar-check"></i>
+                </div>
+            </div>
+            <div class="small text-muted mt-2">Reservations across all slots</div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="stat-card">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <div class="stat-title">Today's Check-Ins</div>
+                    <div class="stat-value text-success">{{ breakfast_att + lunch_att + snacks_att + dinner_att }}</div>
+                </div>
+                <div class="stat-icon-wrapper bg-success-subtle text-success">
+                    <i class="fa-solid fa-bowl-food"></i>
+                </div>
+            </div>
+            <div class="small text-muted mt-2">B:{{ breakfast_att }} &bull; L:{{ lunch_att }} &bull; S:{{ snacks_att }} &bull; D:{{ dinner_att }}</div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="stat-card">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <div class="stat-title">Low Stock Pantry Items</div>
+                    <div class="stat-value {% if low_stock_items > 0 %}text-danger{% else %}text-secondary{% endif %}">{{ low_stock_items }}</div>
+                </div>
+                <div class="stat-icon-wrapper {% if low_stock_items > 0 %}bg-danger-subtle text-danger{% else %}bg-light text-secondary{% endif %}">
+                    <i class="fa-solid fa-boxes-stacked"></i>
+                </div>
+            </div>
+            <div class="small text-muted mt-2">Total tracked items: {{ total_inventory_items }}</div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="stat-card">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <div class="stat-title">Average Food Score</div>
+                    <div class="stat-value text-warning">
+                        {{ avg_rating }} <span class="fs-6 text-muted">/ 5.0</span>
+                    </div>
+                </div>
+                <div class="stat-icon-wrapper bg-warning-subtle text-warning">
+                    <i class="fa-solid fa-star"></i>
+                </div>
+            </div>
+            <div class="small text-muted mt-2">Student quality rating</div>
+        </div>
+    </div>
+</div>
+
+<!-- Charts Section -->
+<div class="row g-4 mb-4">
+    <div class="col-lg-8">
+        <div class="card border-0 shadow-sm rounded-4 p-4 bg-white">
+            <h6 class="fw-bold text-dark mb-3">
+                <i class="fa-solid fa-chart-area text-primary me-2"></i>Daily Meal Attendance Trend (Past 7 Days)
+            </h6>
+            <div style="height: 280px;">
+                <canvas id="dailyAttendanceChart"></canvas>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-4">
+        <div class="card border-0 shadow-sm rounded-4 p-4 bg-white">
+            <h6 class="fw-bold text-dark mb-3">
+                <i class="fa-solid fa-chart-pie text-success me-2"></i>Monthly Operational Expenses
+            </h6>
+            <div style="height: 280px;">
+                <canvas id="expenseCategoryChart"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Quick Overview Tables -->
+<div class="row g-4">
+    <!-- Recent Bookings -->
+    <div class="col-lg-6">
+        <div class="card border-0 shadow-sm rounded-4 p-4 bg-white">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h6 class="fw-bold text-dark mb-0">
+                    <i class="fa-solid fa-bookmark text-primary me-2"></i>Recent Meal Bookings
+                </h6>
+                <a href="{{ url_for('mess_manager.bookings_list') }}" class="small text-decoration-none">View All</a>
+            </div>
+            {% if not recent_bookings %}
+            <div class="text-center py-4 text-muted small">No recent bookings recorded.</div>
+            {% else %}
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0 small">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Student</th>
+                            <th>Date & Slot</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for b in recent_bookings %}
+                        <tr>
+                            <td>
+                                <strong class="text-dark">{{ b.student.full_name }}</strong>
+                                <div class="text-muted small">{{ b.student.enrollment_no }}</div>
+                            </td>
+                            <td>
+                                {{ b.meal_menu.meal_date.strftime('%d %b') }} &bull; <span class="badge bg-light text-dark border">{{ b.meal_menu.meal_type }}</span>
+                            </td>
+                            <td>
+                                <span class="badge {% if b.booking_status == 'Consumed' %}bg-primary-subtle text-primary{% elif b.booking_status == 'Booked' %}bg-success-subtle text-success{% else %}bg-secondary-subtle text-secondary{% endif %}">
+                                    {{ b.booking_status }}
+                                </span>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Recent Feedback -->
+    <div class="col-lg-6">
+        <div class="card border-0 shadow-sm rounded-4 p-4 bg-white">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h6 class="fw-bold text-dark mb-0">
+                    <i class="fa-solid fa-star text-warning me-2"></i>Recent Student Reviews
+                </h6>
+                <a href="{{ url_for('mess_manager.feedback') }}" class="small text-decoration-none">View All</a>
+            </div>
+            {% if not recent_feedbacks %}
+            <div class="text-center py-4 text-muted small">No food reviews submitted yet.</div>
+            {% else %}
+            <div class="d-flex flex-column gap-2">
+                {% for f in recent_feedbacks %}
+                <div class="p-2 bg-light rounded-3 border">
+                    <div class="d-flex justify-content-between align-items-center mb-1">
+                        <strong class="text-dark small">{{ f.meal_menu.meal_type }} ({{ f.meal_menu.meal_date.strftime('%d %b') }})</strong>
+                        <span class="text-warning small">
+                            {% for i in range(f.rating) %}⭐{% endfor %}
+                        </span>
+                    </div>
+                    {% if f.comments %}
+                    <p class="small text-muted mb-0 fst-italic">"{{ f.comments }}"</p>
+                    {% endif %}
+                </div>
+                {% endfor %}
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Daily Attendance Trend Chart
+    const dailyCtx = document.getElementById('dailyAttendanceChart').getContext('2d');
+    new Chart(dailyCtx, {
+        type: 'line',
+        data: {
+            labels: {{ daily_labels | tojson }},
+            datasets: [{
+                label: 'Student Meal Attendance',
+                data: {{ daily_attendance | tojson }},
+                borderColor: '#0d6efd',
+                backgroundColor: 'rgba(13, 110, 253, 0.08)',
+                fill: true,
+                tension: 0.35,
+                borderWidth: 2,
+                pointBackgroundColor: '#0d6efd',
+                pointRadius: 4
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: { legend: { display: false } },
+            scales: {
+                y: { beginAtZero: true, grid: { color: '#f0f2f5' } },
+                x: { grid: { display: false } }
+            }
+        }
+    });
+
+    // Expenses Category Breakdown Chart
+    const expCtx = document.getElementById('expenseCategoryChart').getContext('2d');
+    new Chart(expCtx, {
+        type: 'doughnut',
+        data: {
+            labels: {{ expense_labels | tojson }},
+            datasets: [{
+                data: {{ expense_data | tojson }},
+                backgroundColor: [
+                    '#0d6efd', '#198754', '#ffc107', '#dc3545',
+                    '#0dcaf0', '#6f42c1', '#fd7e14', '#6c757d'
+                ]
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { position: 'bottom', labels: { boxWidth: 12, font: { size: 11 } } }
+            }
+        }
+    });
+</script>
+{% endblock %}

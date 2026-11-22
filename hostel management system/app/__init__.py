@@ -42,6 +42,8 @@ def create_app(config_name=None):
     from app.routes.student import student_bp
     from app.routes.security import security_bp
     from app.routes.parent import parent_bp
+    from app.routes.mess_staff import mess_staff_bp
+    from app.routes.mess_manager import mess_manager_bp
 
     app.register_blueprint(main_bp)
     app.register_blueprint(auth_bp, url_prefix='/auth')
@@ -50,6 +52,8 @@ def create_app(config_name=None):
     app.register_blueprint(student_bp, url_prefix='/student')
     app.register_blueprint(security_bp, url_prefix='/security')
     app.register_blueprint(parent_bp, url_prefix='/parent')
+    app.register_blueprint(mess_staff_bp, url_prefix='/mess-staff')
+    app.register_blueprint(mess_manager_bp, url_prefix='/mess-manager')
 
     # Configure Upload Folder & Limits
     upload_folder = os.path.join(app.root_path, 'static', 'uploads', 'leave_documents')

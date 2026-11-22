@@ -1,0 +1,119 @@
+{% extends 'base.html' %}
+
+{% block title %}Mess Staff Station{% endblock %}
+
+{% block content %}
+<div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4">
+    <div>
+        <h2 class="fw-bold text-dark mb-1">
+            <i class="fa-solid fa-bell-concierge text-primary me-2"></i>Dining Hall Staff Counter
+        </h2>
+        <p class="text-muted small mb-0">
+            Counter Terminal &bull; Facility: <strong>{{ mess.mess_name }}</strong> &bull; Policy: <strong>{{ mess.meal_policy.replace('_', ' ') | title }}</strong>
+        </p>
+    </div>
+    <div class="d-flex gap-2">
+        <a href="{{ url_for('mess_staff.scanner') }}" class="btn btn-primary-custom px-4 py-2">
+            <i class="fa-solid fa-qrcode me-2"></i>Launch QR Scanner
+        </a>
+        <a href="{{ url_for('mess_staff.attendance') }}" class="btn btn-outline-secondary">
+            <i class="fa-solid fa-list-check me-2"></i>Attendance Log
+        </a>
+    </div>
+</div>
+
+<!-- Meal Slots Today Overview -->
+<div class="row g-3 mb-4">
+    {% for slot in ['Breakfast', 'Lunch', 'Snacks', 'Dinner'] %}
+    {% set s = stats[slot] %}
+    <div class="col-md-6 col-lg-3">
+        <div class="card h-100 border-0 shadow-sm rounded-4 p-3 bg-white {% if active_menu and active_menu.meal_type == slot %}border-start border-4 border-primary{% endif %}">
+            <div class="d-flex justify-content-between align-items-center mb-2">
+                <span class="badge {% if slot == 'Breakfast' %}bg-warning text-dark{% elif slot == 'Lunch' %}bg-success{% elif slot == 'Snacks' %}bg-info{% else %}bg-primary{% endif %}">
+                    {{ slot }}
+                </span>
+                {% if s %}
+                    <small class="text-muted">{{ s.timing }}</small>
+                {% else %}
+                    <small class="text-muted">Unscheduled</small>
+                {% endif %}
+            </div>
+
+            {% if s %}
+                <div class="fw-bold text-dark small text-truncate mb-2">{{ s.title }}</div>
+                <div class="d-flex justify-content-between align-items-baseline mb-2">
+                    <div>
+                        <div class="fs-4 fw-bold text-dark">{{ s.attended }}</div>
+                        <div class="small text-muted">Present</div>
+                    </div>
+                    <div class="text-end">
+                        <div class="fs-5 fw-semibold text-secondary">{{ s.booked }}</div>
+                        <div class="small text-muted">Booked / {{ s.capacity }}</div>
+                    </div>
+                </div>
+                <a href="{{ url_for('mess_staff.scanner', menu_id=s.menu_id) }}" class="btn btn-outline-primary btn-sm w-100 mt-auto">
+                    <i class="fa-solid fa-camera me-1"></i>Scan {{ slot }}
+                </a>
+            {% else %}
+                <div class="text-center py-4 text-muted small">No menu scheduled for {{ slot }} today.</div>
+            {% endif %}
+        </div>
+    </div>
+    {% endfor %}
+</div>
+
+<!-- Recent Scans Live Feed -->
+<div class="card border-0 shadow-sm rounded-4 p-4 bg-white mb-4">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h5 class="fw-bold text-dark mb-0">
+            <i class="fa-solid fa-clock-rotate-left text-primary me-2"></i>Recent Check-Ins Live Audit
+        </h5>
+        <a href="{{ url_for('mess_staff.attendance') }}" class="small text-decoration-none">Full Register &rarr;</a>
+    </div>
+
+    {% if not recent_attendances %}
+    <div class="text-center py-4 text-muted small">
+        No students have checked in today yet. Click <strong>Launch QR Scanner</strong> to start meal service.
+    </div>
+    {% else %}
+    <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0 small">
+            <thead class="table-light">
+                <tr>
+                    <th>Student Name</th>
+                    <th>Enrollment No</th>
+                    <th>Hostel & Room</th>
+                    <th>Meal Slot</th>
+                    <th>Check-in Time</th>
+                    <th>Method</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for a in recent_attendances %}
+                {% set alloc = a.student.current_allocation %}
+                <tr>
+                    <td class="fw-bold text-dark">{{ a.student.full_name }}</td>
+                    <td class="font-monospace text-muted">{{ a.student.enrollment_no }}</td>
+                    <td>{{ alloc.hostel.name if alloc else 'N/A' }} - Rm {{ alloc.room.room_number if alloc else 'N/A' }}</td>
+                    <td><span class="badge bg-light text-dark border">{{ a.meal_menu.meal_type }}</span></td>
+                    <td class="font-monospace">{{ a.check_in_time.strftime('%I:%M:%S %p') }}</td>
+                    <td>
+                        <span class="badge bg-light text-secondary border">
+                            <i class="fa-solid {% if a.verification_method == 'QR_Scan' %}fa-qrcode{% else %}fa-id-card{% endif %} me-1"></i>
+                            {{ a.verification_method.replace('_', ' ') }}
+                        </span>
+                    </td>
+                    <td>
+                        <span class="badge bg-success-subtle text-success border border-success-subtle">
+                            {{ a.attendance_status }}
+                        </span>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

@@ -1,0 +1,94 @@
+{% extends 'base.html' %}
+
+{% block title %}Mess Menu Schedule{% endblock %}
+
+{% block content %}
+<div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4">
+    <div>
+        <h2 class="fw-bold text-dark mb-1">
+            <i class="fa-solid fa-calendar-days text-primary me-2"></i>Weekly Dining Schedule
+        </h2>
+        <p class="text-muted small mb-0">
+            Browse upcoming breakfast, lunch, snacks, and dinner options &bull; {{ mess.mess_name }}
+        </p>
+    </div>
+    <div class="d-flex gap-2">
+        <a href="{{ url_for('student.mess_dashboard') }}" class="btn btn-outline-secondary">
+            <i class="fa-solid fa-arrow-left me-2"></i>Back to Dashboard
+        </a>
+        <a href="{{ url_for('student.mess_qr') }}" class="btn btn-primary-custom">
+            <i class="fa-solid fa-qrcode me-2"></i>My Mess QR
+        </a>
+    </div>
+</div>
+
+<!-- Weekly Schedule Table -->
+<div class="card border-0 shadow-sm rounded-4 p-4 bg-white mb-4">
+    <div class="table-responsive">
+        <table class="table table-bordered align-middle text-center mb-0">
+            <thead class="table-light">
+                <tr>
+                    <th style="width: 14%;">Date & Day</th>
+                    <th style="width: 21.5%;">Breakfast<br><small class="text-muted fw-normal">7:30 - 9:30 AM</small></th>
+                    <th style="width: 21.5%;">Lunch<br><small class="text-muted fw-normal">12:30 - 2:30 PM</small></th>
+                    <th style="width: 21.5%;">Snacks<br><small class="text-muted fw-normal">5:00 - 6:00 PM</small></th>
+                    <th style="width: 21.5%;">Dinner<br><small class="text-muted fw-normal">7:30 - 9:30 PM</small></th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for day_date, slots in weekly_calendar.items() %}
+                <tr>
+                    <td class="table-light fw-bold">
+                        <div>{{ day_date.strftime('%a') }}</div>
+                        <div class="small text-muted">{{ day_date.strftime('%d %b') }}</div>
+                    </td>
+                    {% for slot_name in ['Breakfast', 'Lunch', 'Snacks', 'Dinner'] %}
+                    {% set meal = slots[slot_name] %}
+                    <td class="p-2 {% if meal and meal.id in booked_menu_ids %}table-primary-subtle bg-opacity-25{% endif %}">
+                        {% if not meal %}
+                            <div class="py-3 text-muted small opacity-50"><em>Not Published</em></div>
+                        {% else %}
+                            <div class="text-start p-2 rounded bg-light border">
+                                <div class="d-flex justify-content-between align-items-center mb-1">
+                                    <span class="badge {% if meal.food_category == 'Vegetarian' %}bg-success{% elif meal.food_category == 'Non-Vegetarian' %}bg-danger{% else %}bg-info{% endif %} small">
+                                        {{ meal.food_category }}
+                                    </span>
+                                    <small class="text-muted">{{ meal.active_booking_count }}/{{ meal.capacity }}</small>
+                                </div>
+                                <div class="fw-bold small text-dark mb-1">{{ meal.title }}</div>
+                                <div class="small text-muted mb-2 text-truncate" style="max-height: 38px;">{{ meal.description or 'Fresh meal' }}</div>
+
+                                <!-- Booking Action -->
+                                {% if meal.id in booked_menu_ids %}
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <span class="badge bg-success text-white small"><i class="fa-solid fa-check me-1"></i>Booked</span>
+                                        {% if meal.is_booking_open %}
+                                        <form method="POST" action="{{ url_for('student.cancel_meal_booking', booking_id=booked_menu_ids[meal.id]) }}">
+                                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                            <button type="submit" class="btn btn-link text-danger p-0 small text-decoration-none" onclick="return confirm('Cancel this meal booking?');">Cancel</button>
+                                        </form>
+                                        {% endif %}
+                                    </div>
+                                {% elif not meal.is_booking_open %}
+                                    <span class="badge bg-secondary text-white small w-100"><i class="fa-solid fa-lock me-1"></i>Closed</span>
+                                {% elif meal.is_capacity_full %}
+                                    <span class="badge bg-danger text-white small w-100">Full</span>
+                                {% else %}
+                                    <form method="POST" action="{{ url_for('student.book_meal', menu_id=meal.id) }}">
+                                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                        <button type="submit" class="btn btn-outline-primary btn-sm w-100 py-1">
+                                            <i class="fa-solid fa-bookmark me-1"></i>Book
+                                        </button>
+                                    </form>
+                                {% endif %}
+                            </div>
+                        {% endif %}
+                    </td>
+                    {% endfor %}
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

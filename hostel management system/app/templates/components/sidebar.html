@@ -44,6 +44,9 @@
             <a href="{{ url_for('admin.fees_list') }}" class="sidebar-link {% if 'fee' in request.endpoint and request.blueprint == 'admin' %}active{% endif %}">
                 <i class="fa-solid fa-receipt"></i> Fee Records
             </a>
+            <a href="{{ url_for('admin.mess_dashboard') }}" class="sidebar-link {% if 'mess' in request.endpoint and request.blueprint == 'admin' %}active{% endif %}">
+                <i class="fa-solid fa-utensils"></i> Mess Management
+            </a>
             <a href="{{ url_for('admin.attendance_list') }}" class="sidebar-link {% if 'attendance' in request.endpoint and request.blueprint == 'admin' %}active{% endif %}">
                 <i class="fa-solid fa-clipboard-user"></i> Attendance Logs
             </a>
@@ -77,6 +80,9 @@
             </a>
             <a href="{{ url_for('warden.parent_inquiries') }}" class="sidebar-link {% if 'inquir' in request.endpoint and request.blueprint == 'warden' %}active{% endif %}">
                 <i class="fa-solid fa-comments"></i> Parent Inquiries
+            </a>
+            <a href="{{ url_for('warden.mess_view') }}" class="sidebar-link {% if 'mess' in request.endpoint and request.blueprint == 'warden' %}active{% endif %}">
+                <i class="fa-solid fa-utensils"></i> Mess Monitoring
             </a>
 
         {% elif current_user.is_security %}
@@ -119,6 +125,9 @@
             <a href="{{ url_for('student.notices_view') }}" class="sidebar-link {% if 'notice' in request.endpoint and request.blueprint == 'student' %}active{% endif %}">
                 <i class="fa-solid fa-bullhorn"></i> Bulletins & Notices
             </a>
+            <a href="{{ url_for('student.mess_dashboard') }}" class="sidebar-link {% if 'mess' in request.endpoint and request.blueprint == 'student' %}active{% endif %}">
+                <i class="fa-solid fa-utensils"></i> Mess & Dining
+            </a>
 
         {% elif current_user.is_parent %}
             <!-- PARENT NAVIGATION -->
@@ -146,6 +155,58 @@
             </a>
             <a href="{{ url_for('parent.notifications_list') }}" class="sidebar-link {% if 'notification' in request.endpoint and request.blueprint == 'parent' %}active{% endif %}">
                 <i class="fa-solid fa-bell"></i> Notifications
+            </a>
+
+        {% elif current_user.is_mess_manager %}
+            <!-- MESS MANAGER NAVIGATION -->
+            <div class="nav-section-title">Mess Operations</div>
+            <a href="{{ url_for('mess_manager.dashboard') }}" class="sidebar-link {% if request.endpoint == 'mess_manager.dashboard' %}active{% endif %}">
+                <i class="fa-solid fa-chart-line"></i> Dashboard
+            </a>
+            <a href="{{ url_for('mess_manager.menu_list') }}" class="sidebar-link {% if 'menu' in request.endpoint and request.blueprint == 'mess_manager' %}active{% endif %}">
+                <i class="fa-solid fa-utensils"></i> Menu Planner
+            </a>
+            <a href="{{ url_for('mess_manager.bookings_list') }}" class="sidebar-link {% if 'booking' in request.endpoint and request.blueprint == 'mess_manager' %}active{% endif %}">
+                <i class="fa-solid fa-bookmark"></i> Reservations
+            </a>
+            <a href="{{ url_for('mess_manager.attendance_list') }}" class="sidebar-link {% if 'attendance' in request.endpoint and request.blueprint == 'mess_manager' %}active{% endif %}">
+                <i class="fa-solid fa-clipboard-user"></i> Dining Register
+            </a>
+            <div class="nav-section-title">Stock & Procurement</div>
+            <a href="{{ url_for('mess_manager.inventory_list') }}" class="sidebar-link {% if 'inventory' in request.endpoint and request.blueprint == 'mess_manager' %}active{% endif %}">
+                <i class="fa-solid fa-boxes-stacked"></i> Pantry Inventory
+            </a>
+            <a href="{{ url_for('mess_manager.suppliers') }}" class="sidebar-link {% if 'supplier' in request.endpoint and request.blueprint == 'mess_manager' %}active{% endif %}">
+                <i class="fa-solid fa-truck-field"></i> Food Vendors
+            </a>
+            <a href="{{ url_for('mess_manager.expenses') }}" class="sidebar-link {% if 'expense' in request.endpoint and request.blueprint == 'mess_manager' %}active{% endif %}">
+                <i class="fa-solid fa-receipt"></i> Kitchen Expenses
+            </a>
+            <div class="nav-section-title">Quality & Reports</div>
+            <a href="{{ url_for('mess_manager.feedback') }}" class="sidebar-link {% if 'feedback' in request.endpoint and request.blueprint == 'mess_manager' %}active{% endif %}">
+                <i class="fa-solid fa-star-half-stroke"></i> Food Feedback
+            </a>
+            <a href="{{ url_for('mess_manager.notices') }}" class="sidebar-link {% if 'notice' in request.endpoint and request.blueprint == 'mess_manager' %}active{% endif %}">
+                <i class="fa-solid fa-bullhorn"></i> Dining Bulletins
+            </a>
+            <a href="{{ url_for('mess_manager.reports') }}" class="sidebar-link {% if 'report' in request.endpoint and request.blueprint == 'mess_manager' %}active{% endif %}">
+                <i class="fa-solid fa-chart-pie"></i> Wastage Reports
+            </a>
+            <a href="{{ url_for('mess_manager.staff_list') }}" class="sidebar-link {% if 'staff' in request.endpoint and request.blueprint == 'mess_manager' %}active{% endif %}">
+                <i class="fa-solid fa-users-gear"></i> Counter Staff
+            </a>
+
+        {% elif current_user.is_mess_staff %}
+            <!-- MESS STAFF NAVIGATION -->
+            <div class="nav-section-title">Mess Counter Desk</div>
+            <a href="{{ url_for('mess_staff.dashboard') }}" class="sidebar-link {% if request.endpoint == 'mess_staff.dashboard' %}active{% endif %}">
+                <i class="fa-solid fa-chart-line"></i> Counter Overview
+            </a>
+            <a href="{{ url_for('mess_staff.scanner') }}" class="sidebar-link {% if request.endpoint == 'mess_staff.scanner' %}active{% endif %}">
+                <i class="fa-solid fa-qrcode"></i> Scan Meal QR
+            </a>
+            <a href="{{ url_for('mess_staff.attendance') }}" class="sidebar-link {% if request.endpoint == 'mess_staff.attendance' %}active{% endif %}">
+                <i class="fa-solid fa-clipboard-check"></i> Today's Attendance
             </a>
         {% endif %}
     </div>

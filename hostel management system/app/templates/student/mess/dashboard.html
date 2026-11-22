@@ -1,0 +1,272 @@
+{% extends 'base.html' %}
+
+{% block title %}Digital Mess Dashboard{% endblock %}
+
+{% block content %}
+<div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4">
+    <div>
+        <h2 class="fw-bold text-dark mb-1">
+            <i class="fa-solid fa-utensils text-primary me-2"></i>Hostel Mess & Dining Desk
+        </h2>
+        <p class="text-muted small mb-0">
+            Welcome, <strong>{{ student.full_name }}</strong> &bull; Facility: <strong>{{ mess.mess_name }}</strong>
+        </p>
+    </div>
+    <div class="d-flex gap-2">
+        <a href="{{ url_for('student.mess_qr') }}" class="btn btn-primary-custom">
+            <i class="fa-solid fa-qrcode me-2"></i>My Mess QR Card
+        </a>
+        <a href="{{ url_for('student.mess_menu') }}" class="btn btn-outline-secondary">
+            <i class="fa-solid fa-calendar-days me-2"></i>Weekly Menu
+        </a>
+    </div>
+</div>
+
+<!-- Stat Cards -->
+<div class="row g-3 mb-4">
+    <div class="col-md-3">
+        <div class="stat-card">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <div class="stat-title">Today's Bookings</div>
+                    <div class="stat-value text-primary">{{ today_bookings_count }}</div>
+                </div>
+                <div class="stat-icon-wrapper bg-primary-subtle text-primary">
+                    <i class="fa-solid fa-calendar-check"></i>
+                </div>
+            </div>
+            <div class="small text-muted mt-2">Active meals pre-booked today</div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="stat-card">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <div class="stat-title">Meals Consumed</div>
+                    <div class="stat-value text-success">{{ consumed_this_month }}</div>
+                </div>
+                <div class="stat-icon-wrapper bg-success-subtle text-success">
+                    <i class="fa-solid fa-bowl-food"></i>
+                </div>
+            </div>
+            <div class="small text-muted mt-2">Total attended this month</div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="stat-card">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <div class="stat-title">Missed Meals</div>
+                    <div class="stat-value text-warning">{{ missed_this_month }}</div>
+                </div>
+                <div class="stat-icon-wrapper bg-warning-subtle text-warning">
+                    <i class="fa-solid fa-clock-rotate-left"></i>
+                </div>
+            </div>
+            <div class="small text-muted mt-2">Unconsumed pre-booked meals</div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="stat-card">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <div class="stat-title">Reviews Submitted</div>
+                    <div class="stat-value text-info">{{ feedback_count }}</div>
+                </div>
+                <div class="stat-icon-wrapper bg-info-subtle text-info">
+                    <i class="fa-solid fa-star"></i>
+                </div>
+            </div>
+            <div class="small text-muted mt-2">Food quality feedback</div>
+        </div>
+    </div>
+</div>
+
+<!-- Mess Bulletins & Notices Banner if any -->
+{% if notices %}
+<div class="card border-0 shadow-sm rounded-4 p-3 bg-light mb-4">
+    <div class="d-flex align-items-center mb-2">
+        <i class="fa-solid fa-bullhorn text-warning me-2 fs-5"></i>
+        <h6 class="fw-bold mb-0 text-dark">Mess Notices & Announcements</h6>
+    </div>
+    <div class="row g-2">
+        {% for notice in notices %}
+        <div class="col-md-4">
+            <div class="p-2 bg-white rounded-3 border">
+                <div class="d-flex justify-content-between align-items-center mb-1">
+                    <strong class="small text-dark">{{ notice.title }}</strong>
+                    <span class="badge bg-secondary-subtle text-secondary small">{{ notice.notice_type }}</span>
+                </div>
+                <p class="small text-muted mb-0 text-truncate">{{ notice.message }}</p>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endif %}
+
+<!-- Today's Meal Menu Grid -->
+<div class="card border-0 shadow-sm rounded-4 p-4 bg-white mb-4">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <div>
+            <h5 class="fw-bold text-dark mb-0">
+                <i class="fa-solid fa-sun text-warning me-2"></i>Today's Dining Schedule
+            </h5>
+            <small class="text-muted">{{ current_date if current_date else 'Live Menu for Today' }}</small>
+        </div>
+        <div>
+            <span class="badge bg-light text-dark border px-3 py-2">
+                Policy: <strong class="text-capitalize">{{ mess.meal_policy.replace('_', ' ') }}</strong>
+            </span>
+        </div>
+    </div>
+
+    {% if not today_menus %}
+    <div class="text-center py-5">
+        <i class="fa-solid fa-kitchen-set fa-3x text-muted opacity-50 mb-3"></i>
+        <h6 class="text-muted fw-bold">No meals published for today yet</h6>
+        <p class="text-secondary small mb-3">The mess manager has not yet published today's meal roster.</p>
+        <a href="{{ url_for('student.mess_menu') }}" class="btn btn-outline-primary btn-sm">
+            <i class="fa-solid fa-calendar me-1"></i>View Upcoming Weekly Schedule
+        </a>
+    </div>
+    {% else %}
+    <div class="row g-3">
+        {% for menu in today_menus %}
+        <div class="col-md-6 col-lg-3">
+            <div class="card h-100 border rounded-4 overflow-hidden shadow-none {% if menu.id in today_booked_menu_ids %}border-primary border-2{% endif %}">
+                <!-- Food Image or Icon Header -->
+                <div class="position-relative bg-light text-center py-3" style="min-height: 120px;">
+                    {% if menu.food_image %}
+                        <img src="{{ url_for('static', filename=menu.food_image) }}" alt="{{ menu.title }}" class="img-fluid object-fit-cover w-100" style="max-height: 120px;">
+                    {% else %}
+                        <div class="py-3 text-secondary opacity-75">
+                            {% if menu.meal_type == 'Breakfast' %}<i class="fa-solid fa-mug-hot fa-3x text-warning"></i>
+                            {% elif menu.meal_type == 'Lunch' %}<i class="fa-solid fa-bowl-rice fa-3x text-success"></i>
+                            {% elif menu.meal_type == 'Snacks' %}<i class="fa-solid fa-cookie-bite fa-3x text-info"></i>
+                            {% else %}<i class="fa-solid fa-plate-wheat fa-3x text-primary"></i>{% endif %}
+                        </div>
+                    {% endif %}
+                    <span class="position-absolute top-0 start-0 m-2 badge {% if menu.food_category == 'Vegetarian' %}bg-success{% elif menu.food_category == 'Non-Vegetarian' %}bg-danger{% else %}bg-info{% endif %}">
+                        {{ menu.food_category }}
+                    </span>
+                    <span class="position-absolute top-0 end-0 m-2 badge bg-dark bg-opacity-75">
+                        {{ menu.meal_timing }}
+                    </span>
+                </div>
+
+                <div class="card-body p-3 d-flex flex-column">
+                    <div class="small fw-bold text-uppercase text-muted mb-1">{{ menu.meal_type }}</div>
+                    <h6 class="fw-bold text-dark mb-1">{{ menu.title }}</h6>
+                    <p class="small text-muted mb-3 flex-grow-1">{{ menu.description or 'Special chef-prepared balanced nutritional meal.' }}</p>
+
+                    <div class="pt-2 border-top small text-secondary mb-3">
+                        <div class="d-flex justify-content-between mb-1">
+                            <span>Deadline:</span>
+                            <span class="fw-semibold {% if not menu.is_booking_open %}text-danger{% else %}text-dark{% endif %}">
+                                {{ menu.booking_deadline.strftime('%I:%M %p') }}
+                            </span>
+                        </div>
+                        <div class="d-flex justify-content-between">
+                            <span>Bookings:</span>
+                            <span class="fw-semibold">{{ menu.active_booking_count }} / {{ menu.capacity }}</span>
+                        </div>
+                    </div>
+
+                    <!-- Action Button -->
+                    {% if menu.id in today_booked_menu_ids %}
+                        <button class="btn btn-success-subtle text-success w-100 btn-sm py-2" disabled>
+                            <i class="fa-solid fa-circle-check me-1"></i>Booked
+                        </button>
+                    {% elif not menu.is_booking_open %}
+                        <button class="btn btn-secondary w-100 btn-sm py-2" disabled>
+                            <i class="fa-solid fa-lock me-1"></i>Booking Closed
+                        </button>
+                    {% elif menu.is_capacity_full %}
+                        <button class="btn btn-danger-subtle text-danger w-100 btn-sm py-2" disabled>
+                            <i class="fa-solid fa-ban me-1"></i>Capacity Full
+                        </button>
+                    {% else %}
+                        <form method="POST" action="{{ url_for('student.book_meal', menu_id=menu.id) }}">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                            <button type="submit" class="btn btn-primary-custom w-100 btn-sm py-2">
+                                <i class="fa-solid fa-bookmark me-1"></i>Book Meal
+                            </button>
+                        </form>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+</div>
+
+<!-- Upcoming Bookings & Quick Links -->
+<div class="row g-4">
+    <div class="col-lg-7">
+        <div class="card border-0 shadow-sm rounded-4 p-4 bg-white">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h6 class="fw-bold text-dark mb-0">
+                    <i class="fa-solid fa-calendar-check text-primary me-2"></i>My Upcoming Reserved Meals
+                </h6>
+                <a href="{{ url_for('student.mess_bookings') }}" class="small text-decoration-none">View All</a>
+            </div>
+
+            {% if not upcoming_bookings %}
+            <div class="text-center py-4 text-muted small">
+                No upcoming meal reservations. Browse the <a href="{{ url_for('student.mess_menu') }}">weekly menu</a> to reserve meals in advance.
+            </div>
+            {% else %}
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0 small">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Date</th>
+                            <th>Slot</th>
+                            <th>Menu</th>
+                            <th>Status</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for b in upcoming_bookings %}
+                        <tr>
+                            <td class="fw-semibold">{{ b.meal_menu.meal_date.strftime('%d %b, %Y') }}</td>
+                            <td><span class="badge bg-secondary-subtle text-secondary">{{ b.meal_menu.meal_type }}</span></td>
+                            <td>{{ b.meal_menu.title }}</td>
+                            <td><span class="badge bg-success-subtle text-success">Confirmed</span></td>
+                            <td>
+                                {% if b.meal_menu.is_booking_open %}
+                                <form method="POST" action="{{ url_for('student.cancel_meal_booking', booking_id=b.id) }}" class="d-inline" onsubmit="return confirm('Cancel this meal reservation?');">
+                                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                    <button type="submit" class="btn btn-outline-danger btn-sm py-0 px-2">Cancel</button>
+                                </form>
+                                {% else %}
+                                <span class="text-muted small">Locked</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="col-lg-5">
+        <div class="card border-0 shadow-sm rounded-4 p-4 bg-white">
+            <h6 class="fw-bold text-dark mb-3">
+                <i class="fa-solid fa-circle-question text-info me-2"></i>Resident Dining Rules & Guidelines
+            </h6>
+            <ul class="small text-muted ps-3 mb-0">
+                <li class="mb-2"><strong>QR Scan Check-in:</strong> Present your digital Mess QR card at the dining hall check-in counter before collecting food trays.</li>
+                <li class="mb-2"><strong>Cutoff Deadlines:</strong> Meal reservations and cancellations close 2 hours before the scheduled meal time.</li>
+                <li class="mb-2"><strong>Leave Rebate:</strong> Approved leave applications exceeding 3 continuous days automatically receive daily mess bill rebates.</li>
+                <li class="mb-2"><strong>Food Hygiene & Quality:</strong> Please submit 5-star ratings or constructive comments via the Feedback portal to maintain dining standards.</li>
+            </ul>
+        </div>
+    </div>
+</div>
+{% endblock %}

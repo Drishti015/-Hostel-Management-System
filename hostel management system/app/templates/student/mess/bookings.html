@@ -1,0 +1,115 @@
+{% extends 'base.html' %}
+
+{% block title %}My Meal Bookings{% endblock %}
+
+{% block content %}
+<div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4">
+    <div>
+        <h2 class="fw-bold text-dark mb-1">
+            <i class="fa-solid fa-bookmark text-primary me-2"></i>My Meal Reservations
+        </h2>
+        <p class="text-muted small mb-0">
+            View booking status, consumption audit, and manage upcoming meals.
+        </p>
+    </div>
+    <div class="d-flex gap-2">
+        <a href="{{ url_for('student.mess_menu') }}" class="btn btn-primary-custom">
+            <i class="fa-solid fa-plus me-2"></i>Book New Meal
+        </a>
+        <a href="{{ url_for('student.mess_dashboard') }}" class="btn btn-outline-secondary">
+            <i class="fa-solid fa-arrow-left me-2"></i>Dashboard
+        </a>
+    </div>
+</div>
+
+<!-- Filters -->
+<div class="card border-0 shadow-sm rounded-4 p-3 bg-white mb-4">
+    <div class="d-flex flex-wrap gap-2">
+        <a href="{{ url_for('student.mess_bookings') }}" class="btn btn-sm {% if not current_status %}btn-primary{% else %}btn-outline-secondary{% endif %}">
+            All Bookings
+        </a>
+        <a href="{{ url_for('student.mess_bookings', status='Booked') }}" class="btn btn-sm {% if current_status == 'Booked' %}btn-primary{% else %}btn-outline-secondary{% endif %}">
+            Active Confirmed
+        </a>
+        <a href="{{ url_for('student.mess_bookings', status='Consumed') }}" class="btn btn-sm {% if current_status == 'Consumed' %}btn-primary{% else %}btn-outline-secondary{% endif %}">
+            Consumed
+        </a>
+        <a href="{{ url_for('student.mess_bookings', status='Cancelled') }}" class="btn btn-sm {% if current_status == 'Cancelled' %}btn-primary{% else %}btn-outline-secondary{% endif %}">
+            Cancelled
+        </a>
+        <a href="{{ url_for('student.mess_bookings', status='Missed') }}" class="btn btn-sm {% if current_status == 'Missed' %}btn-primary{% else %}btn-outline-secondary{% endif %}">
+            Missed
+        </a>
+    </div>
+</div>
+
+<div class="card border-0 shadow-sm rounded-4 p-4 bg-white">
+    {% if not bookings %}
+    <div class="text-center py-5">
+        <i class="fa-solid fa-calendar-xmark fa-3x text-muted opacity-50 mb-3"></i>
+        <h6 class="text-muted fw-bold">No meal reservations found</h6>
+        <p class="text-secondary small mb-3">You have not booked any meals under this status filter.</p>
+        <a href="{{ url_for('student.mess_menu') }}" class="btn btn-outline-primary btn-sm">Browse Weekly Menu</a>
+    </div>
+    {% else %}
+    <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+            <thead class="table-light">
+                <tr>
+                    <th>Meal Date</th>
+                    <th>Slot</th>
+                    <th>Menu Title</th>
+                    <th>Booked At</th>
+                    <th>Status</th>
+                    <th class="text-end">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for b in bookings %}
+                <tr>
+                    <td class="fw-semibold">{{ b.meal_menu.meal_date.strftime('%d %b, %Y') }}</td>
+                    <td>
+                        <span class="badge {% if b.meal_menu.meal_type == 'Breakfast' %}bg-warning text-dark{% elif b.meal_menu.meal_type == 'Lunch' %}bg-success{% elif b.meal_menu.meal_type == 'Snacks' %}bg-info{% else %}bg-primary{% endif %}">
+                            {{ b.meal_menu.meal_type }}
+                        </span>
+                    </td>
+                    <td>
+                        <div class="fw-semibold text-dark">{{ b.meal_menu.title }}</div>
+                        <small class="text-muted">{{ b.meal_menu.food_category }} &bull; {{ b.meal_menu.meal_timing }}</small>
+                    </td>
+                    <td class="small text-muted">{{ b.booking_date.strftime('%d %b %Y, %I:%M %p') }}</td>
+                    <td>
+                        {% if b.booking_status == 'Booked' %}
+                            <span class="badge bg-success-subtle text-success border border-success-subtle">Booked</span>
+                        {% elif b.booking_status == 'Consumed' %}
+                            <span class="badge bg-primary-subtle text-primary border border-primary-subtle">Consumed</span>
+                        {% elif b.booking_status == 'Cancelled' %}
+                            <span class="badge bg-secondary-subtle text-secondary border border-secondary-subtle">Cancelled</span>
+                        {% elif b.booking_status == 'Missed' %}
+                            <span class="badge bg-danger-subtle text-danger border border-danger-subtle">Missed</span>
+                        {% endif %}
+                    </td>
+                    <td class="text-end">
+                        {% if b.booking_status == 'Booked' and b.meal_menu.is_booking_open %}
+                        <form method="POST" action="{{ url_for('student.cancel_meal_booking', booking_id=b.id) }}" class="d-inline" onsubmit="return confirm('Cancel this meal reservation?');">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                            <button type="submit" class="btn btn-outline-danger btn-sm py-1 px-3">
+                                <i class="fa-solid fa-xmark me-1"></i>Cancel
+                            </button>
+                        </form>
+                        {% elif b.booking_status == 'Consumed' and not b.meal_menu.feedbacks.filter_by(student_id=student.id).first() %}
+                        <a href="{{ url_for('student.mess_feedback') }}" class="btn btn-outline-warning btn-sm py-1 px-3">
+                            <i class="fa-solid fa-star me-1"></i>Rate Meal
+                        </a>
+                        {% else %}
+                        <span class="text-muted small">&mdash;</span>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

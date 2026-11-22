@@ -44,4 +44,12 @@ def parent_required(f):
     """Decorator to restrict access strictly to Parent role"""
     return role_required('parent')(f)
 
+def mess_manager_required(f):
+    """Decorator to restrict access strictly to Mess Manager or Admin"""
+    return role_required('admin', 'mess_manager')(f)
+
+def mess_staff_required(f):
+    """Decorator to restrict access to Mess Staff, Mess Manager, or Admin"""
+    return role_required('admin', 'mess_manager', 'mess_staff')(f)
+
 

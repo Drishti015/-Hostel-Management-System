@@ -17,6 +17,10 @@ def login():
             return redirect(url_for('security.dashboard'))
         elif current_user.is_parent:
             return redirect(url_for('parent.dashboard'))
+        elif current_user.is_mess_manager:
+            return redirect(url_for('mess_manager.dashboard'))
+        elif current_user.is_mess_staff:
+            return redirect(url_for('mess_staff.dashboard'))
         return redirect(url_for('student.dashboard'))
 
     if request.method == 'POST':
@@ -46,6 +50,10 @@ def login():
                 return redirect(url_for('security.dashboard'))
             elif user.is_parent:
                 return redirect(url_for('parent.dashboard'))
+            elif user.is_mess_manager:
+                return redirect(url_for('mess_manager.dashboard'))
+            elif user.is_mess_staff:
+                return redirect(url_for('mess_staff.dashboard'))
             else:
                 return redirect(url_for('student.dashboard'))
         else:

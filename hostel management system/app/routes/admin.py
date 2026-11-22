@@ -1031,3 +1031,205 @@ def reset_parent_password(id):
 
     return redirect(url_for('admin.edit_parent', id=profile.id))
 
+
+# =====================================================================
+# MESS MANAGEMENT (ADMINISTRATION)
+# =====================================================================
+
+@admin_bp.route('/mess')
+@login_required
+@admin_required
+def mess_dashboard():
+    """Admin Master Mess Management Center"""
+    from decimal import Decimal
+    from app.models.mess import MessProfile, MealMenu, MealBooking, MealAttendance, MessExpense, MessStaffProfile
+    from app.services.mess_service import MessService
+
+    # Ensure at least default mess exists
+    MessService.get_or_create_default_mess()
+
+    messes = MessProfile.query.all()
+    today = date.today()
+    first_day_of_month = date(today.year, today.month, 1)
+
+    today_bookings = MealBooking.query.join(MealMenu).filter(
+        MealMenu.meal_date == today,
+        MealBooking.booking_status == 'Booked'
+    ).count()
+
+    today_served = MealAttendance.query.join(MealMenu).filter(
+        MealMenu.meal_date == today,
+        MealAttendance.attendance_status.in_(['Present', 'Walk-in'])
+    ).count()
+
+    month_expenses = db.session.query(db.func.sum(MessExpense.amount)).filter(
+        MessExpense.transaction_date >= first_day_of_month
+    ).scalar() or Decimal('0.00')
+
+    staff_members = MessStaffProfile.query.all()
+
+    return render_template('admin/mess/dashboard.html',
+                           messes=messes,
+                           today_bookings=today_bookings,
+                           today_served=today_served,
+                           month_expenses=month_expenses,
+                           staff_members=staff_members,
+                           today=today)
+
+
+@admin_bp.route('/mess/create', methods=['GET', 'POST'])
+@login_required
+@admin_required
+def mess_create():
+    """Create a new mess facility"""
+    from app.models.mess import MessProfile
+    from app.models import Hostel
+
+    hostels = Hostel.query.all()
+
+    if request.method == 'POST':
+        mess_name = request.form.get('mess_name', '').strip()
+        hostel_id = request.form.get('hostel_id', type=int) or None
+        description = request.form.get('description', '').strip()
+        contact_number = request.form.get('contact_number', '').strip()
+        capacity = request.form.get('daily_capacity', 300, type=int)
+        meal_policy = request.form.get('meal_policy', 'booking_required')
+        operating_status = request.form.get('operating_status', 'Active')
+
+        if not mess_name:
+            flash('Mess Name is required.', 'danger')
+            return redirect(url_for('admin.mess_create'))
+
+        mess = MessProfile(
+            mess_name=mess_name,
+            hostel_id=hostel_id,
+            description=description,
+            contact_number=contact_number,
+            daily_capacity=capacity,
+            meal_policy=meal_policy,
+            operating_status=operating_status
+        )
+        db.session.add(mess)
+        db.session.commit()
+        flash(f'Mess facility "{mess_name}" created successfully.', 'success')
+        return redirect(url_for('admin.mess_dashboard'))
+
+    return render_template('admin/mess/form.html', mess=None, hostels=hostels)
+
+
+@admin_bp.route('/mess/<int:id>/edit', methods=['GET', 'POST'])
+@login_required
+@admin_required
+def mess_edit(id):
+    """Update mess operating policies and capacity"""
+    from app.models.mess import MessProfile
+    from app.models import Hostel
+
+    mess = MessProfile.query.get_or_404(id)
+    hostels = Hostel.query.all()
+
+    if request.method == 'POST':
+        mess.mess_name = request.form.get('mess_name', mess.mess_name).strip()
+        mess.hostel_id = request.form.get('hostel_id', type=int) or None
+        mess.description = request.form.get('description', mess.description or '').strip()
+        mess.contact_number = request.form.get('contact_number', mess.contact_number or '').strip()
+        mess.daily_capacity = request.form.get('daily_capacity', mess.daily_capacity, type=int)
+        mess.meal_policy = request.form.get('meal_policy', mess.meal_policy)
+        mess.operating_status = request.form.get('operating_status', mess.operating_status)
+        mess.updated_at = datetime.utcnow()
+
+        db.session.commit()
+        flash(f'Mess "{mess.mess_name}" updated successfully.', 'success')
+        return redirect(url_for('admin.mess_dashboard'))
+
+    return render_template('admin/mess/form.html', mess=mess, hostels=hostels)
+
+
+@admin_bp.route('/mess/<int:id>/toggle-policy', methods=['POST'])
+@login_required
+@admin_required
+def mess_toggle_policy(id):
+    """Quickly switch dining entry policies (booking_required vs walk_in)"""
+    from app.models.mess import MessProfile
+    mess = MessProfile.query.get_or_404(id)
+    if mess.meal_policy == 'booking_required':
+        mess.meal_policy = 'walk_in'
+    else:
+        mess.meal_policy = 'booking_required'
+    mess.updated_at = datetime.utcnow()
+    db.session.commit()
+    policy_label = "Pre-booking required" if mess.meal_policy == 'booking_required' else "Open walk-ins allowed"
+    flash(f'{mess.mess_name} policy updated: {policy_label}.', 'info')
+    return redirect(url_for('admin.mess_dashboard'))
+
+
+@admin_bp.route('/mess/staff/create', methods=['GET', 'POST'])
+@login_required
+@admin_required
+def mess_staff_create():
+    """Provision a new mess staff user account"""
+    from app.models.mess import MessProfile, MessStaffProfile
+
+    messes = MessProfile.query.all()
+
+    if request.method == 'POST':
+        username = request.form.get('username', '').strip()
+        email = request.form.get('email', '').strip()
+        full_name = request.form.get('full_name', '').strip()
+        password = request.form.get('password', '').strip()
+        mess_id = request.form.get('mess_id', type=int)
+        designation = request.form.get('role_designation', 'Counter Staff')
+        shift = request.form.get('shift_timing', 'General Shift (7 AM - 10 PM)')
+
+        if not username or not password or not full_name:
+            flash('Username, Full Name, and Password are required.', 'danger')
+            return redirect(url_for('admin.mess_staff_create'))
+
+        if User.query.filter((User.username == username) | (User.email == email)).first():
+            flash('Username or Email is already registered in the system.', 'danger')
+            return redirect(url_for('admin.mess_staff_create'))
+
+        user = User(
+            username=username,
+            email=email,
+            role='mess_staff',
+            is_active=True
+        )
+        user.set_password(password)
+        db.session.add(user)
+        db.session.flush()
+
+        staff_profile = MessStaffProfile(
+            user_id=user.id,
+            mess_id=mess_id,
+            staff_name=full_name,
+            role_designation=designation,
+            employment_status='Active'
+        )
+        db.session.add(staff_profile)
+        db.session.commit()
+
+        flash(f'Mess Staff account for "{full_name}" (@{username}) provisioned successfully.', 'success')
+        return redirect(url_for('admin.mess_dashboard'))
+
+    return render_template('admin/mess/staff_create.html', messes=messes)
+
+
+@admin_bp.route('/mess/billing/generate', methods=['POST'])
+@login_required
+@admin_required
+def mess_billing_generate():
+    """Trigger automated monthly mess billing with approved leave rebates"""
+    from app.services.mess_service import MessService
+
+    month = request.form.get('month', type=int) or date.today().month
+    year = request.form.get('year', type=int) or date.today().year
+
+    result = MessService.generate_monthly_billing(month, year)
+    if result['success']:
+        flash(result['message'], 'success')
+    else:
+        flash(result['message'], 'danger')
+
+    return redirect(url_for('admin.mess_dashboard'))
+

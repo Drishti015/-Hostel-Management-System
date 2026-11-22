@@ -1,0 +1,75 @@
+{% extends 'base.html' %}
+
+{% block title %}Mess Billing & Rebates{% endblock %}
+
+{% block content %}
+<div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4">
+    <div>
+        <h2 class="fw-bold text-dark mb-1">
+            <i class="fa-solid fa-receipt text-primary me-2"></i>Mess Billing & Rebates Ledger
+        </h2>
+        <p class="text-muted small mb-0">Monthly dining charges, attendance reconciliations, and approved leave rebates.</p>
+    </div>
+    <div>
+        <a href="{{ url_for('student.mess_dashboard') }}" class="btn btn-outline-secondary">
+            <i class="fa-solid fa-arrow-left me-2"></i>Back to Dashboard
+        </a>
+    </div>
+</div>
+
+<div class="card border-0 shadow-sm rounded-4 p-4 bg-white mb-4">
+    {% if not bills %}
+    <div class="text-center py-5">
+        <i class="fa-solid fa-file-invoice-dollar fa-3x text-muted opacity-50 mb-3"></i>
+        <h6 class="text-muted fw-bold">No mess billing records generated yet</h6>
+        <p class="text-secondary small mb-0">Monthly mess bills and leave rebates will be posted here by administration.</p>
+    </div>
+    {% else %}
+    <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+            <thead class="table-light">
+                <tr>
+                    <th>Billing Month</th>
+                    <th>Booked / Consumed</th>
+                    <th>Base Fee</th>
+                    <th>Leave Rebate</th>
+                    <th>Total Payable</th>
+                    <th>Due Date</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for b in bills %}
+                <tr>
+                    <td class="fw-semibold">{{ b.billing_month }}</td>
+                    <td>
+                        <span class="badge bg-light text-dark border">
+                            {{ b.total_meals_booked }} Booked &bull; {{ b.total_meals_consumed }} Consumed
+                        </span>
+                    </td>
+                    <td class="font-monospace">Rs {{ b.base_fee }}</td>
+                    <td class="font-monospace text-success">- Rs {{ b.rebate_amount }}</td>
+                    <td class="font-monospace fw-bold text-dark">Rs {{ b.total_amount }}</td>
+                    <td class="small text-muted">{{ b.due_date.strftime('%d %b, %Y') }}</td>
+                    <td>
+                        {% if b.status == 'paid' %}
+                            <span class="badge bg-success-subtle text-success border border-success-subtle">Paid</span>
+                        {% elif b.status == 'overdue' %}
+                            <span class="badge bg-danger-subtle text-danger border border-danger-subtle">Overdue</span>
+                        {% else %}
+                            <span class="badge bg-warning-subtle text-warning border border-warning-subtle">Pending</span>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% endif %}
+</div>
+
+<div class="alert alert-light border small text-muted">
+    <i class="fa-solid fa-circle-info text-info me-1"></i>
+    <strong>Leave Rebate Policy:</strong> Approved leave applications exceeding 3 continuous days receive automatic daily dining rebates of Rs 100/day applied directly to the monthly invoice.
+</div>
+{% endblock %}

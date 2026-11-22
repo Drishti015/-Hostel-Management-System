@@ -14,7 +14,7 @@ class User(UserMixin, db.Model):
     username = db.Column(db.String(50), unique=True, nullable=False, index=True)
     email = db.Column(db.String(120), unique=True, nullable=False, index=True)
     password_hash = db.Column(db.String(255), nullable=False)
-    role = db.Column(db.Enum('admin', 'warden', 'student', 'security', 'parent', name='user_roles'), nullable=False, default='student', index=True)
+    role = db.Column(db.Enum('admin', 'warden', 'student', 'security', 'parent', 'mess_manager', 'mess_staff', name='user_roles'), nullable=False, default='student', index=True)
     is_active = db.Column(db.Boolean, default=True, nullable=False)
     created_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
@@ -54,6 +54,14 @@ class User(UserMixin, db.Model):
     @property
     def is_parent(self):
         return self.role == 'parent'
+
+    @property
+    def is_mess_manager(self):
+        return self.role == 'mess_manager'
+
+    @property
+    def is_mess_staff(self):
+        return self.role == 'mess_staff'
 
     def __repr__(self):
         return f"<User {self.username} [{self.role}]>"

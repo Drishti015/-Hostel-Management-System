@@ -1,0 +1,504 @@
+{% extends 'base.html' %}
+
+{% block title %}Dining Counter QR Scanner{% endblock %}
+
+{% block extra_css %}
+<style>
+    #reader {
+        width: 100%;
+        max-width: 480px;
+        margin: 0 auto;
+        border-radius: 14px;
+        overflow: hidden;
+        border: 2px dashed #0d6efd;
+        background: #000;
+        min-height: 280px;
+        position: relative;
+    }
+    #reader video {
+        border-radius: 12px;
+        width: 100% !important;
+        height: auto !important;
+        object-fit: cover;
+    }
+    .pulse-dot {
+        display: inline-block;
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+        background-color: #198754;
+        animation: pulse 1.2s infinite;
+    }
+    @keyframes pulse {
+        0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(25, 135, 84, 0.7); }
+        70% { transform: scale(1.15); box-shadow: 0 0 0 8px rgba(25, 135, 84, 0); }
+        100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(25, 135, 84, 0); }
+    }
+    .scanner-placeholder {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        color: #adb5bd;
+        text-align: center;
+        width: 90%;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4">
+    <div>
+        <h2 class="fw-bold text-dark mb-1">
+            <i class="fa-solid fa-qrcode text-primary me-2"></i>Meal Attendance Live QR Scanner
+        </h2>
+        <p class="text-muted small mb-0">
+            Counter terminal for scanning student meal passes &bull; Facility: <strong>{{ mess.mess_name }}</strong>
+        </p>
+    </div>
+    <div class="d-flex gap-2">
+        <a href="{{ url_for('mess_staff.dashboard') }}" class="btn btn-outline-secondary">
+            <i class="fa-solid fa-arrow-left me-2"></i>Dashboard
+        </a>
+        <a href="{{ url_for('mess_staff.attendance') }}" class="btn btn-outline-primary">
+            <i class="fa-solid fa-list-check me-2"></i>Today's Log
+        </a>
+    </div>
+</div>
+
+<div class="row g-4 justify-content-center">
+    <div class="col-lg-7">
+        <div class="card border-0 shadow-sm rounded-4 p-4 bg-white mb-4">
+            <!-- Active Meal Selector -->
+            <div class="mb-4 text-center">
+                <label class="form-label small fw-bold text-uppercase text-muted d-block mb-2">Active Meal Service Slot</label>
+                {% if not published_menus %}
+                    <div class="alert alert-warning py-2 small mb-0">
+                        <i class="fa-solid fa-triangle-exclamation me-1"></i> No meals are scheduled for today. Please publish a menu first.
+                    </div>
+                {% else %}
+                    <div class="d-flex flex-wrap justify-content-center gap-2">
+                        {% for m in published_menus %}
+                            <a href="{{ url_for('mess_staff.scanner', menu_id=m.id) }}"
+                               class="btn btn-sm px-3 py-2 fw-semibold {% if active_menu and active_menu.id == m.id %}btn-primary{% else %}btn-outline-secondary{% endif %}">
+                                <i class="fa-solid {% if m.meal_type == 'Breakfast' %}fa-mug-hot{% elif m.meal_type == 'Lunch' %}fa-bowl-rice{% elif m.meal_type == 'Snacks' %}fa-cookie-bite{% else %}fa-plate-wheat{% endif %} me-1"></i>
+                                {{ m.meal_type }} ({{ m.title }})
+                            </a>
+                        {% endfor %}
+                    </div>
+                    {% if active_menu %}
+                    <div class="small text-muted mt-2">
+                        Timing: <strong>{{ active_menu.meal_timing }}</strong> &bull; Attended: <strong class="text-success">{{ active_menu.attendance_count }}</strong> / {{ active_menu.capacity }}
+                    </div>
+                    {% endif %}
+                {% endif %}
+            </div>
+
+            <!-- Live Camera Viewport -->
+            <div class="text-center mb-3">
+                <div id="reader">
+                    <div id="reader-placeholder" class="scanner-placeholder">
+                        <i class="fa-solid fa-camera fa-3x mb-2 text-secondary opacity-50"></i>
+                        <p class="mb-0 small">Camera stream will appear here once started.</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Scanner Controls -->
+            <div class="d-flex flex-wrap justify-content-center gap-2 mb-3">
+                <button id="btn-start-scanner" class="btn btn-primary-custom px-4" onclick="startScanner()" {% if not active_menu %}disabled{% endif %}>
+                    <i class="fa-solid fa-camera me-2"></i>Start Camera
+                </button>
+                <button id="btn-stop-scanner" class="btn btn-outline-danger px-4" onclick="stopScanner()" style="display:none;">
+                    <i class="fa-solid fa-stop me-2"></i>Stop Camera
+                </button>
+                <button id="btn-switch-camera" class="btn btn-outline-secondary px-3" onclick="switchCamera()" style="display:none;">
+                    <i class="fa-solid fa-repeat me-1"></i>Flip Camera
+                </button>
+            </div>
+
+            <div id="scan-status-indicator" class="alert alert-secondary text-center small py-2 mb-0">
+                <i class="fa-solid fa-video me-1"></i> Camera is idle. Click <strong>Start Camera</strong> to begin scanning.
+            </div>
+        </div>
+
+        <!-- Verification Result Box (Appears via AJAX or Form Submit) -->
+        <div id="scan-result-card" class="card border-0 shadow rounded-4 p-4 bg-white mb-4" style="display: none;">
+            <div id="scan-result-content"></div>
+        </div>
+    </div>
+
+    <!-- Right Column: Manual Fallback & Policy Help -->
+    <div class="col-lg-5">
+        <div class="card border-0 shadow-sm rounded-4 p-4 bg-white mb-4">
+            <h5 class="fw-bold text-dark mb-3">
+                <i class="fa-solid fa-keyboard text-primary me-2"></i>Manual Verification Fallback
+            </h5>
+            <p class="text-muted small">
+                If student camera scan fails or phone battery is drained, verify by entering their enrollment number.
+            </p>
+
+            <form method="POST" action="{{ url_for('mess_staff.verify_scan') }}" id="manual-verify-form">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <input type="hidden" name="meal_menu_id" value="{{ active_menu.id if active_menu else '' }}">
+
+                <div class="mb-3">
+                    <label class="form-label small fw-semibold text-secondary">Student Enrollment / Roll No</label>
+                    <div class="input-group">
+                        <span class="input-group-text bg-light border-end-0"><i class="fa-solid fa-user-graduate text-muted"></i></span>
+                        <input type="text" name="token" id="manual_token_input" class="form-control font-monospace border-start-0" placeholder="e.g. 2100970100045" required>
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label small fw-semibold text-secondary">Remarks (Optional)</label>
+                    <input type="text" name="remarks" class="form-control" placeholder="e.g. Checked ID Card manually">
+                </div>
+
+                <button type="submit" class="btn btn-primary-custom w-100 py-2" {% if not active_menu %}disabled{% endif %}>
+                    <i class="fa-solid fa-check me-2"></i>Record Manual Attendance
+                </button>
+            </form>
+        </div>
+
+        <div class="card border-0 shadow-sm rounded-4 p-4 bg-light">
+            <h6 class="fw-bold text-dark mb-2">
+                <i class="fa-solid fa-circle-info text-info me-1"></i>Active Dining Policy
+            </h6>
+            <div class="small text-muted">
+                Current Mode: <strong class="text-dark">{{ mess.meal_policy.replace('_', ' ') | title }}</strong>
+                <ul class="ps-3 mt-2 mb-0">
+                    {% if mess.meal_policy == 'booking_required' %}
+                    <li class="mb-1"><strong>Pre-booking Required:</strong> Only students with an active reservation can be checked in.</li>
+                    <li>Students without a booking will be rejected by the server.</li>
+                    {% else %}
+                    <li class="mb-1"><strong>Walk-in Mode:</strong> All eligible hostel residents may dine without pre-booking, subject to capacity.</li>
+                    {% endif %}
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<!-- HTML5 QR Code Library with Fallback CDN -->
+<script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+<script>
+    if (typeof Html5Qrcode === 'undefined') {
+        document.write('<script src="https://cdnjs.cloudflare.com/ajax/libs/html5-qrcode/2.3.8/html5-qrcode.min.js"><\/script>');
+    }
+</script>
+
+<script>
+    const csrfToken = "{{ csrf_token() }}";
+    const verifyApiUrl = "{{ url_for('mess_staff.verify_scan') }}";
+    const activeMenuId = {{ active_menu.id if active_menu else 'null' }};
+
+    let html5QrCode = null;
+    let isScanning = false;
+    let isStarting = false;
+    let cameraList = [];
+    let currentCameraIndex = 0;
+
+    function showStatus(message, type) {
+        const indicator = document.getElementById('scan-status-indicator');
+        indicator.className = `alert alert-${type} text-center small py-2 mb-0`;
+        indicator.innerHTML = message;
+    }
+
+    function handleCameraError(err) {
+        isStarting = false;
+        isScanning = false;
+        document.getElementById('btn-start-scanner').style.display = 'inline-block';
+        document.getElementById('btn-stop-scanner').style.display = 'none';
+        document.getElementById('btn-switch-camera').style.display = 'none';
+
+        const placeholder = document.getElementById('reader-placeholder');
+        if (placeholder) placeholder.style.display = 'block';
+
+        const errStr = (err && (err.name || err.message || err.toString())) || '';
+        console.error("Camera error:", err);
+
+        if (errStr.includes("NotAllowedError") || errStr.includes("PermissionDeniedError")) {
+            showStatus('<i class="fa-solid fa-triangle-exclamation me-1"></i> <strong>Camera permission denied.</strong> Please allow camera access in browser address bar and try again.', 'danger');
+        } else if (errStr.includes("NotFoundError") || errStr.includes("DevicesNotFoundError")) {
+            showStatus('<i class="fa-solid fa-video-slash me-1"></i> <strong>No camera detected.</strong> Please connect a webcam or use manual enrollment verification.', 'warning');
+        } else if (errStr.includes("NotReadableError") || errStr.includes("TrackStartError")) {
+            showStatus('<i class="fa-solid fa-triangle-exclamation me-1"></i> <strong>Camera in use.</strong> Another application is using the camera. Please close it and retry.', 'danger');
+        } else {
+            showStatus('<i class="fa-solid fa-circle-exclamation me-1"></i> <strong>Camera error:</strong> ' + (err.message || err), 'danger');
+        }
+    }
+
+    function startScanner() {
+        if (!activeMenuId) {
+            alert('Please select an active meal slot first.');
+            return;
+        }
+
+        if (isScanning || isStarting) return;
+        isStarting = true;
+
+        const placeholder = document.getElementById('reader-placeholder');
+        if (placeholder) placeholder.style.display = 'none';
+
+        if (!window.isSecureContext && location.hostname !== 'localhost' && location.hostname !== '127.0.0.1') {
+            showStatus('<i class="fa-solid fa-lock text-danger me-1"></i> <strong>Insecure Origin:</strong> Camera requires HTTPS or localhost.', 'danger');
+            isStarting = false;
+            if (placeholder) placeholder.style.display = 'block';
+            return;
+        }
+
+        if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+            showStatus('<i class="fa-solid fa-ban me-1"></i> Your browser does not support camera capture (<code>getUserMedia</code> missing).', 'danger');
+            isStarting = false;
+            if (placeholder) placeholder.style.display = 'block';
+            return;
+        }
+
+        if (typeof Html5Qrcode === 'undefined') {
+            showStatus('<i class="fa-solid fa-wifi me-1"></i> QR Scanner library failed to load. Check connection and refresh.', 'danger');
+            isStarting = false;
+            if (placeholder) placeholder.style.display = 'block';
+            return;
+        }
+
+        showStatus('<i class="fa-solid fa-spinner fa-spin me-1"></i> Initializing camera...', 'info');
+
+        if (!html5QrCode) {
+            html5QrCode = new Html5Qrcode("reader");
+        }
+
+        Html5Qrcode.getCameras().then(devices => {
+            if (devices && devices.length > 0) {
+                cameraList = devices;
+                let selectedCameraId = cameraList[currentCameraIndex].id;
+
+                for (let i = 0; i < devices.length; i++) {
+                    const label = (devices[i].label || '').toLowerCase();
+                    if (label.includes('back') || label.includes('rear') || label.includes('environment')) {
+                        selectedCameraId = devices[i].id;
+                        currentCameraIndex = i;
+                        break;
+                    }
+                }
+
+                const config = {
+                    fps: 15,
+                    qrbox: function(viewfinderWidth, viewfinderHeight) {
+                        const minEdge = Math.min(viewfinderWidth, viewfinderHeight);
+                        const qrboxSize = Math.floor(minEdge * 0.72);
+                        return { width: Math.max(qrboxSize, 200), height: Math.max(qrboxSize, 200) };
+                    },
+                    aspectRatio: 1.0
+                };
+
+                html5QrCode.start(
+                    selectedCameraId,
+                    config,
+                    onScanSuccess,
+                    onScanFailure
+                ).then(() => {
+                    isScanning = true;
+                    isStarting = false;
+                    document.getElementById('btn-start-scanner').style.display = 'none';
+                    document.getElementById('btn-stop-scanner').style.display = 'inline-block';
+                    if (cameraList.length > 1) {
+                        document.getElementById('btn-switch-camera').style.display = 'inline-block';
+                    }
+                    showStatus('<span class="pulse-dot me-2"></span><strong>Scanner Active</strong> — Point camera at student mess QR code...', 'success');
+                }).catch(err => {
+                    handleCameraError(err);
+                });
+            } else {
+                const config = { fps: 15, qrbox: { width: 250, height: 250 } };
+                html5QrCode.start(
+                    { facingMode: "environment" },
+                    config,
+                    onScanSuccess,
+                    onScanFailure
+                ).then(() => {
+                    isScanning = true;
+                    isStarting = false;
+                    document.getElementById('btn-start-scanner').style.display = 'none';
+                    document.getElementById('btn-stop-scanner').style.display = 'inline-block';
+                    showStatus('<span class="pulse-dot me-2"></span><strong>Scanner Active</strong> — Point camera at student mess QR code...', 'success');
+                }).catch(err => {
+                    handleCameraError(err);
+                });
+            }
+        }).catch(err => {
+            handleCameraError(err);
+        });
+    }
+
+    function stopScanner() {
+        if (html5QrCode && (isScanning || html5QrCode.isScanning)) {
+            html5QrCode.stop().then(() => {
+                isScanning = false;
+                isStarting = false;
+                document.getElementById('btn-start-scanner').style.display = 'inline-block';
+                document.getElementById('btn-stop-scanner').style.display = 'none';
+                document.getElementById('btn-switch-camera').style.display = 'none';
+
+                const placeholder = document.getElementById('reader-placeholder');
+                if (placeholder) placeholder.style.display = 'block';
+
+                showStatus('<i class="fa-solid fa-video me-1"></i> Camera stopped. Click <strong>Start Camera</strong> to begin scanning.', 'secondary');
+            }).catch(err => {
+                console.error("Error stopping scanner:", err);
+                isScanning = false;
+                isStarting = false;
+                document.getElementById('btn-start-scanner').style.display = 'inline-block';
+                document.getElementById('btn-stop-scanner').style.display = 'none';
+            });
+        }
+    }
+
+    function switchCamera() {
+        if (cameraList.length > 1) {
+            currentCameraIndex = (currentCameraIndex + 1) % cameraList.length;
+            if (isScanning) {
+                stopScanner();
+                setTimeout(() => { startScanner(); }, 350);
+            }
+        }
+    }
+
+    function onScanFailure(error) {
+        // Continuous scan feedback
+    }
+
+    function onScanSuccess(decodedText, decodedResult) {
+        if (!isScanning) return;
+        isScanning = false;
+
+        showStatus('<i class="fa-solid fa-spinner fa-spin me-2"></i>QR Code detected! Verifying student attendance...', 'info');
+
+        if (html5QrCode) {
+            html5QrCode.stop().then(() => {
+                document.getElementById('btn-start-scanner').style.display = 'inline-block';
+                document.getElementById('btn-stop-scanner').style.display = 'none';
+                document.getElementById('btn-switch-camera').style.display = 'none';
+                const placeholder = document.getElementById('reader-placeholder');
+                if (placeholder) placeholder.style.display = 'block';
+            }).catch(err => console.log(err));
+        }
+
+        fetch(verifyApiUrl, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': csrfToken
+            },
+            body: JSON.stringify({
+                token: decodedText,
+                meal_menu_id: activeMenuId,
+                verification_method: 'QR_Scan'
+            })
+        })
+        .then(res => res.json())
+        .then(result => {
+            renderVerificationResult(result);
+        })
+        .catch(err => {
+            console.error("AJAX verification failed:", err);
+            showStatus('<i class="fa-solid fa-circle-exclamation me-1"></i> Network error during verification. Try manual input.', 'danger');
+        });
+    }
+
+    function renderVerificationResult(result) {
+        const card = document.getElementById('scan-result-card');
+        const content = document.getElementById('scan-result-content');
+        card.style.display = 'block';
+
+        if (result.success) {
+            // GREEN - SUCCESS
+            content.innerHTML = `
+                <div class="d-flex justify-content-between align-items-center border-bottom pb-3 mb-3">
+                    <div>
+                        <h4 class="fw-bold text-success mb-1">
+                            <i class="fa-solid fa-circle-check me-2"></i>MEAL ATTENDANCE RECORDED
+                        </h4>
+                        <div class="text-muted small">${result.message}</div>
+                    </div>
+                    <div>
+                        <span class="badge bg-success px-3 py-2 fs-6">
+                            <i class="fa-solid fa-check me-1"></i>${result.attendance_status || 'VERIFIED'}
+                        </span>
+                    </div>
+                </div>
+
+                <div class="row g-3 mb-3">
+                    <div class="col-md-6">
+                        <div class="p-3 bg-light rounded-3">
+                            <div class="text-uppercase small text-muted fw-semibold">Student Name</div>
+                            <div class="fs-5 fw-bold text-dark">${result.student_name}</div>
+                            <div class="small text-secondary">
+                                Roll No: <span class="fw-semibold text-dark">${result.roll_no}</span> | 
+                                Enroll: <span class="fw-semibold text-dark">${result.enrollment_no}</span>
+                            </div>
+                            <div class="small text-secondary">Branch: ${result.branch}</div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="p-3 bg-light rounded-3">
+                            <div class="text-uppercase small text-muted fw-semibold">Hostel & Room</div>
+                            <div class="fs-5 fw-bold text-dark">${result.hostel}</div>
+                            <div class="small text-secondary">Room: <strong>${result.room}</strong></div>
+                            <div class="small text-secondary">Meal: <strong>${result.meal_type}</strong> (${result.menu_title})</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="d-flex justify-content-end">
+                    <button class="btn btn-primary-custom px-4" onclick="scanNextStudent()">
+                        <i class="fa-solid fa-camera me-2"></i>Scan Next Student
+                    </button>
+                </div>
+            `;
+            showStatus('<i class="fa-solid fa-check-circle me-1"></i> Attendance logged. Ready for next student.', 'success');
+        } else if (result.code === 'DUPLICATE_ATTENDANCE') {
+            // YELLOW - DUPLICATE
+            content.innerHTML = `
+                <div class="p-3 bg-warning-subtle border border-warning rounded-4 text-center">
+                    <div class="text-warning mb-2"><i class="fa-solid fa-triangle-exclamation fa-3x"></i></div>
+                    <h4 class="fw-bold text-dark mb-1">ATTENDANCE ALREADY RECORDED</h4>
+                    <p class="text-dark small mb-3">${result.message}</p>
+                    <button class="btn btn-outline-dark btn-sm px-4" onclick="scanNextStudent()">
+                        <i class="fa-solid fa-camera me-2"></i>Scan Next Student
+                    </button>
+                </div>
+            `;
+            showStatus('<i class="fa-solid fa-triangle-exclamation me-1"></i> Duplicate check-in rejected.', 'warning');
+        } else {
+            // RED - ERROR / REJECTION
+            content.innerHTML = `
+                <div class="p-3 bg-danger-subtle border border-danger rounded-4 text-center">
+                    <div class="text-danger mb-2"><i class="fa-solid fa-circle-xmark fa-3x"></i></div>
+                    <h4 class="fw-bold text-danger mb-1">${result.code || 'ACCESS REJECTED'}</h4>
+                    <p class="text-dark small mb-3">${result.message}</p>
+                    <button class="btn btn-outline-danger btn-sm px-4" onclick="scanNextStudent()">
+                        <i class="fa-solid fa-camera me-2"></i>Try Again
+                    </button>
+                </div>
+            `;
+            showStatus('<i class="fa-solid fa-circle-xmark me-1"></i> Verification failed: ' + result.message, 'danger');
+        }
+
+        card.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
+
+    function scanNextStudent() {
+        document.getElementById('scan-result-card').style.display = 'none';
+        startScanner();
+    }
+
+    window.addEventListener('beforeunload', () => {
+        if (html5QrCode && (isScanning || html5QrCode.isScanning)) {
+            try { html5QrCode.stop(); } catch(e) {}
+        }
+    });
+</script>
+{% endblock %}

@@ -1,0 +1,149 @@
+{% extends 'base.html' %}
+
+{% block title %}Mess Monitoring Desk - Warden{% endblock %}
+
+{% block content %}
+<div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4">
+    <div>
+        <h2 class="fw-bold text-dark mb-1">
+            <i class="fa-solid fa-utensils text-primary me-2"></i>Hostel Mess Monitoring Desk
+        </h2>
+        <p class="text-muted small mb-0">Oversee dining hall operations, daily food menus, student turnout, and meal quality.</p>
+    </div>
+    <div class="d-flex gap-2">
+        <span class="badge bg-primary fs-6 d-flex align-items-center">
+            <i class="fa-solid fa-building me-2"></i>{{ mess.mess_name }}
+        </span>
+    </div>
+</div>
+
+<!-- Overview Stats -->
+<div class="row g-3 mb-4">
+    <div class="col-md-4">
+        <div class="card border-0 shadow-sm rounded-4 p-3 bg-white border-start border-4 border-primary">
+            <div class="text-muted small fw-semibold text-uppercase">Today's Menus Scheduled</div>
+            <div class="fs-2 fw-bold text-dark mt-1">{{ today_menus|length }}</div>
+            <div class="text-muted small">{{ today.strftime('%A, %d %b %Y') }}</div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card border-0 shadow-sm rounded-4 p-3 bg-white border-start border-4 border-info">
+            <div class="text-muted small fw-semibold text-uppercase">Pre-Booked Meals</div>
+            <div class="fs-2 fw-bold text-info mt-1">{{ today_bookings }}</div>
+            <div class="text-muted small">Resident reservations</div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card border-0 shadow-sm rounded-4 p-3 bg-white border-start border-4 border-success">
+            <div class="text-muted small fw-semibold text-uppercase">Meals Served Today</div>
+            <div class="fs-2 fw-bold text-success mt-1">{{ today_attendance }}</div>
+            <div class="text-muted small">Verified QR scan attendance</div>
+        </div>
+    </div>
+</div>
+
+<!-- Low Stock Warning if any -->
+{% if low_stock_items %}
+<div class="alert alert-warning border-0 rounded-4 shadow-sm mb-4 p-3">
+    <div class="d-flex align-items-center">
+        <i class="fa-solid fa-triangle-exclamation fs-4 me-3 text-warning"></i>
+        <div>
+            <div class="fw-bold">Pantry Alert: {{ low_stock_items|length }} items below threshold</div>
+            <div class="small text-muted">
+                Items requiring replenishment: 
+                {% for item in low_stock_items[:5] %}
+                <span class="badge bg-warning-subtle text-dark border me-1">{{ item.item_name }} ({{ item.quantity }} {{ item.unit }})</span>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<div class="row g-4">
+    <!-- Today's Menus -->
+    <div class="col-lg-7">
+        <div class="card border-0 shadow-sm rounded-4 p-4 bg-white h-100">
+            <h5 class="fw-bold text-dark mb-3">Today's Dining Schedule</h5>
+            {% if today_menus %}
+            <div class="row g-3">
+                {% for m in today_menus %}
+                <div class="col-12">
+                    <div class="p-3 border rounded-3 bg-light">
+                        <div class="d-flex justify-content-between align-items-start mb-2">
+                            <div>
+                                <span class="badge {% if m.meal_type == 'Breakfast' %}bg-warning text-dark{% elif m.meal_type == 'Lunch' %}bg-primary{% elif m.meal_type == 'Snacks' %}bg-info text-dark{% else %}bg-dark{% endif %} me-2">
+                                    {{ m.meal_type }}
+                                </span>
+                                <span class="badge {% if m.food_category == 'Vegetarian' %}bg-success-subtle text-success border border-success{% else %}bg-danger-subtle text-danger border border-danger{% endif %} small">
+                                    {{ m.food_category }}
+                                </span>
+                            </div>
+                            <span class="small text-muted"><i class="fa-regular fa-clock me-1"></i>{{ m.meal_timing }}</span>
+                        </div>
+                        <h6 class="fw-bold text-dark mb-1">{{ m.title }}</h6>
+                        <p class="small text-secondary mb-2">{{ m.description or 'Standard meal preparation.' }}</p>
+                        <div class="d-flex justify-content-between align-items-center small text-muted border-top pt-2">
+                            <span>Booked: <strong>{{ m.booked_count }}</strong></span>
+                            <span>Turnout: <strong>{{ m.attendance_count }}</strong> / {{ m.capacity }}</span>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <div class="text-center py-5">
+                <i class="fa-solid fa-utensils fa-3x text-muted mb-3 opacity-50"></i>
+                <h6 class="fw-bold text-dark">No Menus Scheduled Today</h6>
+                <p class="text-muted small">The mess manager has not published menus for today yet.</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Student Feedback & Notices -->
+    <div class="col-lg-5">
+        <div class="card border-0 shadow-sm rounded-4 p-4 bg-white mb-4">
+            <h5 class="fw-bold text-dark mb-3">Recent Resident Feedback</h5>
+            {% if recent_feedbacks %}
+            <div class="list-group list-group-flush">
+                {% for fb in recent_feedbacks %}
+                <div class="list-group-item px-0 py-2 border-0 border-bottom">
+                    <div class="d-flex justify-content-between align-items-center mb-1">
+                        <span class="small fw-bold text-dark">{{ fb.student.full_name if not fb.is_anonymous else 'Anonymous Resident' }}</span>
+                        <span class="text-warning small">
+                            {% for i in range(1, 6) %}
+                            <i class="fa-solid fa-star {% if i <= fb.rating %}text-warning{% else %}text-muted opacity-25{% endif %}"></i>
+                            {% endfor %}
+                        </span>
+                    </div>
+                    <div class="small text-muted mb-1">{{ fb.meal_menu.meal_type }} - {{ fb.meal_menu.title }}</div>
+                    {% if fb.comments %}
+                    <div class="small text-secondary fst-italic">"{{ fb.comments }}"</div>
+                    {% endif %}
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <p class="text-muted small mb-0">No food reviews recorded recently.</p>
+            {% endif %}
+        </div>
+
+        <div class="card border-0 shadow-sm rounded-4 p-4 bg-white">
+            <h5 class="fw-bold text-dark mb-3">Dining Notices</h5>
+            {% if notices %}
+            <div class="list-group list-group-flush">
+                {% for n in notices %}
+                <div class="list-group-item px-0 py-2 border-0 border-bottom">
+                    <div class="fw-semibold text-dark small mb-1">{{ n.title }}</div>
+                    <div class="small text-muted">{{ n.message }}</div>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <p class="text-muted small mb-0">No active mess bulletins.</p>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

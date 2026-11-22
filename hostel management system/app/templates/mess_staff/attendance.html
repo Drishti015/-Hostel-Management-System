@@ -1,0 +1,111 @@
+{% extends 'base.html' %}
+
+{% block title %}Meal Service Attendance Log{% endblock %}
+
+{% block content %}
+<div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4">
+    <div>
+        <h2 class="fw-bold text-dark mb-1">
+            <i class="fa-solid fa-list-check text-primary me-2"></i>Meal Attendance Register
+        </h2>
+        <p class="text-muted small mb-0">Dining Hall Attendance &bull; Facility: <strong>{{ mess.mess_name }}</strong></p>
+    </div>
+    <div class="d-flex gap-2">
+        <a href="{{ url_for('mess_staff.scanner') }}" class="btn btn-primary-custom">
+            <i class="fa-solid fa-qrcode me-2"></i>Scanner
+        </a>
+        <a href="{{ url_for('mess_staff.dashboard') }}" class="btn btn-outline-secondary">
+            <i class="fa-solid fa-arrow-left me-2"></i>Dashboard
+        </a>
+    </div>
+</div>
+
+<!-- Date & Meal Filters -->
+<div class="card border-0 shadow-sm rounded-4 p-3 bg-white mb-4">
+    <form method="GET" action="{{ url_for('mess_staff.attendance') }}" class="row g-2 align-items-end">
+        <div class="col-md-3">
+            <label class="form-label small fw-semibold text-secondary">Service Date</label>
+            <input type="date" name="date" class="form-control form-control-sm" value="{{ selected_date.strftime('%Y-%m-%d') }}">
+        </div>
+        <div class="col-md-3">
+            <label class="form-label small fw-semibold text-secondary">Meal Slot</label>
+            <select name="menu_id" class="form-select form-select-sm">
+                <option value="">All Meal Slots</option>
+                {% for m in today_menus %}
+                    <option value="{{ m.id }}" {% if selected_menu_id == m.id %}selected{% endif %}>
+                        {{ m.meal_type }} ({{ m.title }})
+                    </option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="col-md-4">
+            <label class="form-label small fw-semibold text-secondary">Search Student</label>
+            <input type="text" name="q" class="form-control form-control-sm" placeholder="Name, Enrollment or Roll No..." value="{{ search_q }}">
+        </div>
+        <div class="col-md-2">
+            <button type="submit" class="btn btn-primary-custom btn-sm w-100">
+                <i class="fa-solid fa-filter me-1"></i>Filter
+            </button>
+        </div>
+    </form>
+</div>
+
+<!-- Table -->
+<div class="card border-0 shadow-sm rounded-4 p-4 bg-white">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h6 class="fw-bold text-dark mb-0">Total Checked-In: <span class="text-primary">{{ attendances|length }}</span></h6>
+    </div>
+
+    {% if not attendances %}
+    <div class="text-center py-5">
+        <i class="fa-solid fa-clipboard-user fa-3x text-muted opacity-50 mb-3"></i>
+        <h6 class="text-muted fw-bold">No attendance records found</h6>
+        <p class="text-secondary small mb-0">No students checked in matching the current filter criteria.</p>
+    </div>
+    {% else %}
+    <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0 small">
+            <thead class="table-light">
+                <tr>
+                    <th>Student Name</th>
+                    <th>Enrollment No</th>
+                    <th>Roll No</th>
+                    <th>Meal Slot</th>
+                    <th>Check-in Time</th>
+                    <th>Method</th>
+                    <th>Status</th>
+                    <th>Remarks</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for a in attendances %}
+                <tr>
+                    <td class="fw-bold text-dark">{{ a.student.full_name }}</td>
+                    <td class="font-monospace text-muted">{{ a.student.enrollment_no }}</td>
+                    <td class="font-monospace text-muted">{{ a.student.roll_no or 'N/A' }}</td>
+                    <td>
+                        <span class="badge {% if a.meal_menu.meal_type == 'Breakfast' %}bg-warning text-dark{% elif a.meal_menu.meal_type == 'Lunch' %}bg-success{% elif a.meal_menu.meal_type == 'Snacks' %}bg-info{% else %}bg-primary{% endif %}">
+                            {{ a.meal_menu.meal_type }}
+                        </span>
+                    </td>
+                    <td class="font-monospace text-dark">{{ a.check_in_time.strftime('%I:%M:%S %p') }}</td>
+                    <td>
+                        <span class="badge bg-light text-secondary border">
+                            <i class="fa-solid {% if a.verification_method == 'QR_Scan' %}fa-qrcode{% else %}fa-id-card{% endif %} me-1"></i>
+                            {{ a.verification_method.replace('_', ' ') }}
+                        </span>
+                    </td>
+                    <td>
+                        <span class="badge bg-success-subtle text-success border border-success-subtle">
+                            {{ a.attendance_status }}
+                        </span>
+                    </td>
+                    <td class="text-muted">{{ a.remarks or '&mdash;' | safe }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

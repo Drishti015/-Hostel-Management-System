@@ -1,0 +1,108 @@
+{% extends 'base.html' %}
+
+{% block title %}My Student Mess QR Card{% endblock %}
+
+{% block extra_css %}
+<style>
+    .qr-card-container {
+        max-width: 440px;
+        margin: 0 auto;
+        border-radius: 20px;
+        background: #ffffff;
+        box-shadow: 0 10px 30px rgba(13, 110, 253, 0.12);
+        border: 2px solid #e9ecef;
+        overflow: hidden;
+    }
+    .qr-card-header {
+        background: linear-gradient(135deg, #0d6efd, #0b5ed7);
+        color: white;
+        padding: 24px;
+        text-align: center;
+    }
+    .qr-box {
+        padding: 20px;
+        background: #f8f9fa;
+        border-radius: 16px;
+        display: inline-block;
+        border: 2px dashed #0d6efd;
+    }
+    .qr-box img {
+        width: 220px;
+        height: 220px;
+        object-fit: contain;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h2 class="fw-bold text-dark mb-1">
+            <i class="fa-solid fa-qrcode text-primary me-2"></i>Student Mess Dining Identity
+        </h2>
+        <p class="text-muted small mb-0">Present this QR code at the dining hall counter for meal verification.</p>
+    </div>
+    <div>
+        <a href="{{ url_for('student.mess_dashboard') }}" class="btn btn-outline-secondary">
+            <i class="fa-solid fa-arrow-left me-2"></i>Back to Dashboard
+        </a>
+    </div>
+</div>
+
+<div class="row justify-content-center">
+    <div class="col-md-6 col-lg-5">
+        <div class="qr-card-container text-center mb-4">
+            <div class="qr-card-header">
+                <div class="small text-uppercase tracking-wider opacity-75 mb-1">{{ app_name }} &bull; Dining Pass</div>
+                <h4 class="fw-bold mb-0">{{ student.full_name }}</h4>
+                <div class="small font-monospace opacity-90">{{ student.enrollment_no }}</div>
+            </div>
+
+            <div class="p-4">
+                <div class="qr-box mb-3">
+                    <img src="{{ qr_image_url }}" alt="Student Mess QR Code">
+                </div>
+
+                <div class="mb-3">
+                    <span class="badge bg-success-subtle text-success border border-success-subtle px-3 py-2 font-monospace">
+                        <i class="fa-solid fa-shield-check me-1"></i>Cryptographic Token Active
+                    </span>
+                </div>
+
+                <!-- Resident Details Table -->
+                <div class="p-3 bg-light rounded-3 text-start small mb-3">
+                    <div class="row g-2">
+                        <div class="col-6">
+                            <span class="text-muted d-block">Hostel Block:</span>
+                            <strong class="text-dark">{{ allocation.hostel.name if allocation else 'Unallocated' }}</strong>
+                        </div>
+                        <div class="col-6">
+                            <span class="text-muted d-block">Room & Bed:</span>
+                            <strong class="text-dark">{{ allocation.room.room_number if allocation else 'N/A' }} ({{ allocation.bed.bed_number if allocation else 'N/A' }})</strong>
+                        </div>
+                        <div class="col-6">
+                            <span class="text-muted d-block">Branch:</span>
+                            <strong class="text-dark">{{ student.branch or 'B.Tech' }}</strong>
+                        </div>
+                        <div class="col-6">
+                            <span class="text-muted d-block">Mess Facility:</span>
+                            <strong class="text-dark">{{ mess.mess_name }}</strong>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="d-flex gap-2">
+                    <a href="{{ qr_image_url }}" download="HostelEase_MessQR_{{ student.enrollment_no }}.png" class="btn btn-primary-custom w-100 py-2">
+                        <i class="fa-solid fa-download me-2"></i>Download QR Slip
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <div class="alert alert-light border small text-center text-muted">
+            <i class="fa-solid fa-lock text-primary me-1"></i>
+            This QR code contains an encrypted token reference. It does not expose student contact or personal credentials.
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,69 @@
+{% extends 'base.html' %}
+
+{% block title %}Meal Attendance History{% endblock %}
+
+{% block content %}
+<div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4">
+    <div>
+        <h2 class="fw-bold text-dark mb-1">
+            <i class="fa-solid fa-clipboard-check text-primary me-2"></i>My Meal Attendance History
+        </h2>
+        <p class="text-muted small mb-0">Verified logs of meals checked in at the dining hall counter.</p>
+    </div>
+    <div>
+        <a href="{{ url_for('student.mess_dashboard') }}" class="btn btn-outline-secondary">
+            <i class="fa-solid fa-arrow-left me-2"></i>Back to Dashboard
+        </a>
+    </div>
+</div>
+
+<div class="card border-0 shadow-sm rounded-4 p-4 bg-white">
+    {% if not attendances %}
+    <div class="text-center py-5">
+        <i class="fa-solid fa-bowl-food fa-3x text-muted opacity-50 mb-3"></i>
+        <h6 class="text-muted fw-bold">No meal attendance records found</h6>
+        <p class="text-secondary small mb-0">Your scanned meal check-ins will appear here.</p>
+    </div>
+    {% else %}
+    <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+            <thead class="table-light">
+                <tr>
+                    <th>Meal Date</th>
+                    <th>Slot</th>
+                    <th>Menu Description</th>
+                    <th>Check-in Time</th>
+                    <th>Method</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for a in attendances %}
+                <tr>
+                    <td class="fw-semibold">{{ a.meal_menu.meal_date.strftime('%d %b, %Y') }}</td>
+                    <td>
+                        <span class="badge {% if a.meal_menu.meal_type == 'Breakfast' %}bg-warning text-dark{% elif a.meal_menu.meal_type == 'Lunch' %}bg-success{% elif a.meal_menu.meal_type == 'Snacks' %}bg-info{% else %}bg-primary{% endif %}">
+                            {{ a.meal_menu.meal_type }}
+                        </span>
+                    </td>
+                    <td>{{ a.meal_menu.title }}</td>
+                    <td class="font-monospace small text-dark">{{ a.check_in_time.strftime('%I:%M %p') }}</td>
+                    <td>
+                        <span class="badge bg-light text-dark border">
+                            <i class="fa-solid {% if a.verification_method == 'QR_Scan' %}fa-qrcode{% else %}fa-id-card{% endif %} me-1"></i>
+                            {{ a.verification_method.replace('_', ' ') }}
+                        </span>
+                    </td>
+                    <td>
+                        <span class="badge bg-success-subtle text-success border border-success-subtle">
+                            {{ a.attendance_status }}
+                        </span>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

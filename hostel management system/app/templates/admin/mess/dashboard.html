@@ -1,0 +1,194 @@
+{% extends 'base.html' %}
+
+{% block title %}Mess Management Administration{% endblock %}
+
+{% block content %}
+<div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4">
+    <div>
+        <h2 class="fw-bold text-dark mb-1">
+            <i class="fa-solid fa-utensils text-primary me-2"></i>Mess Facility Administration
+        </h2>
+        <p class="text-muted small mb-0">Configure dining facilities, operational policies, monthly fees, leave rebates, and staff accounts.</p>
+    </div>
+    <div class="d-flex gap-2">
+        <a href="{{ url_for('admin.mess_create') }}" class="btn btn-primary-custom">
+            <i class="fa-solid fa-plus me-2"></i>Create New Mess
+        </a>
+        <a href="{{ url_for('admin.mess_staff_create') }}" class="btn btn-outline-secondary">
+            <i class="fa-solid fa-user-plus me-2"></i>Provision Counter Staff
+        </a>
+    </div>
+</div>
+
+<!-- Operations Summary -->
+<div class="row g-3 mb-4">
+    <div class="col-md-3">
+        <div class="card border-0 shadow-sm rounded-4 p-3 bg-white">
+            <div class="text-muted small fw-semibold text-uppercase">Active Facilities</div>
+            <div class="fs-2 fw-bold text-dark mt-1">{{ messes|length }}</div>
+            <div class="text-muted small">Campus dining halls</div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card border-0 shadow-sm rounded-4 p-3 bg-white border-start border-4 border-info">
+            <div class="text-muted small fw-semibold text-uppercase">Active Bookings Today</div>
+            <div class="fs-2 fw-bold text-info mt-1">{{ today_bookings }}</div>
+            <div class="text-muted small">Resident reservations</div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card border-0 shadow-sm rounded-4 p-3 bg-white border-start border-4 border-success">
+            <div class="text-muted small fw-semibold text-uppercase">Meals Served Today</div>
+            <div class="fs-2 fw-bold text-success mt-1">{{ today_served }}</div>
+            <div class="text-muted small">Verified scan turnout</div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card border-0 shadow-sm rounded-4 p-3 bg-white border-start border-4 border-warning">
+            <div class="text-muted small fw-semibold text-uppercase">Expenditures (This Month)</div>
+            <div class="fs-2 fw-bold text-dark mt-1">₹{{ "%.2f"|format(month_expenses) }}</div>
+            <div class="text-muted small">Provisions & fuel costs</div>
+        </div>
+    </div>
+</div>
+
+<!-- Automated Billing Action Card -->
+<div class="card border-0 shadow-sm rounded-4 p-3 bg-white mb-4">
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3">
+        <div>
+            <h6 class="fw-bold text-dark mb-1">
+                <i class="fa-solid fa-file-invoice-dollar text-primary me-2"></i>Monthly Mess Fee & Rebate Processing
+            </h6>
+            <p class="text-muted small mb-0">Compute monthly student dues after factoring in verified approved leaves for rebates.</p>
+        </div>
+        <form method="POST" action="{{ url_for('admin.mess_billing_generate') }}" class="d-flex gap-2">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <select name="month" class="form-select form-select-sm">
+                {% for m in range(1, 13) %}
+                <option value="{{ m }}" {% if m == today.month %}selected{% endif %}>Month {{ m }}</option>
+                {% endfor %}
+            </select>
+            <input type="number" name="year" class="form-control form-control-sm" style="width: 100px;" value="{{ today.year }}">
+            <button type="submit" class="btn btn-sm btn-outline-primary text-nowrap">
+                <i class="fa-solid fa-calculator me-1"></i>Generate Dues
+            </button>
+        </form>
+    </div>
+</div>
+
+<!-- Mess Profiles List -->
+<div class="card border-0 shadow-sm rounded-4 p-4 bg-white mb-4">
+    <h5 class="fw-bold text-dark mb-3">Campus Dining Facilities</h5>
+
+    <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+            <thead class="table-light text-secondary small text-uppercase">
+                <tr>
+                    <th>Facility Name</th>
+                    <th>Associated Hostel</th>
+                    <th>Contact</th>
+                    <th>Daily Capacity</th>
+                    <th>Entry Policy</th>
+                    <th>Status</th>
+                    <th class="text-end">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for m in messes %}
+                <tr>
+                    <td>
+                        <div class="fw-bold text-dark">{{ m.mess_name }}</div>
+                        <div class="small text-muted">ID: #{{ m.id }}</div>
+                    </td>
+                    <td>
+                        <span class="small text-dark">{{ m.hostel.name if m.hostel else 'Campus Wide (Shared)' }}</span>
+                    </td>
+                    <td>
+                        <span class="small text-muted">{{ m.contact_number or 'N/A' }}</span>
+                    </td>
+                    <td>
+                        <span class="small fw-semibold text-dark">{{ m.daily_capacity }} seats</span>
+                    </td>
+                    <td>
+                        <form method="POST" action="{{ url_for('admin.mess_toggle_policy', id=m.id) }}" class="d-inline">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                            <button type="submit" class="badge border-0 {% if m.meal_policy == 'booking_required' %}bg-primary{% else %}bg-success{% endif %}" title="Click to toggle policy">
+                                <i class="fa-solid fa-arrows-rotate me-1"></i>{{ 'Booking Required' if m.meal_policy == 'booking_required' else 'Walk-ins Allowed' }}
+                            </button>
+                        </form>
+                    </td>
+                    <td>
+                        {% if m.operating_status == 'Active' %}
+                        <span class="badge bg-success small">Active</span>
+                        {% elif m.operating_status == 'Maintenance' %}
+                        <span class="badge bg-warning text-dark small">Maintenance</span>
+                        {% else %}
+                        <span class="badge bg-secondary small">Inactive</span>
+                        {% endif %}
+                    </td>
+                    <td class="text-end">
+                        <a href="{{ url_for('admin.mess_edit', id=m.id) }}" class="btn btn-sm btn-outline-primary">
+                            <i class="fa-solid fa-pen-to-square me-1"></i>Configure
+                        </a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Mess Staff Register -->
+<div class="card border-0 shadow-sm rounded-4 p-4 bg-white">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h5 class="fw-bold text-dark mb-0">Active Counter Personnel ({{ staff_members|length }})</h5>
+        <a href="{{ url_for('admin.mess_staff_create') }}" class="btn btn-sm btn-outline-primary">
+            <i class="fa-solid fa-user-plus me-1"></i>Add Staff Member
+        </a>
+    </div>
+
+    {% if staff_members %}
+    <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+            <thead class="table-light text-secondary small text-uppercase">
+                <tr>
+                    <th>Staff Member</th>
+                    <th>Assigned Mess</th>
+                    <th>Role Designation</th>
+                    <th>Contact</th>
+                    <th>Account Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for st in staff_members %}
+                <tr>
+                    <td>
+                        <div class="fw-bold text-dark">{{ st.staff_name }}</div>
+                        <div class="small text-muted">@{{ st.user_account.username }} ({{ st.user_account.email }})</div>
+                    </td>
+                    <td>
+                        <span class="small text-dark">{{ st.assigned_mess.mess_name if st.assigned_mess else 'Any / Campus-wide' }}</span>
+                    </td>
+                    <td>
+                        <span class="badge bg-light text-dark border">{{ st.role_designation }}</span>
+                    </td>
+                    <td>
+                        <span class="small text-muted"><i class="fa-solid fa-phone me-1"></i>{{ st.phone_number or 'On Duty' }}</span>
+                    </td>
+                    <td>
+                        {% if st.employment_status == 'Active' and st.user_account.is_active %}
+                        <span class="badge bg-success small">Active</span>
+                        {% else %}
+                        <span class="badge bg-secondary small">{{ st.employment_status }}</span>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <p class="text-muted small mb-0">No dedicated counter staff provisioned yet.</p>
+    {% endif %}
+</div>
+{% endblock %}

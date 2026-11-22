@@ -1,0 +1,160 @@
+{% extends 'base.html' %}
+
+{% block title %}Menu Management Schedule{% endblock %}
+
+{% block content %}
+<div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4">
+    <div>
+        <h2 class="fw-bold text-dark mb-1">
+            <i class="fa-solid fa-utensils text-primary me-2"></i>Daily & Weekly Menu Schedule
+        </h2>
+        <p class="text-muted small mb-0">Publish meal plans, set booking cutoff deadlines, and configure dining capacity.</p>
+    </div>
+    <div class="d-flex gap-2">
+        <a href="{{ url_for('mess_manager.menu_create') }}" class="btn btn-primary-custom">
+            <i class="fa-solid fa-plus me-2"></i>Schedule New Meal
+        </a>
+        <a href="{{ url_for('mess_manager.dashboard') }}" class="btn btn-outline-secondary">
+            <i class="fa-solid fa-arrow-left me-2"></i>Dashboard
+        </a>
+    </div>
+</div>
+
+<!-- Weekly Schedule Overview Grid -->
+<div class="card border-0 shadow-sm rounded-4 p-4 bg-white mb-4">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h5 class="fw-bold text-dark mb-0">Weekly Meal Planner (7-Day Overview)</h5>
+        <div class="small text-muted">Starting: <strong>{{ current_date.strftime('%d %b, %Y') }}</strong></div>
+    </div>
+
+    <div class="table-responsive">
+        <table class="table table-bordered align-middle text-center mb-0">
+            <thead class="table-light">
+                <tr>
+                    <th style="width: 14%;">Day & Date</th>
+                    <th style="width: 21.5%;">Breakfast</th>
+                    <th style="width: 21.5%;">Lunch</th>
+                    <th style="width: 21.5%;">Snacks</th>
+                    <th style="width: 21.5%;">Dinner</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for day_date, slots in weekly_calendar.items() %}
+                <tr>
+                    <td class="table-light fw-bold">
+                        <div>{{ day_date.strftime('%a') }}</div>
+                        <div class="small text-muted">{{ day_date.strftime('%d %b') }}</div>
+                    </td>
+                    {% for slot_name in ['Breakfast', 'Lunch', 'Snacks', 'Dinner'] %}
+                    {% set m = slots[slot_name] %}
+                    <td class="p-2">
+                        {% if not m %}
+                            <div class="py-3 text-muted small opacity-50">
+                                <em>Unscheduled</em>
+                            </div>
+                        {% else %}
+                            <div class="text-start p-2 rounded bg-light border">
+                                <div class="d-flex justify-content-between align-items-center mb-1">
+                                    <span class="badge {% if m.is_published %}bg-success{% else %}bg-secondary{% endif %} small">
+                                        {{ 'Published' if m.is_published else 'Draft' }}
+                                    </span>
+                                    <span class="badge {% if m.food_category == 'Vegetarian' %}bg-success-subtle text-success{% else %}bg-danger-subtle text-danger{% endif %} small">
+                                        {{ m.food_category }}
+                                    </span>
+                                </div>
+                                <div class="fw-bold small text-dark mb-1">{{ m.title }}</div>
+                                <div class="small text-muted mb-2">{{ m.active_booking_count }} / {{ m.capacity }} booked</div>
+                                
+                                <div class="d-flex gap-1 border-top pt-2">
+                                    <a href="{{ url_for('mess_manager.menu_edit', id=m.id) }}" class="btn btn-outline-secondary btn-sm py-0 px-2 flex-grow-1">Edit</a>
+                                    <form method="POST" action="{{ url_for('mess_manager.menu_toggle_publish', id=m.id) }}">
+                                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                        <button type="submit" class="btn btn-sm py-0 px-2 {% if m.is_published %}btn-outline-warning{% else %}btn-outline-success{% endif %}">
+                                            {{ 'Hide' if m.is_published else 'Publish' }}
+                                        </button>
+                                    </form>
+                                </div>
+                            </div>
+                        {% endif %}
+                    </td>
+                    {% endfor %}
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- All Scheduled Meals Register -->
+<div class="card border-0 shadow-sm rounded-4 p-4 bg-white">
+    <h5 class="fw-bold text-dark mb-3">Recently Scheduled Meals Register</h5>
+    <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0 small">
+            <thead class="table-light">
+                <tr>
+                    <th>Date</th>
+                    <th>Slot</th>
+                    <th>Title & Description</th>
+                    <th>Category</th>
+                    <th>Timing</th>
+                    <th>Cutoff Deadline</th>
+                    <th>Bookings / Capacity</th>
+                    <th>Status</th>
+                    <th class="text-end">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for m in menus %}
+                <tr>
+                    <td class="fw-semibold">{{ m.meal_date.strftime('%d %b, %Y') }}</td>
+                    <td>
+                        <span class="badge {% if m.meal_type == 'Breakfast' %}bg-warning text-dark{% elif m.meal_type == 'Lunch' %}bg-success{% elif m.meal_type == 'Snacks' %}bg-info{% else %}bg-primary{% endif %}">
+                            {{ m.meal_type }}
+                        </span>
+                    </td>
+                    <td>
+                        <strong class="text-dark">{{ m.title }}</strong>
+                        <div class="text-muted text-truncate" style="max-width: 250px;">{{ m.description or 'No notes' }}</div>
+                    </td>
+                    <td>{{ m.food_category }}</td>
+                    <td>{{ m.meal_timing }}</td>
+                    <td class="font-monospace">{{ m.booking_deadline.strftime('%d %b %I:%M %p') }}</td>
+                    <td>
+                        <div class="fw-bold">{{ m.active_booking_count }} / {{ m.capacity }}</div>
+                        <small class="text-success">Attended: {{ m.attendance_count }}</small>
+                    </td>
+                    <td>
+                        {% if m.is_published %}
+                            <span class="badge bg-success-subtle text-success border border-success-subtle">Published</span>
+                        {% else %}
+                            <span class="badge bg-secondary-subtle text-secondary border border-secondary-subtle">Draft</span>
+                        {% endif %}
+                    </td>
+                    <td class="text-end">
+                        <div class="d-inline-flex gap-1">
+                            <a href="{{ url_for('mess_manager.menu_edit', id=m.id) }}" class="btn btn-outline-secondary btn-sm py-1 px-2">
+                                <i class="fa-solid fa-pen"></i>
+                            </a>
+                            <form method="POST" action="{{ url_for('mess_manager.menu_toggle_publish', id=m.id) }}" class="d-inline">
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                <button type="submit" class="btn btn-sm py-1 px-2 {% if m.is_published %}btn-outline-warning{% else %}btn-outline-success{% endif %}" title="{{ 'Unpublish' if m.is_published else 'Publish' }}">
+                                    <i class="fa-solid {% if m.is_published %}fa-eye-slash{% else %}fa-eye{% endif %}"></i>
+                                </button>
+                            </form>
+                            {% if m.bookings.count() == 0 and m.attendances.count() == 0 %}
+                            <form method="POST" action="{{ url_for('mess_manager.menu_delete', id=m.id) }}" class="d-inline" onsubmit="return confirm('Delete this unpublished meal?');">
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                <button type="submit" class="btn btn-outline-danger btn-sm py-1 px-2">
+                                    <i class="fa-solid fa-trash"></i>
+                                </button>
+                            </form>
+                            {% endif %}
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,112 @@
+{% extends 'base.html' %}
+
+{% block title %}Mess Suppliers Directory{% endblock %}
+
+{% block content %}
+<div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4">
+    <div>
+        <h2 class="fw-bold text-dark mb-1">
+            <i class="fa-solid fa-truck-field text-primary me-2"></i>Food Vendors & Suppliers
+        </h2>
+        <p class="text-muted small mb-0">Maintain wholesale contracts for ration, dairy, fresh vegetables, and groceries.</p>
+    </div>
+    <div class="d-flex gap-2">
+        <a href="{{ url_for('mess_manager.inventory_list') }}" class="btn btn-outline-secondary">
+            <i class="fa-solid fa-boxes-stacked me-2"></i>Pantry Stock
+        </a>
+    </div>
+</div>
+
+<div class="row g-4">
+    <!-- Register Supplier Form -->
+    <div class="col-lg-4">
+        <div class="card border-0 shadow-sm rounded-4 p-4 bg-white">
+            <h5 class="fw-bold text-dark mb-3">
+                <i class="fa-solid fa-user-plus text-primary me-2"></i>Register Vendor
+            </h5>
+            <form method="POST" action="{{ url_for('mess_manager.suppliers') }}">
+                <div class="mb-3">
+                    <label class="form-label small fw-semibold text-secondary">Supplier / Business Name *</label>
+                    <input type="text" name="supplier_name" class="form-control" placeholder="e.g. Apex Agri Provisions" required>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label small fw-semibold text-secondary">Contact Person</label>
+                    <input type="text" name="contact_person" class="form-control" placeholder="e.g. Rajesh Kumar">
+                </div>
+                <div class="mb-3">
+                    <label class="form-label small fw-semibold text-secondary">Phone Number</label>
+                    <input type="text" name="phone_number" class="form-control" placeholder="e.g. +91 9876543210">
+                </div>
+                <div class="mb-3">
+                    <label class="form-label small fw-semibold text-secondary">Email Address</label>
+                    <input type="email" name="email" class="form-control" placeholder="e.g. supply@apexagri.com">
+                </div>
+                <div class="mb-3">
+                    <label class="form-label small fw-semibold text-secondary">Warehouse Address</label>
+                    <textarea name="address" class="form-control" rows="2" placeholder="Market yard address..."></textarea>
+                </div>
+                <button type="submit" class="btn btn-primary-custom w-100">
+                    <i class="fa-solid fa-check me-2"></i>Save Supplier
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Suppliers List -->
+    <div class="col-lg-8">
+        <div class="card border-0 shadow-sm rounded-4 p-4 bg-white">
+            <h5 class="fw-bold text-dark mb-3">Registered Vendors ({{ suppliers|length }})</h5>
+
+            {% if suppliers %}
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="table-light text-secondary small text-uppercase">
+                        <tr>
+                            <th>Supplier Name</th>
+                            <th>Contact Person</th>
+                            <th>Contact Details</th>
+                            <th>Address</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for sup in suppliers %}
+                        <tr>
+                            <td>
+                                <div class="fw-bold text-dark">{{ sup.supplier_name }}</div>
+                            </td>
+                            <td>
+                                <span class="small text-muted">{{ sup.contact_person or 'N/A' }}</span>
+                            </td>
+                            <td>
+                                <div class="small text-dark"><i class="fa-solid fa-phone me-1 text-muted"></i>{{ sup.phone_number or 'N/A' }}</div>
+                                {% if sup.email %}
+                                <div class="small text-muted"><i class="fa-solid fa-envelope me-1 text-muted"></i>{{ sup.email }}</div>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <span class="small text-muted">{{ sup.address or 'N/A' }}</span>
+                            </td>
+                            <td>
+                                {% if sup.is_active %}
+                                <span class="badge bg-success small">Active</span>
+                                {% else %}
+                                <span class="badge bg-secondary small">Inactive</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="text-center py-5">
+                <i class="fa-solid fa-truck-field fa-3x text-muted mb-3 opacity-50"></i>
+                <h6 class="fw-bold text-dark">No Suppliers Registered</h6>
+                <p class="text-muted small">Use the form on the left to add your first grocery vendor.</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

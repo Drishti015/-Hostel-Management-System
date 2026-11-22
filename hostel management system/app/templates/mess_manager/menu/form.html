@@ -1,0 +1,105 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ 'Edit Meal Menu' if menu else 'Schedule New Meal' }}{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h2 class="fw-bold text-dark mb-1">
+            <i class="fa-solid fa-utensils text-primary me-2"></i>{{ 'Edit Meal Menu' if menu else 'Schedule New Meal' }}
+        </h2>
+        <p class="text-muted small mb-0">Configure meal items, serving hours, capacity, and booking deadline.</p>
+    </div>
+    <div>
+        <a href="{{ url_for('mess_manager.menu_list') }}" class="btn btn-outline-secondary">
+            <i class="fa-solid fa-arrow-left me-2"></i>Back to Schedule
+        </a>
+    </div>
+</div>
+
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <div class="card border-0 shadow-sm rounded-4 p-4 bg-white">
+            <form method="POST" enctype="multipart/form-data">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+                <div class="row g-3 mb-3">
+                    <div class="col-md-6">
+                        <label class="form-label small fw-semibold text-secondary">Service Date</label>
+                        <input type="date" name="meal_date" class="form-control" value="{{ menu.meal_date.strftime('%Y-%m-%d') if menu else today.strftime('%Y-%m-%d') }}" {% if menu %}readonly{% endif %} required>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label small fw-semibold text-secondary">Meal Slot</label>
+                        <select name="meal_type" class="form-select" {% if menu %}disabled{% endif %} required>
+                            <option value="Breakfast" {% if menu and menu.meal_type == 'Breakfast' %}selected{% endif %}>Breakfast (Morning)</option>
+                            <option value="Lunch" {% if menu and menu.meal_type == 'Lunch' %}selected{% endif %}>Lunch (Afternoon)</option>
+                            <option value="Snacks" {% if menu and menu.meal_type == 'Snacks' %}selected{% endif %}>Snacks (Evening)</option>
+                            <option value="Dinner" {% if menu and menu.meal_type == 'Dinner' %}selected{% endif %}>Dinner (Night)</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label small fw-semibold text-secondary">Menu Title</label>
+                    <input type="text" name="title" class="form-control" placeholder="e.g. Masala Dosa, Sambhar & Coconut Chutney" value="{{ menu.title if menu else '' }}" required>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label small fw-semibold text-secondary">Detailed Food Items & Nutritional Description</label>
+                    <textarea name="description" rows="3" class="form-control" placeholder="List items served: Rice, Paneer Butter Masala, Dal Tadka, Roti, Salad, Gulab Jamun...">{{ menu.description if menu else '' }}</textarea>
+                </div>
+
+                <div class="row g-3 mb-3">
+                    <div class="col-md-4">
+                        <label class="form-label small fw-semibold text-secondary">Dietary Category</label>
+                        <select name="food_category" class="form-select" required>
+                            <option value="Vegetarian" {% if menu and menu.food_category == 'Vegetarian' %}selected{% endif %}>Vegetarian (Pure Veg)</option>
+                            <option value="Non-Vegetarian" {% if menu and menu.food_category == 'Non-Vegetarian' %}selected{% endif %}>Non-Vegetarian</option>
+                            <option value="Vegan" {% if menu and menu.food_category == 'Vegan' %}selected{% endif %}>Vegan</option>
+                            <option value="Other" {% if menu and menu.food_category == 'Other' %}selected{% endif %}>Other Festive Special</option>
+                        </select>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label small fw-semibold text-secondary">Service Timings</label>
+                        <input type="text" name="meal_timing" class="form-control" placeholder="e.g. 7:30 AM - 9:30 AM" value="{{ menu.meal_timing if menu else '7:30 AM - 9:30 AM' }}" required>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label small fw-semibold text-secondary">Meal Capacity (Seats)</label>
+                        <input type="number" name="capacity" class="form-control" min="10" max="1000" value="{{ menu.capacity if menu else 250 }}" required>
+                    </div>
+                </div>
+
+                <div class="row g-3 mb-3">
+                    <div class="col-md-6">
+                        <label class="form-label small fw-semibold text-secondary">Booking Cutoff Deadline</label>
+                        <input type="datetime-local" name="booking_deadline" class="form-control"
+                               value="{{ menu.booking_deadline.strftime('%Y-%m-%dT%H:%M') if menu else '' }}" required>
+                        <div class="form-text small">Students cannot reserve or cancel after this time.</div>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label small fw-semibold text-secondary">Food Photograph (Optional)</label>
+                        <input type="file" name="food_image" class="form-control" accept="image/*">
+                        {% if menu and menu.food_image %}
+                        <div class="small text-muted mt-1">Current: <a href="{{ url_for('static', filename=menu.food_image) }}" target="_blank">View Image</a></div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <div class="form-check form-switch mb-4">
+                    <input class="form-check-input" type="checkbox" name="is_published" id="is_published" value="1" {% if menu and menu.is_published %}checked{% elif not menu %}checked{% endif %}>
+                    <label class="form-check-label fw-semibold text-dark" for="is_published">
+                        Publish Menu immediately (Visible to residents for pre-booking)
+                    </label>
+                </div>
+
+                <div class="d-flex justify-content-end gap-2">
+                    <a href="{{ url_for('mess_manager.menu_list') }}" class="btn btn-outline-secondary px-4">Cancel</a>
+                    <button type="submit" class="btn btn-primary-custom px-4">
+                        <i class="fa-solid fa-save me-2"></i>{{ 'Save Changes' if menu else 'Schedule Meal' }}
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

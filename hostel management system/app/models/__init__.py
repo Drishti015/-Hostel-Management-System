@@ -16,6 +16,20 @@ from app.models.leave import LeaveApplication
 from app.models.notification import Notification
 from app.models.outpass import DigitalOutPass, GateTransaction
 from app.models.parent import ParentProfile, ParentInquiry
+from app.models.mess import (
+    MessProfile,
+    Supplier,
+    MealMenu,
+    MealBooking,
+    MealAttendance,
+    MealFeedback,
+    MessInventory,
+    InventoryTransaction,
+    MessExpense,
+    MessStaffProfile,
+    MessNotice,
+    MessBillingRecord
+)
 
 __all__ = [
     'db',
@@ -36,6 +50,18 @@ __all__ = [
     'DigitalOutPass',
     'GateTransaction',
     'ParentProfile',
-    'ParentInquiry'
+    'ParentInquiry',
+    'MessProfile',
+    'Supplier',
+    'MealMenu',
+    'MealBooking',
+    'MealAttendance',
+    'MealFeedback',
+    'MessInventory',
+    'InventoryTransaction',
+    'MessExpense',
+    'MessStaffProfile',
+    'MessNotice',
+    'MessBillingRecord'
 ]
 
