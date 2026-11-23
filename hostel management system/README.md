@@ -1,4 +1,7 @@
 # HostelEase HMS — Modern Hostel Management System
+## 🚀 Live Demo
+
+[Live Demo – HostelEase HMS](https://hms-ruby-beta.vercel.app/)
 
 > **B.Tech Computer Science & Engineering Mini Project**  
 > Affiliation: **Dr. A.P.J. Abdul Kalam Technical University (AKTU)**  
