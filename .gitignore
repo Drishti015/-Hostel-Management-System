@@ -14,11 +14,13 @@ __pycache__/
 
 # Environment Variables & Secrets
 .env
-.env.local
-.env.*.local
+.env.*
 *.env
 !.env.example
 !hostel management system/.env.example
+
+# Vercel Deployment Cache
+.vercel/
 
 # Local SQLite Database & Instance Files
 instance/

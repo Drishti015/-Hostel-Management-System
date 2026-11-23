@@ -18,7 +18,23 @@ def create_app(config_name=None):
         config_name = os.environ.get('FLASK_ENV', 'development')
 
     app = Flask(__name__)
-    app.config.from_object(config_by_name.get(config_name, config_by_name['default']))
+    config_obj = config_by_name.get(config_name, config_by_name['default'])
+    app.config.from_object(config_obj)
+
+    # Re-evaluate DATABASE_URL at runtime if present to ensure dynamic environment overrides
+    database_url = os.environ.get('DATABASE_URL')
+    if database_url and database_url.strip():
+        from app.config import normalize_database_url
+        app.config['SQLALCHEMY_DATABASE_URI'] = normalize_database_url(database_url)
+
+    # Serverless connection pooling (e.g. Vercel)
+    is_serverless = bool(os.environ.get('VERCEL') or os.environ.get('AWS_LAMBDA_FUNCTION_NAME'))
+    if is_serverless:
+        from sqlalchemy.pool import NullPool
+        app.config['SQLALCHEMY_ENGINE_OPTIONS'] = {
+            'poolclass': NullPool,
+            'pool_pre_ping': True,
+        }
 
     # Initialize Extensions with App
     db.init_app(app)
@@ -55,11 +71,18 @@ def create_app(config_name=None):
     app.register_blueprint(mess_staff_bp, url_prefix='/mess-staff')
     app.register_blueprint(mess_manager_bp, url_prefix='/mess-manager')
 
-    # Configure Upload Folder & Limits
-    upload_folder = os.path.join(app.root_path, 'static', 'uploads', 'leave_documents')
-    os.makedirs(upload_folder, exist_ok=True)
-    os.makedirs(os.path.join(app.root_path, 'static', 'uploads', 'qrcodes'), exist_ok=True)
-    app.config['UPLOAD_FOLDER'] = os.path.join(app.root_path, 'static', 'uploads')
+    # Configure Upload Folder & Limits (with serverless read-only filesystem fallback)
+    try:
+        upload_folder = os.path.join(app.root_path, 'static', 'uploads', 'leave_documents')
+        os.makedirs(upload_folder, exist_ok=True)
+        os.makedirs(os.path.join(app.root_path, 'static', 'uploads', 'qrcodes'), exist_ok=True)
+        app.config['UPLOAD_FOLDER'] = os.path.join(app.root_path, 'static', 'uploads')
+    except OSError:
+        import tempfile
+        tmp_base = os.path.join(tempfile.gettempdir(), 'hostelease_uploads')
+        os.makedirs(os.path.join(tmp_base, 'leave_documents'), exist_ok=True)
+        os.makedirs(os.path.join(tmp_base, 'qrcodes'), exist_ok=True)
+        app.config['UPLOAD_FOLDER'] = tmp_base
     app.config['MAX_CONTENT_LENGTH'] = 5 * 1024 * 1024  # 5 MB max upload
 
     # Global Context Processors (available in all Jinja templates)
@@ -99,8 +122,10 @@ def create_app(config_name=None):
         app.logger.error(f"Internal Server Error (500): {error}", exc_info=True)
         return render_template('components/error.html', code=500, message="Internal Server Error: Something went wrong on the server."), 500
 
-    # Ensure database schema is up-to-date (self-healing migration)
-    _ensure_schema_migrations(app)
+    # Ensure database schema is up-to-date in local dev, but avoid running DDL on every serverless invocation
+    is_serverless = bool(os.environ.get('VERCEL') or os.environ.get('AWS_LAMBDA_FUNCTION_NAME'))
+    if not is_serverless or os.environ.get('RUN_DB_MIGRATIONS') == '1':
+        _ensure_schema_migrations(app)
 
     return app
 
@@ -118,11 +143,12 @@ def _ensure_schema_migrations(app):
             if inspector.has_table('digital_out_passes'):
                 existing_cols = [c['name'] for c in inspector.get_columns('digital_out_passes')]
                 with db.engine.connect() as conn:
+                    col_type = 'TIMESTAMP' if db.engine.dialect.name == 'postgresql' else 'DATETIME'
                     if 'actual_departure_time' not in existing_cols:
-                        conn.execute(text('ALTER TABLE digital_out_passes ADD COLUMN actual_departure_time DATETIME'))
+                        conn.execute(text(f'ALTER TABLE digital_out_passes ADD COLUMN actual_departure_time {col_type}'))
                         conn.commit()
                     if 'actual_return_time' not in existing_cols:
-                        conn.execute(text('ALTER TABLE digital_out_passes ADD COLUMN actual_return_time DATETIME'))
+                        conn.execute(text(f'ALTER TABLE digital_out_passes ADD COLUMN actual_return_time {col_type}'))
                         conn.commit()
         except Exception as e:
             app.logger.warning(f"Schema self-healing migration note: {e}")
