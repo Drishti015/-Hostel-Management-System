@@ -52,12 +52,48 @@ class DigitalOutPass(db.Model):
 
     @property
     def qr_code_url(self):
-        if not self.qr_code_file:
-            return None
+        """
+        Returns URL to access the QR code image.
+        Uses dynamic serving route if available, with fallback to static asset.
+        """
         from flask import url_for
-        if self.qr_code_file.startswith('uploads/'):
-            return url_for('static', filename=self.qr_code_file)
-        return url_for('static', filename=f'uploads/qrcodes/{self.qr_code_file}')
+        try:
+            return url_for('student.outpass_qr_image', id=self.id)
+        except Exception:
+            if not self.qr_code_file:
+                return None
+            if self.qr_code_file.startswith('uploads/'):
+                return url_for('static', filename=self.qr_code_file)
+            return url_for('static', filename=f'uploads/qrcodes/{self.qr_code_file}')
+
+    def get_qr_image_bytes(self):
+        """
+        Generates in-memory PNG bytes of the Out-Pass QR code.
+        Guarantees zero-filesystem dependency for serverless/Vercel environments.
+        """
+        import io
+        import qrcode
+        token_val = getattr(self, 'raw_token', None) or self.pass_token_hash
+        payload = f"HOSTELPASS:{token_val}"
+        img = qrcode.make(payload, box_size=8, border=2)
+        buf = io.BytesIO()
+        img.save(buf, format='PNG')
+        buf.seek(0)
+        return buf.getvalue()
+
+    @property
+    def qr_code_data_uri(self):
+        """
+        Returns inline Base64 data URI (data:image/png;base64,...) of the QR code.
+        Works across all serverless/ephemeral lambda environments without disk reads.
+        """
+        import base64
+        try:
+            png_bytes = self.get_qr_image_bytes()
+            encoded = base64.b64encode(png_bytes).decode('ascii')
+            return f"data:image/png;base64,{encoded}"
+        except Exception:
+            return None
 
     @property
     def exit_transaction(self):

@@ -153,9 +153,13 @@ python run.py
 Open your web browser and visit: **`http://127.0.0.1:5000`**
 
 ### Step 5: Execute Test Suites
-Run the complete automated test suite (105 tests across all modules):
+Run the complete automated test suite (107 tests across all 6 test modules):
 ```powershell
-python -m unittest discover tests
+# Run Python syntax and bytecode compilation verification
+python -m compileall -q app tests migrate_demo_accounts_prod.py
+
+# Execute full automated test suite with isolated in-memory database
+python -m unittest discover tests -v
 ```
 
 ---
@@ -299,6 +303,10 @@ python -m unittest tests/test_gate_system.py -v
    - The SHA-256 hash of this token is stored in the database (`pass_token_hash`).
    - The QR code contains only a secure protocol-prefixed token payload (`HOSTELPASS:<token>`), preventing exposure of sensitive PII or raw database primary keys.
    - High-resolution QR images are dynamically rendered and stored in `static/uploads/qrcodes/`.
+   - **Serverless Resilience & In-Memory QR Generation:** To guarantee full compatibility with serverless environments (such as Vercel AWS Lambda containers where local filesystems are read-only or ephemeral), the `DigitalOutPass` model incorporates:
+     - `get_qr_image_bytes()`: Generates the cryptographic PNG image dynamically in-memory via `io.BytesIO`.
+     - `qr_code_data_uri`: Encodes the QR PNG as an inline Base64 data URI (`data:image/png;base64,...`), allowing zero-disk-dependency template rendering in student, warden, and admin portals.
+     - Dynamic streaming endpoint `/student/outpasses/<id>/qr-image` and `/student/outpasses/<id>/download` using `send_file()` with `BytesIO` fallback to ensure QR codes are always accessible regardless of container disk persistence.
    - The student instantly receives an in-app notification linking to their digital pass wallet.
 
 2. **Student Digital Pass Wallet:**
@@ -673,5 +681,23 @@ HostelEase features an enterprise-grade, integrated **Mess Management System** d
 - **Security:** `werkzeug.security` (salted `scrypt` password hashing), `secrets` (32-byte cryptographic entropy), `hmac` (constant-time token comparison)
 - **Deployment:** Vercel WSGI Serverless / Standard WSGI (Gunicorn)
 
+---
 
+## 12. Quality Assurance, Security Audits & Release Reports
+
+HostelEase HMS has undergone comprehensive end-to-end quality assurance, vulnerability mitigation, and regression testing. The repository includes two exhaustive audit reports:
+
+1. **[`HOSTELEASE_COMPLETE_QA_REPORT.md`](file:///HOSTELEASE_COMPLETE_QA_REPORT.md):**
+   - Complete feature inventory across all 8 user roles and 7 major workflows.
+   - Comprehensive test execution results (107 automated unit and integration tests passing).
+   - In-depth security analysis covering RBAC, IDOR protection, session boundaries, and CSRF defense.
+   - Database schema and entity relationship consistency audit.
+   - Vercel serverless deployment assessment and header verification.
+
+2. **[`HOSTELEASE_FINAL_RELEASE_QA_REPORT.md`](file:///HOSTELEASE_FINAL_RELEASE_QA_REPORT.md):**
+   - Executive release readiness assessment and verification sign-off.
+   - Serverless ephemeral filesystem remediation (in-memory QR streams and Base64 data URIs).
+   - Cross-role route and template hardening audit.
+   - Production migration fail-closed safety verification (`--execute-production-migration` flag requirement, interactive confirmation, read-only preflight).
+   - Final release checklist and deployment guidelines.
 

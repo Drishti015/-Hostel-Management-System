@@ -123,9 +123,9 @@
                 </div>
                 <div class="card-body p-4 text-center">
                     <!-- QR Code Preview -->
-                    {% if p.qr_code_file and p.status in ['Active', 'Used'] %}
+                    {% if (p.qr_code_file or p.qr_code_data_uri) and p.status in ['Active', 'Used'] %}
                         <div class="mb-3 p-2 bg-light rounded-3 d-inline-block border">
-                            <img src="{{ p.qr_code_url or url_for('static', filename='uploads/qrcodes/' + p.qr_code_file) }}" alt="Out-Pass QR Code" style="width: 140px; height: 140px;" class="img-fluid">
+                            <img src="{{ p.qr_code_data_uri or p.qr_code_url or url_for('static', filename='uploads/qrcodes/' + (p.qr_code_file or '')) }}" alt="Out-Pass QR Code" style="width: 140px; height: 140px;" class="img-fluid">
                         </div>
                     {% else %}
                         <div class="mb-3 p-4 bg-light rounded-3 d-inline-block border text-muted" style="width: 140px; height: 140px;">

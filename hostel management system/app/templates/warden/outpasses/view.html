@@ -164,8 +164,8 @@
     <div class="col-lg-4">
         <div class="card border-0 shadow-sm rounded-4 p-4 bg-white text-center mb-4">
             <h6 class="fw-bold text-muted text-uppercase mb-3">Cryptographic QR Pass</h6>
-            {% if outpass.qr_code_file %}
-                <img src="{{ outpass.qr_code_url or url_for('static', filename='uploads/qrcodes/' + outpass.qr_code_file) }}" alt="QR Code" class="img-fluid border rounded-3 p-2 mb-3 mx-auto" style="max-width: 220px;">
+            {% if outpass.qr_code_file or outpass.qr_code_data_uri %}
+                <img src="{{ outpass.qr_code_data_uri or outpass.qr_code_url or url_for('static', filename='uploads/qrcodes/' + (outpass.qr_code_file or '')) }}" alt="QR Code" class="img-fluid border rounded-3 p-2 mb-3 mx-auto" style="max-width: 220px;">
             {% else %}
                 <div class="p-4 bg-light text-muted rounded-3 mb-3">No QR Generated</div>
             {% endif %}

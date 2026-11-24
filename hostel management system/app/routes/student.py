@@ -1,7 +1,7 @@
 import os
 import uuid
 from datetime import datetime, date, timedelta
-from flask import Blueprint, render_template, redirect, url_for, flash, request, abort, current_app, send_from_directory
+from flask import Blueprint, render_template, redirect, url_for, flash, request, abort, current_app, send_from_directory, send_file
 from flask_login import login_required, current_user
 from app.utils.decorators import student_required
 from app.models import db, Notice, Complaint, FeeRecord, Attendance, LeaveApplication, DigitalOutPass, GateTransaction
@@ -427,6 +427,35 @@ def view_outpass(id):
         return redirect(url_for('student.outpasses_list'))
 
 
+@student_bp.route('/outpasses/<int:id>/qr-code')
+@student_bp.route('/outpasses/<int:id>/qr-image')
+@login_required
+@student_required
+def outpass_qr_image(id):
+    """
+    Dynamically stream out-pass QR code directly from memory or disk.
+    Guarantees 100% serverless/Vercel compatibility without relying on persistent local disk.
+    """
+    student = current_user.student_profile
+    outpass = DigitalOutPass.query.get_or_404(id)
+
+    # IDOR check
+    if outpass.student_id != student.id:
+        abort(403)
+
+    # Try streaming from disk if file exists
+    upload_base = current_app.config.get('UPLOAD_FOLDER', os.path.join(current_app.root_path, 'static', 'uploads'))
+    if outpass.qr_code_file:
+        qr_path = os.path.join(upload_base, 'qrcodes', outpass.qr_code_file)
+        if os.path.exists(qr_path):
+            return send_file(qr_path, mimetype='image/png')
+
+    # Serverless fallback: generate dynamically in-memory
+    import io
+    png_bytes = outpass.get_qr_image_bytes()
+    return send_file(io.BytesIO(png_bytes), mimetype='image/png', download_name=f"outpass_{outpass.id}.png")
+
+
 @student_bp.route('/outpasses/<int:id>/download')
 @login_required
 @student_required
@@ -439,13 +468,16 @@ def download_qr(id):
     if outpass.student_id != student.id:
         abort(403)
 
-    if not outpass.qr_code_file:
-        flash('QR Code image file not found.', 'danger')
-        return redirect(url_for('student.view_outpass', id=outpass.id))
-
     upload_base = current_app.config.get('UPLOAD_FOLDER', os.path.join(current_app.root_path, 'static', 'uploads'))
-    qr_dir = os.path.join(upload_base, 'qrcodes')
-    return send_from_directory(qr_dir, outpass.qr_code_file, as_attachment=True, download_name=f"HostelEase_OutPass_{outpass.id}.png")
+    if outpass.qr_code_file:
+        qr_path = os.path.join(upload_base, 'qrcodes', outpass.qr_code_file)
+        if os.path.exists(qr_path):
+            return send_from_directory(os.path.join(upload_base, 'qrcodes'), outpass.qr_code_file, as_attachment=True, download_name=f"HostelEase_OutPass_{outpass.id}.png")
+
+    # In-memory streaming fallback
+    import io
+    png_bytes = outpass.get_qr_image_bytes()
+    return send_file(io.BytesIO(png_bytes), mimetype='image/png', as_attachment=True, download_name=f"HostelEase_OutPass_{outpass.id}.png")
 
 
 # =====================================================================

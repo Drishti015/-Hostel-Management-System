@@ -360,5 +360,41 @@ class GateSystemTestCase(unittest.TestCase):
         self.assertIn(b'Transaction ID,Out-Pass ID,Student Name', res.data)
         self.assertIn(b'North Gate', res.data)
 
+    def test_serverless_qr_code_dynamic_generation_and_routes(self):
+        """Test serverless dynamic QR code in-memory generation and download endpoints"""
+        leave = self._create_approved_leave(self.student_1)
+        outpass = OutPassService.generate_outpass(leave)
+
+        # 1. Test in-memory PNG generation
+        png_bytes = outpass.get_qr_image_bytes()
+        self.assertTrue(len(png_bytes) > 0)
+        # Check standard PNG header magic bytes: \x89PNG\r\n\x1a\n
+        self.assertTrue(png_bytes.startswith(b'\x89PNG\r\n\x1a\n'))
+
+        # 2. Test data URI format
+        data_uri = outpass.qr_code_data_uri
+        self.assertTrue(data_uri.startswith('data:image/png;base64,'))
+
+        # 3. Test student dynamic QR stream route
+        self.login('rahul', 'Student@123')
+        res = self.client.get(f'/student/outpasses/{outpass.id}/qr-image')
+        self.assertEqual(res.status_code, 200)
+        self.assertEqual(res.mimetype, 'image/png')
+        self.assertTrue(res.data.startswith(b'\x89PNG\r\n\x1a\n'))
+
+        # 4. Test student QR download endpoint
+        res = self.client.get(f'/student/outpasses/{outpass.id}/download')
+        self.assertEqual(res.status_code, 200)
+        self.assertEqual(res.mimetype, 'image/png')
+        self.assertIn('attachment', res.headers.get('Content-Disposition', ''))
+
+        # 5. Test IDOR protection: other student cannot access this QR code
+        self.logout()
+        self.login('priya', 'Student@123')
+        res = self.client.get(f'/student/outpasses/{outpass.id}/qr-image')
+        self.assertEqual(res.status_code, 403)
+        res = self.client.get(f'/student/outpasses/{outpass.id}/download')
+        self.assertEqual(res.status_code, 403)
+
 if __name__ == '__main__':
     unittest.main()

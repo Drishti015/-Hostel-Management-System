@@ -59,8 +59,8 @@
 
             <!-- Prominent QR Code -->
             <div class="p-3 bg-white border border-2 border-primary rounded-4 d-inline-block shadow-sm mb-4">
-                {% if outpass.qr_code_file %}
-                    <img src="{{ outpass.qr_code_url or url_for('static', filename='uploads/qrcodes/' + outpass.qr_code_file) }}" alt="Out-Pass QR Code" style="width: 200px; height: 200px;" class="img-fluid">
+                {% if outpass.qr_code_file or outpass.qr_code_data_uri %}
+                    <img src="{{ outpass.qr_code_data_uri or outpass.qr_code_url or url_for('static', filename='uploads/qrcodes/' + (outpass.qr_code_file or '')) }}" alt="Out-Pass QR Code" style="width: 200px; height: 200px;" class="img-fluid">
                 {% else %}
                     <div class="text-muted p-4">QR Unavailable</div>
                 {% endif %}

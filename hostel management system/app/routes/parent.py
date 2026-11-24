@@ -58,7 +58,8 @@ def child_profile():
                            warden=warden)
 
 
-@parent_bp.route('/leave-applications')
+@parent_bp.route('/leaves', endpoint='leaves')
+@parent_bp.route('/leave-applications', endpoint='leaves_list')
 @login_required
 @parent_required
 def leaves_list():

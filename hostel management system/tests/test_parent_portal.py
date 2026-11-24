@@ -540,5 +540,19 @@ class ParentPortalTestCase(unittest.TestCase):
         self.assertIsNotNone(notif_exit)
         self.assertIn('Main Campus Gate', notif_exit.message)
 
+    def test_parent_leaves_alias_route_consistency(self):
+        """Test both /parent/leaves and /parent/leave-applications endpoints render cleanly"""
+        self.login('parent_ramesh', 'Parent@123')
+
+        # Test /parent/leave-applications
+        res1 = self.client.get('/parent/leave-applications')
+        self.assertEqual(res1.status_code, 200)
+        self.assertIn(b'Leave Application History', res1.data)
+
+        # Test /parent/leaves alias
+        res2 = self.client.get('/parent/leaves')
+        self.assertEqual(res2.status_code, 200)
+        self.assertIn(b'Leave Application History', res2.data)
+
 if __name__ == '__main__':
     unittest.main()
