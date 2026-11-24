@@ -14,6 +14,275 @@ from app.services.notification_service import NotificationService
 
 SECRET_MESS_KEY = "hostelease-secure-mess-qr-salt-2026"
 
+WEEKLY_MENU_TEMPLATE = [
+    # Day 0: Monday
+    {
+        'day_name': 'Monday',
+        'meals': [
+            {
+                'type': 'Breakfast',
+                'title': 'Poha, Milk, Banana',
+                'desc': 'Fluffy seasoned poha garnished with roasted peanuts and fresh coriander, served with warm milk and fresh banana.',
+                'timing': '7:30 AM - 9:30 AM',
+                'category': 'Vegetarian',
+                'special_dish': None
+            },
+            {
+                'type': 'Lunch',
+                'title': 'Dal, Rice, Roti, Salad',
+                'desc': 'Nutritious yellow toor dal tadka, steamed basmati rice, freshly baked whole wheat rotis, and fresh seasonal green salad.',
+                'timing': '12:30 PM - 2:30 PM',
+                'category': 'Vegetarian',
+                'special_dish': None
+            },
+            {
+                'type': 'Snacks',
+                'title': 'Samosa, Tea',
+                'desc': 'Crispy potato-stuffed samosas served with tangy tamarind chutney and freshly brewed spiced masala chai.',
+                'timing': '5:00 PM - 6:00 PM',
+                'category': 'Vegetarian',
+                'special_dish': None
+            },
+            {
+                'type': 'Dinner',
+                'title': 'Paneer, Roti, Rice',
+                'desc': 'Rich paneer butter masala gravy, warm tawa rotis, fragrant jeera rice, and sliced cucumber salad.\nSpecial Dish: Paneer Butter Masala',
+                'timing': '7:30 PM - 9:30 PM',
+                'category': 'Vegetarian',
+                'special_dish': 'Paneer Butter Masala'
+            }
+        ]
+    },
+    # Day 1: Tuesday
+    {
+        'day_name': 'Tuesday',
+        'meals': [
+            {
+                'type': 'Breakfast',
+                'title': 'Aloo Paratha, Curd',
+                'desc': 'Hot spiced aloo parathas served with creamy fresh curd, mixed pickle, and tea.\nSpecial Dish: Stuffed Aloo Paratha',
+                'timing': '7:30 AM - 9:30 AM',
+                'category': 'Vegetarian',
+                'special_dish': 'Stuffed Aloo Paratha'
+            },
+            {
+                'type': 'Lunch',
+                'title': 'Rajma, Rice, Salad',
+                'desc': 'Authentic North Indian rajma masala cooked in thick tomato-onion gravy, steamed basmati rice, roasted papad, and fresh salad.',
+                'timing': '12:30 PM - 2:30 PM',
+                'category': 'Vegetarian',
+                'special_dish': None
+            },
+            {
+                'type': 'Snacks',
+                'title': 'Sandwich, Tea',
+                'desc': 'Toasted grilled vegetable sandwich filled with cucumber, tomato, green mint chutney, served with hot ginger tea.',
+                'timing': '5:00 PM - 6:00 PM',
+                'category': 'Vegetarian',
+                'special_dish': None
+            },
+            {
+                'type': 'Dinner',
+                'title': 'Mix Veg, Dal, Roti',
+                'desc': 'Homestyle mixed seasonal vegetable sabzi, yellow moong dal fry, soft tawa rotis, and steamed rice.',
+                'timing': '7:30 PM - 9:30 PM',
+                'category': 'Vegetarian',
+                'special_dish': None
+            }
+        ]
+    },
+    # Day 2: Wednesday
+    {
+        'day_name': 'Wednesday',
+        'meals': [
+            {
+                'type': 'Breakfast',
+                'title': 'Idli, Sambar',
+                'desc': 'Soft steamed rice idlis served with piping hot vegetable sambar and freshly ground coconut chutney.',
+                'timing': '7:30 AM - 9:30 AM',
+                'category': 'Vegetarian',
+                'special_dish': None
+            },
+            {
+                'type': 'Lunch',
+                'title': 'Chole, Rice, Roti',
+                'desc': 'Spiced Amritsari chole masala, steamed basmati rice, warm whole wheat rotis, and onion-lemon salad.',
+                'timing': '12:30 PM - 2:30 PM',
+                'category': 'Vegetarian',
+                'special_dish': None
+            },
+            {
+                'type': 'Snacks',
+                'title': 'Bread Pakora, Tea',
+                'desc': 'Crispy deep-fried bread pakoras stuffed with savory spiced potatoes, served with mint chutney and tea.',
+                'timing': '5:00 PM - 6:00 PM',
+                'category': 'Vegetarian',
+                'special_dish': None
+            },
+            {
+                'type': 'Dinner',
+                'title': 'Shahi Paneer, Roti',
+                'desc': 'Creamy royal shahi paneer cooked with cashew gravy and aromatic spices, hot tawa phulkas, steamed rice, and gulab jamun.\nSpecial Dish: Shahi Paneer',
+                'timing': '7:30 PM - 9:30 PM',
+                'category': 'Vegetarian',
+                'special_dish': 'Shahi Paneer'
+            }
+        ]
+    },
+    # Day 3: Thursday
+    {
+        'day_name': 'Thursday',
+        'meals': [
+            {
+                'type': 'Breakfast',
+                'title': 'Sandwich, Milk',
+                'desc': 'Nutritious toasted vegetable club sandwich with cheese slice, served with warm sweetened dairy milk.',
+                'timing': '7:30 AM - 9:30 AM',
+                'category': 'Vegetarian',
+                'special_dish': None
+            },
+            {
+                'type': 'Lunch',
+                'title': 'Kadhi, Rice, Roti',
+                'desc': 'Traditional Punjabi pakora kadhi cooked in sour buttermilk, steamed basmati rice, soft rotis, and roasted papad.',
+                'timing': '12:30 PM - 2:30 PM',
+                'category': 'Vegetarian',
+                'special_dish': None
+            },
+            {
+                'type': 'Snacks',
+                'title': 'Dhokla, Tea',
+                'desc': 'Spongy steamed Gujarati nylon dhokla tempered with mustard seeds and curry leaves, served with green chutney and tea.',
+                'timing': '5:00 PM - 6:00 PM',
+                'category': 'Vegetarian',
+                'special_dish': None
+            },
+            {
+                'type': 'Dinner',
+                'title': 'Dal Makhani, Rice',
+                'desc': 'Slow-cooked creamy dal makhani with butter and aromatic spices, steamed jeera rice, soft whole wheat rotis, and salad.\nSpecial Dish: Dal Makhani',
+                'timing': '7:30 PM - 9:30 PM',
+                'category': 'Vegetarian',
+                'special_dish': 'Dal Makhani'
+            }
+        ]
+    },
+    # Day 4: Friday
+    {
+        'day_name': 'Friday',
+        'meals': [
+            {
+                'type': 'Breakfast',
+                'title': 'Poori, Aloo Sabzi',
+                'desc': 'Puffy golden pooris served with halwai-style spicy aloo rasedaar sabzi, sweet semolina sooji halwa, and pickle.\nSpecial Dish: Poori Aloo Halwa',
+                'timing': '7:30 AM - 9:30 AM',
+                'category': 'Vegetarian',
+                'special_dish': 'Poori Aloo Halwa'
+            },
+            {
+                'type': 'Lunch',
+                'title': 'Dal, Rice, Roti, Salad',
+                'desc': 'Yellow dal fry with cumin tempering, steamed basmati rice, tawa rotis, roasted papad, and fresh sliced green salad.',
+                'timing': '12:30 PM - 2:30 PM',
+                'category': 'Vegetarian',
+                'special_dish': None
+            },
+            {
+                'type': 'Snacks',
+                'title': 'Pasta, Juice',
+                'desc': 'Italian herb vegetable penne pasta with sweet corn, bell peppers, served with chilled fruit juice.',
+                'timing': '5:00 PM - 6:00 PM',
+                'category': 'Vegetarian',
+                'special_dish': None
+            },
+            {
+                'type': 'Dinner',
+                'title': 'Kadai Paneer, Roti',
+                'desc': 'Spicy kadai paneer tossed with capsicum and freshly ground whole spices, soft butter rotis, steamed rice.\nSpecial Dish: Kadai Paneer',
+                'timing': '7:30 PM - 9:30 PM',
+                'category': 'Vegetarian',
+                'special_dish': 'Kadai Paneer'
+            }
+        ]
+    },
+    # Day 5: Saturday
+    {
+        'day_name': 'Saturday',
+        'meals': [
+            {
+                'type': 'Breakfast',
+                'title': 'Upma, Tea',
+                'desc': 'Roasted rava upma cooked with vegetables, curry leaves, and mustard seeds, served with coconut chutney and hot tea.',
+                'timing': '7:30 AM - 9:30 AM',
+                'category': 'Vegetarian',
+                'special_dish': None
+            },
+            {
+                'type': 'Lunch',
+                'title': 'Chole Bhature, Salad',
+                'desc': 'Fluffy hot bhature served with rich spiced Punjabi chole, pickled onions, fried green chili, and boondi raita.\nSpecial Dish: Chole Bhature',
+                'timing': '12:30 PM - 2:30 PM',
+                'category': 'Vegetarian',
+                'special_dish': 'Chole Bhature'
+            },
+            {
+                'type': 'Snacks',
+                'title': 'Spring Rolls, Tea',
+                'desc': 'Golden crispy vegetable spring rolls served with sweet garlic chili dipping sauce and hot masala tea.',
+                'timing': '5:00 PM - 6:00 PM',
+                'category': 'Vegetarian',
+                'special_dish': None
+            },
+            {
+                'type': 'Dinner',
+                'title': 'Veg Pulao, Raita',
+                'desc': 'Fragrant basmati vegetable pulao prepared with green peas and carrots, served with chilled vegetable raita and roasted papad.',
+                'timing': '7:30 PM - 9:30 PM',
+                'category': 'Vegetarian',
+                'special_dish': None
+            }
+        ]
+    },
+    # Day 6: Sunday
+    {
+        'day_name': 'Sunday',
+        'meals': [
+            {
+                'type': 'Breakfast',
+                'title': 'Masala Dosa, Sambar',
+                'desc': 'Crisp golden South Indian masala dosa with potato stuffing, served with hot sambar and fresh coconut chutney.\nSpecial Dish: Masala Dosa',
+                'timing': '7:30 AM - 9:30 AM',
+                'category': 'Vegetarian',
+                'special_dish': 'Masala Dosa'
+            },
+            {
+                'type': 'Lunch',
+                'title': 'Special Thali',
+                'desc': 'Grand Sunday Royal Thali: Paneer Lababdar, Dal Makhani, Seasonal Veg, Steamed Basmati Rice, Butter Naan/Roti, Boondi Raita, Papad, and Sweet Dessert.\nSpecial Dish: Special Thali',
+                'timing': '12:30 PM - 2:30 PM',
+                'category': 'Vegetarian',
+                'special_dish': 'Special Thali'
+            },
+            {
+                'type': 'Snacks',
+                'title': 'Burger, Juice',
+                'desc': 'Crispy vegetable burger with cheese slice and fresh tomatoes, served with chilled mango fruit juice.',
+                'timing': '5:00 PM - 6:00 PM',
+                'category': 'Vegetarian',
+                'special_dish': None
+            },
+            {
+                'type': 'Dinner',
+                'title': 'Special Dinner, Ice Cream',
+                'desc': 'Weekend Special Dinner: Malai Kofta, Jeera Rice, Tawa Butter Roti, Dal Fry, Fresh Salad, followed by Premium Ice Cream.\nSpecial Dish: Special Dinner, Ice Cream',
+                'timing': '7:30 PM - 9:30 PM',
+                'category': 'Vegetarian',
+                'special_dish': 'Special Dinner, Ice Cream'
+            }
+        ]
+    }
+]
+
 class MessService:
     """
     Core Business Logic Service for HostelEase Mess & Dining Management System.
@@ -77,13 +346,65 @@ class MessService:
         return MessService.get_or_create_default_mess()
 
     @staticmethod
-    def get_today_menus(mess_id, target_date=None):
+    def ensure_weekly_menu_seeded(mess_id, reference_date=None):
+        """
+        Ensures that all 28 meal slots (Monday-Sunday, 4 meals/day)
+        are present in the database for the week containing reference_date.
+        """
+        if not mess_id:
+            return
+        if reference_date is None:
+            reference_date = date.today()
+
+        monday = reference_date - timedelta(days=reference_date.weekday())
+        any_added = False
+
+        for day_offset in range(7):
+            meal_day = monday + timedelta(days=day_offset)
+            day_template = WEEKLY_MENU_TEMPLATE[day_offset]
+
+            for m in day_template['meals']:
+                existing = MealMenu.query.filter_by(
+                    mess_id=mess_id,
+                    meal_date=meal_day,
+                    meal_type=m['type']
+                ).first()
+
+                if not existing:
+                    # Cutoff deadline is 6 hours after day start (e.g. 6:00 AM on the meal day)
+                    deadline = datetime.combine(meal_day, datetime.min.time()) + timedelta(hours=6)
+                    menu = MealMenu(
+                        mess_id=mess_id,
+                        meal_date=meal_day,
+                        meal_type=m['type'],
+                        title=m['title'],
+                        description=m['desc'],
+                        food_category=m['category'],
+                        meal_timing=m['timing'],
+                        booking_deadline=deadline,
+                        capacity=300,
+                        is_published=True
+                    )
+                    db.session.add(menu)
+                    any_added = True
+
+        if any_added:
+            try:
+                db.session.commit()
+            except Exception:
+                db.session.rollback()
+
+    @staticmethod
+    def get_today_menus(mess_id, target_date=None, auto_seed=True):
         """Retrieves published menus for all four slots of a specific day"""
         if not mess_id:
             return []
 
         if target_date is None:
             target_date = date.today()
+
+        if auto_seed:
+            MessService.ensure_weekly_menu_seeded(mess_id, target_date)
 
         menus = MealMenu.query.filter_by(
             mess_id=mess_id,
@@ -95,27 +416,39 @@ class MessService:
         return sorted(menus, key=lambda m: slot_order.get(m.meal_type, 5))
 
     @staticmethod
-    def get_weekly_menus(mess_id, start_date=None):
-        """Retrieves a full 7-day schedule of meals for the weekly calendar"""
+    def get_weekly_menus(mess_id, start_date=None, auto_seed=True, published_only=False):
+        """
+        Retrieves a full 7-day schedule of meals for Monday through Sunday.
+        Anchors automatically to the Monday of the week containing start_date.
+        """
         if start_date is None:
             start_date = date.today()
+
+        # Anchor to Monday of that week
+        monday = start_date - timedelta(days=start_date.weekday())
+        sunday = monday + timedelta(days=6)
+
+        if auto_seed and mess_id:
+            MessService.ensure_weekly_menu_seeded(mess_id, monday)
 
         # Organize by date -> meal_type
         calendar_data = {}
         for i in range(7):
-            d = start_date + timedelta(days=i)
+            d = monday + timedelta(days=i)
             calendar_data[d] = {'Breakfast': None, 'Lunch': None, 'Snacks': None, 'Dinner': None}
 
         if not mess_id:
             return calendar_data
 
-        end_date = start_date + timedelta(days=6)
-        menus = MealMenu.query.filter(
+        query = MealMenu.query.filter(
             MealMenu.mess_id == mess_id,
-            MealMenu.meal_date >= start_date,
-            MealMenu.meal_date <= end_date,
-            MealMenu.is_published == True
-        ).order_by(MealMenu.meal_date.asc()).all()
+            MealMenu.meal_date >= monday,
+            MealMenu.meal_date <= sunday
+        )
+        if published_only:
+            query = query.filter(MealMenu.is_published == True)
+
+        menus = query.order_by(MealMenu.meal_date.asc()).all()
 
         for menu in menus:
             if menu.meal_date in calendar_data and menu.meal_type in calendar_data[menu.meal_date]:

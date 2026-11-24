@@ -383,13 +383,12 @@ class MessSystemTestCase(unittest.TestCase):
     # 9. Student Mess Dashboard & Resilience Test Suite
     # -------------------------------------------------------------
     def test_student_mess_dashboard_empty_menus_and_bookings(self):
-        """Test GET /student/mess loads cleanly (HTTP 200) when no menus or bookings exist"""
+        """Test GET /student/mess loads cleanly (HTTP 200) when no bookings exist"""
         self._login('student_test', 'Student@123')
         res = self.client.get('/student/mess')
         self.assertEqual(res.status_code, 200)
         self.assertIn(b'Hostel Mess & Dining Desk', res.data)
         self.assertIn(b"Today's Dining Schedule", res.data)
-        self.assertIn(b'No meals published for today yet', res.data)
         self.assertIn(b'No upcoming meal reservations', res.data)
 
     def test_student_mess_dashboard_with_menus_and_bookings(self):
@@ -520,6 +519,167 @@ class MessSystemTestCase(unittest.TestCase):
         att = MessService.record_meal_attendance(self.student.id, menu.id, self.staff.id)
         # Should not throw DataError or InvalidTextRepresentation
         self.assertIn('success', att)
+
+    # -------------------------------------------------------------
+    # 7. Complete Weekly Mess Menu (Monday - Sunday) Tests
+    # -------------------------------------------------------------
+    def test_ensure_weekly_menu_seeded_full_28_slots(self):
+        """Verify ensure_weekly_menu_seeded generates all 28 slots for Monday through Sunday"""
+        today = date.today()
+        monday = today - timedelta(days=today.weekday())
+        sunday = monday + timedelta(days=6)
+
+        MessService.ensure_weekly_menu_seeded(self.mess.id, today)
+
+        # Check all 7 days have 4 meals each
+        weekly_calendar = MessService.get_weekly_menus(self.mess.id, today, auto_seed=False)
+        self.assertEqual(len(weekly_calendar), 7)
+
+        total_meals = 0
+        for day_date, slots in weekly_calendar.items():
+            self.assertIn('Breakfast', slots)
+            self.assertIn('Lunch', slots)
+            self.assertIn('Snacks', slots)
+            self.assertIn('Dinner', slots)
+            for m_type in ['Breakfast', 'Lunch', 'Snacks', 'Dinner']:
+                self.assertIsNotNone(slots[m_type], f"Missing {m_type} on {day_date}")
+                self.assertTrue(slots[m_type].is_published)
+                total_meals += 1
+
+        self.assertEqual(total_meals, 28)
+
+        # Check sample menu values for Monday
+        mon_slots = weekly_calendar[monday]
+        self.assertEqual(mon_slots['Breakfast'].title, 'Poha, Milk, Banana')
+        self.assertEqual(mon_slots['Lunch'].title, 'Dal, Rice, Roti, Salad')
+        self.assertEqual(mon_slots['Snacks'].title, 'Samosa, Tea')
+        self.assertEqual(mon_slots['Dinner'].title, 'Paneer, Roti, Rice')
+        self.assertEqual(mon_slots['Dinner'].special_dish, 'Paneer Butter Masala')
+
+        # Check sample menu values for Sunday
+        sun_slots = weekly_calendar[sunday]
+        self.assertEqual(sun_slots['Breakfast'].title, 'Masala Dosa, Sambar')
+        self.assertEqual(sun_slots['Lunch'].title, 'Special Thali')
+        self.assertEqual(sun_slots['Snacks'].title, 'Burger, Juice')
+        self.assertEqual(sun_slots['Dinner'].title, 'Special Dinner, Ice Cream')
+        self.assertEqual(sun_slots['Dinner'].special_dish, 'Special Dinner, Ice Cream')
+
+    def test_meal_menu_special_dish_and_items_properties(self):
+        """Verify MealMenu extracts special_dish and formats food_items_display cleanly"""
+        menu = MealMenu(
+            mess_id=self.mess.id,
+            meal_date=date.today(),
+            meal_type='Dinner',
+            title='Paneer, Roti, Rice',
+            description='Paneer Butter Masala\nTawa Phulka\nJeera Rice\nSpecial Dish: Chef Paneer Butter Masala',
+            booking_deadline=datetime.utcnow() + timedelta(hours=4),
+            capacity=200,
+            is_published=True
+        )
+        self.assertEqual(menu.special_dish, 'Chef Paneer Butter Masala')
+        self.assertNotIn('Special Dish', menu.food_items_display)
+        self.assertIn('Paneer Butter Masala', menu.food_items_display)
+
+    def test_student_mess_dashboard_weekly_menu_view(self):
+        """Verify Student Mess Dashboard renders 7-day navigation tabs and today's highlighted menu"""
+        self._login('student_test', 'Student@123')
+        res = self.client.get('/student/mess')
+        self.assertEqual(res.status_code, 200)
+
+        # Verify 7-day Monday through Sunday navigation exists
+        self.assertIn(b'Weekly Dining Menu & Daily Schedule', res.data)
+        self.assertIn(b'Today', res.data)
+        # Check meal types
+        self.assertIn(b'Breakfast', res.data)
+        self.assertIn(b'Lunch', res.data)
+        self.assertIn(b'Snacks', res.data)
+        self.assertIn(b'Dinner', res.data)
+
+    def test_student_weekly_menu_schedule_page(self):
+        """Verify Student Weekly Menu page (/student/mess/menu) renders all 7 days with today highlighted"""
+        self._login('student_test', 'Student@123')
+        res = self.client.get('/student/mess/menu')
+        self.assertEqual(res.status_code, 200)
+        self.assertIn(b'Full 7-Day Food Menu (Monday', res.data)
+        self.assertIn(b'Today', res.data)
+
+    def test_mess_manager_menu_create_edit_delete(self):
+        """Verify Mess Manager can create with special dish, edit, and delete an unused meal"""
+        self._login('manager_test', 'Manager@123')
+
+        future_date = date.today() + timedelta(days=20)
+        # 1. Create a new meal menu
+        res = self.client.post('/mess-manager/menu/create', data={
+            'meal_date': future_date.strftime('%Y-%m-%d'),
+            'meal_type': 'Lunch',
+            'title': 'Chole Bhature Feast',
+            'special_dish': 'Punjabi Chole Bhature',
+            'description': 'Amritsari Chole, Puffed Bhature, Pickle, Lassi',
+            'food_category': 'Vegetarian',
+            'meal_timing': '12:30 PM - 2:30 PM',
+            'booking_deadline': (datetime.combine(future_date, datetime.min.time()) + timedelta(hours=6)).strftime('%Y-%m-%dT%H:%M'),
+            'capacity': 250,
+            'is_published': '1'
+        }, follow_redirects=True)
+        self.assertEqual(res.status_code, 200)
+        self.assertIn(b'Chole Bhature Feast', res.data)
+
+        # Verify saved in DB with special dish
+        created_menu = MealMenu.query.filter_by(mess_id=self.mess.id, meal_date=future_date, meal_type='Lunch').first()
+        self.assertIsNotNone(created_menu)
+        self.assertEqual(created_menu.title, 'Chole Bhature Feast')
+        self.assertEqual(created_menu.special_dish, 'Punjabi Chole Bhature')
+
+        # 2. Edit the meal menu
+        res = self.client.post(f'/mess-manager/menu/{created_menu.id}/edit', data={
+            'title': 'Grand Chole Bhature Feast',
+            'special_dish': 'Royal Punjabi Chole Bhature',
+            'description': 'Updated items: Amritsari Chole, 2 Bhature, Boondi Raita',
+            'food_category': 'Vegetarian',
+            'meal_timing': '12:00 PM - 2:30 PM',
+            'booking_deadline': (datetime.combine(future_date, datetime.min.time()) + timedelta(hours=7)).strftime('%Y-%m-%dT%H:%M'),
+            'capacity': 280,
+            'is_published': '1'
+        }, follow_redirects=True)
+        self.assertEqual(res.status_code, 200)
+        db.session.refresh(created_menu)
+        self.assertEqual(created_menu.title, 'Grand Chole Bhature Feast')
+        self.assertEqual(created_menu.special_dish, 'Royal Punjabi Chole Bhature')
+
+        # 3. Delete the meal menu
+        res = self.client.post(f'/mess-manager/menu/{created_menu.id}/delete', follow_redirects=True)
+        self.assertEqual(res.status_code, 200)
+        deleted = MealMenu.query.get(created_menu.id)
+        self.assertIsNone(deleted)
+
+    def test_existing_manager_edits_preserved_during_seeding(self):
+        """Verify ensure_weekly_menu_seeded does not overwrite custom meals set by Mess Manager"""
+        today = date.today()
+        monday = today - timedelta(days=today.weekday())
+
+        # Manager creates custom meal on Monday breakfast before auto-seed
+        custom_menu = MealMenu(
+            mess_id=self.mess.id,
+            meal_date=monday,
+            meal_type='Breakfast',
+            title='Custom Manager Special Breakfast',
+            description='Special Fruit Platter\nSpecial Dish: Exotic Fruit Platter',
+            food_category='Vegetarian',
+            meal_timing='7:00 AM - 9:30 AM',
+            booking_deadline=datetime.combine(monday, datetime.min.time()) + timedelta(hours=6),
+            capacity=150,
+            is_published=True
+        )
+        db.session.add(custom_menu)
+        db.session.commit()
+
+        # Run ensure_weekly_menu_seeded
+        MessService.ensure_weekly_menu_seeded(self.mess.id, today)
+
+        # Verify the custom meal was NOT replaced
+        mon_b = MealMenu.query.filter_by(mess_id=self.mess.id, meal_date=monday, meal_type='Breakfast').first()
+        self.assertEqual(mon_b.title, 'Custom Manager Special Breakfast')
+        self.assertEqual(mon_b.special_dish, 'Exotic Fruit Platter')
 
 if __name__ == '__main__':
     unittest.main()

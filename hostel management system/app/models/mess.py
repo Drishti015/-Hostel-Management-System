@@ -109,6 +109,32 @@ class MealMenu(db.Model):
     )
 
     @property
+    def special_dish(self):
+        """Extracts special dish name if defined in description or title"""
+        if not self.description:
+            return None
+        for line in self.description.splitlines():
+            clean = line.strip()
+            for prefix in ('special dish:', 'chef special:', 'special:'):
+                if clean.lower().startswith(prefix):
+                    val = clean[len(prefix):].strip()
+                    if val:
+                        return val
+        return None
+
+    @property
+    def food_items_display(self):
+        """Returns food items clean string excluding special dish markers"""
+        if not self.description:
+            return self.title
+        lines = []
+        for line in self.description.splitlines():
+            clean = line.strip()
+            if clean and not any(clean.lower().startswith(p) for p in ('special dish:', 'chef special:', 'special:')):
+                lines.append(clean)
+        return " • ".join(lines) if lines else self.title
+
+    @property
     def is_booking_open(self):
         """Checks if meal is currently published and before the booking cutoff deadline"""
         return self.is_published and datetime.utcnow() <= self.booking_deadline

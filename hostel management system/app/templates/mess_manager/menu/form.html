@@ -40,13 +40,22 @@
                 </div>
 
                 <div class="mb-3">
-                    <label class="form-label small fw-semibold text-secondary">Menu Title</label>
-                    <input type="text" name="title" class="form-control" placeholder="e.g. Masala Dosa, Sambhar & Coconut Chutney" value="{{ menu.title if menu else '' }}" required>
+                    <label class="form-label small fw-semibold text-secondary">Menu Title (Meal Name)</label>
+                    <input type="text" name="title" class="form-control" placeholder="e.g. Masala Dosa, Sambar" value="{{ menu.title if menu else '' }}" required>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label small fw-semibold text-secondary">Special Dish / Chef Highlight (Optional)</label>
+                    <div class="input-group">
+                        <span class="input-group-text bg-warning-subtle text-warning-emphasis"><i class="fa-solid fa-crown"></i></span>
+                        <input type="text" name="special_dish" class="form-control" placeholder="e.g. Paneer Butter Masala, Special Sunday Thali, Chole Bhature" value="{{ menu.special_dish if menu and menu.special_dish else '' }}">
+                    </div>
+                    <div class="form-text small">Highlights this meal with a special chef badge across the student dashboard and weekly menus.</div>
                 </div>
 
                 <div class="mb-3">
                     <label class="form-label small fw-semibold text-secondary">Detailed Food Items & Nutritional Description</label>
-                    <textarea name="description" rows="3" class="form-control" placeholder="List items served: Rice, Paneer Butter Masala, Dal Tadka, Roti, Salad, Gulab Jamun...">{{ menu.description if menu else '' }}</textarea>
+                    <textarea name="description" rows="3" class="form-control" placeholder="List items served: Rice, Paneer Butter Masala, Dal Tadka, Roti, Salad...">{{ menu.food_items_display if menu else '' }}</textarea>
                 </div>
 
                 <div class="row g-3 mb-3">

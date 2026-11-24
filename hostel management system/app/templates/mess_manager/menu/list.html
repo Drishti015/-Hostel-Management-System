@@ -63,6 +63,9 @@
                                     </span>
                                 </div>
                                 <div class="fw-bold small text-dark mb-1">{{ m.title }}</div>
+                                {% if m.special_dish %}
+                                <div class="mb-1"><span class="badge bg-warning-subtle text-warning-emphasis border border-warning-subtle small py-1 px-2"><i class="fa-solid fa-crown me-1 text-warning"></i>{{ m.special_dish }}</span></div>
+                                {% endif %}
                                 <div class="small text-muted mb-2">{{ m.active_booking_count }} / {{ m.capacity }} booked</div>
                                 
                                 <div class="d-flex gap-1 border-top pt-2">
@@ -114,7 +117,10 @@
                     </td>
                     <td>
                         <strong class="text-dark">{{ m.title }}</strong>
-                        <div class="text-muted text-truncate" style="max-width: 250px;">{{ m.description or 'No notes' }}</div>
+                        {% if m.special_dish %}
+                        <span class="badge bg-warning-subtle text-warning-emphasis border border-warning-subtle ms-1"><i class="fa-solid fa-crown me-1 text-warning"></i>{{ m.special_dish }}</span>
+                        {% endif %}
+                        <div class="text-muted text-truncate" style="max-width: 250px;">{{ m.food_items_display or 'No notes' }}</div>
                     </td>
                     <td>{{ m.food_category }}</td>
                     <td>{{ m.meal_timing }}</td>

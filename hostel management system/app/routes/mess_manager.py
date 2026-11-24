@@ -136,7 +136,7 @@ def menu_list():
     except ValueError:
         current_date = date.today()
 
-    weekly_calendar = MessService.get_weekly_menus(mess.id, current_date)
+    weekly_calendar = MessService.get_weekly_menus(mess.id, current_date, published_only=False)
     menus = MealMenu.query.filter_by(mess_id=mess.id).order_by(
         MealMenu.meal_date.desc(), MealMenu.meal_type.asc()
     ).limit(30).all()
@@ -160,11 +160,15 @@ def menu_create():
         meal_type = request.form.get('meal_type')
         title = request.form.get('title', '').strip()
         description = request.form.get('description', '').strip()
+        special_dish = request.form.get('special_dish', '').strip()
         food_category = request.form.get('food_category', 'Vegetarian')
         meal_timing = request.form.get('meal_timing', '').strip()
         booking_deadline_str = request.form.get('booking_deadline')
         capacity = request.form.get('capacity', 250, type=int)
         is_published = bool(request.form.get('is_published'))
+
+        if special_dish and not any(special_dish.lower() in l.lower() for l in description.splitlines()):
+            description = f"{description}\nSpecial Dish: {special_dish}".strip() if description else f"Special Dish: {special_dish}"
 
         try:
             meal_date = datetime.strptime(meal_date_str, '%Y-%m-%d').date()
@@ -239,7 +243,18 @@ def menu_edit(id):
 
     if request.method == 'POST':
         menu.title = request.form.get('title', '').strip()
-        menu.description = request.form.get('description', '').strip()
+        description = request.form.get('description', '').strip()
+        special_dish = request.form.get('special_dish', '').strip()
+        
+        # Parse and format description with special dish note
+        clean_desc_lines = [
+            l.strip() for l in description.splitlines() 
+            if l.strip() and not any(l.strip().lower().startswith(p) for p in ('special dish:', 'chef special:', 'special:'))
+        ]
+        if special_dish:
+            clean_desc_lines.append(f"Special Dish: {special_dish}")
+        menu.description = "\n".join(clean_desc_lines).strip()
+
         menu.food_category = request.form.get('food_category', menu.food_category)
         menu.meal_timing = request.form.get('meal_timing', menu.meal_timing)
         menu.capacity = request.form.get('capacity', menu.capacity, type=int)

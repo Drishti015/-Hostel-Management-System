@@ -488,7 +488,7 @@ def download_qr(id):
 @login_required
 @student_required
 def mess_dashboard():
-    """Digital Mess Dashboard for students: today's menus, stats, active notices"""
+    """Digital Mess Dashboard for students: 7-day weekly menu, today's schedule, stats, active notices"""
     student = current_user.student_profile
     if not student:
         flash('Student profile not found.', 'warning')
@@ -498,10 +498,20 @@ def mess_dashboard():
     from app.models.mess import MealMenu, MealBooking, MealAttendance, MealFeedback, MessNotice
 
     mess = MessService.get_student_mess(student)
-    today_menus = MessService.get_today_menus(mess.id) if mess else []
+    today = date.today()
+    selected_date_str = request.args.get('date', '')
+    if selected_date_str:
+        try:
+            current_date = datetime.strptime(selected_date_str, '%Y-%m-%d').date()
+        except ValueError:
+            current_date = today
+    else:
+        current_date = today
+
+    today_menus = MessService.get_today_menus(mess.id, current_date) if mess else []
+    weekly_calendar = MessService.get_weekly_menus(mess.id, today, published_only=True) if mess else {}
 
     # Key statistics
-    today = date.today()
     first_day_of_month = date(today.year, today.month, 1)
 
     today_bookings = MealBooking.query.filter(
@@ -510,6 +520,20 @@ def mess_dashboard():
         MealBooking.meal_menu_id.in_([m.id for m in today_menus])
     ).all() if today_menus else []
     today_booked_menu_ids = {b.meal_menu_id for b in today_bookings}
+
+    # All active student bookings for this week
+    week_menu_ids = []
+    for day_slots in weekly_calendar.values():
+        for m in day_slots.values():
+            if m:
+                week_menu_ids.append(m.id)
+
+    week_bookings = MealBooking.query.filter(
+        MealBooking.student_id == student.id,
+        MealBooking.booking_status == 'Booked',
+        MealBooking.meal_menu_id.in_(week_menu_ids)
+    ).all() if week_menu_ids else []
+    booked_menu_ids = {b.meal_menu_id: b.id for b in week_bookings}
 
     consumed_this_month = MealAttendance.query.filter(
         MealAttendance.student_id == student.id,
@@ -545,8 +569,12 @@ def mess_dashboard():
     return render_template('student/mess/dashboard.html',
                            student=student,
                            mess=mess,
+                           today=today,
+                           current_date=current_date,
                            today_menus=today_menus,
+                           weekly_calendar=weekly_calendar,
                            today_booked_menu_ids=today_booked_menu_ids,
+                           booked_menu_ids=booked_menu_ids,
                            today_bookings_count=len(today_bookings),
                            consumed_this_month=consumed_this_month,
                            missed_this_month=missed_this_month,
@@ -559,7 +587,7 @@ def mess_dashboard():
 @login_required
 @student_required
 def mess_menu():
-    """Daily and weekly meal schedule views"""
+    """Daily and weekly meal schedule views with complete 7-day Monday-Sunday schedule"""
     student = current_user.student_profile
     if not student:
         flash('Student profile not found.', 'warning')
@@ -571,17 +599,18 @@ def mess_menu():
     mess = MessService.get_student_mess(student)
     view_type = request.args.get('view', 'weekly')  # 'daily' or 'weekly'
     selected_date_str = request.args.get('date', '')
+    today = date.today()
 
     if selected_date_str:
         try:
             current_date = datetime.strptime(selected_date_str, '%Y-%m-%d').date()
         except ValueError:
-            current_date = date.today()
+            current_date = today
     else:
-        current_date = date.today()
+        current_date = today
 
     today_menus = MessService.get_today_menus(mess.id, current_date) if mess else []
-    weekly_calendar = MessService.get_weekly_menus(mess.id, current_date) if mess else {
+    weekly_calendar = MessService.get_weekly_menus(mess.id, current_date, published_only=True) if mess else {
         (current_date + timedelta(days=i)): {'Breakfast': None, 'Lunch': None, 'Snacks': None, 'Dinner': None}
         for i in range(7)
     }
@@ -596,6 +625,7 @@ def mess_menu():
     return render_template('student/mess/menu.html',
                            student=student,
                            mess=mess,
+                           today=today,
                            view_type=view_type,
                            current_date=current_date,
                            today_menus=today_menus,

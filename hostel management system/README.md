@@ -79,7 +79,9 @@ hostel_management_system/
 ├── tests/
 │   ├── test_basic.py         # Core unit testing suite
 │   ├── test_parent_portal.py # Parent portal test suite
-│   └── test_mess_system.py   # Mess management test suite (9 comprehensive tests)
+│   ├── test_gate_system.py   # Security gate and QR out-pass test suite
+│   ├── test_leave_system.py  # Student leave application test suite
+│   └── test_mess_system.py   # Mess management test suite (22 tests, 120 total project tests)
 ├── .env                      # Local environment configuration
 ├── .env.example              # Template environment configuration
 ├── requirements.txt          # Python package dependencies
@@ -629,8 +631,8 @@ HostelEase features an enterprise-grade, integrated **Mess Management System** d
 
 | Endpoint | HTTP Method | Protected Role | Functionality |
 | :--- | :--- | :--- | :--- |
-| `/student/mess` | GET | `student` | Student dining home: today's menu, active bookings, dining notice bulletin |
-| `/student/mess/menu` | GET | `student` | Weekly menu calendar with dietary tags, calories, and booking buttons |
+| `/student/mess` | GET | `student` | Student dining home: complete 7-day (Mon–Sun) menu tabs, today auto-highlighting, dietary tags, special dishes, live booking |
+| `/student/mess/menu` | GET | `student` | Full 7-day weekly dining matrix (Mon–Sun) with today row auto-highlight, food items, chef specials, and booking buttons |
 | `/student/mess/book/<id>` | POST | `student` | Reserve meal slot within cutoff deadline |
 | `/student/mess/cancel-booking/<id>` | POST | `student` | Cancel booked meal before preparation cutoff |
 | `/student/mess/bookings` | GET | `student` | Personal booking history and status ledger |
