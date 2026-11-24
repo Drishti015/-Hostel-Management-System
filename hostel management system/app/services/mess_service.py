@@ -32,18 +32,27 @@ class MessService:
 
         mess = query.first()
         if not mess:
-            # Seed default central campus dining hall
-            mess = MessProfile(
-                mess_name="HostelEase Central Dining Hall",
-                description="Primary student residential dining facility serving nutritious, hygienic vegetarian and non-vegetarian meals.",
-                contact_number="+91-9876543210",
-                operating_status='Active',
-                meal_policy='booking_required',
-                daily_capacity=350,
-                hostel_id=hostel_id
-            )
-            db.session.add(mess)
-            db.session.commit()
+            # Fallback to any existing mess profile regardless of operating status
+            mess = MessProfile.query.first()
+            if mess:
+                return mess
+
+            # Seed default central campus dining hall safely with rollback guard
+            try:
+                mess = MessProfile(
+                    mess_name="HostelEase Central Dining Hall",
+                    description="Primary student residential dining facility serving nutritious, hygienic vegetarian and non-vegetarian meals.",
+                    contact_number="+91-9876543210",
+                    operating_status='Active',
+                    meal_policy='booking_required',
+                    daily_capacity=350,
+                    hostel_id=hostel_id
+                )
+                db.session.add(mess)
+                db.session.commit()
+            except Exception:
+                db.session.rollback()
+                mess = MessProfile.query.first()
         return mess
 
     @staticmethod
@@ -52,10 +61,16 @@ class MessService:
         if not student:
             return MessService.get_or_create_default_mess()
 
-        # Check student's current active room allocation
-        alloc = BedAllocation.query.filter_by(student_id=student.id, status='Active').first()
+        # Check student's current active room allocation (PostgreSQL allocation_status_enum: 'active')
+        alloc = student.current_allocation if hasattr(student, 'current_allocation') else None
+        if not alloc:
+            alloc = BedAllocation.query.filter_by(student_id=student.id, status='active').first()
+
         if alloc and alloc.hostel_id:
             hostel_mess = MessProfile.query.filter_by(hostel_id=alloc.hostel_id, operating_status='Active').first()
+            if hostel_mess:
+                return hostel_mess
+            hostel_mess = MessProfile.query.filter_by(hostel_id=alloc.hostel_id).first()
             if hostel_mess:
                 return hostel_mess
 
@@ -64,6 +79,9 @@ class MessService:
     @staticmethod
     def get_today_menus(mess_id, target_date=None):
         """Retrieves published menus for all four slots of a specific day"""
+        if not mess_id:
+            return []
+
         if target_date is None:
             target_date = date.today()
 
@@ -82,6 +100,15 @@ class MessService:
         if start_date is None:
             start_date = date.today()
 
+        # Organize by date -> meal_type
+        calendar_data = {}
+        for i in range(7):
+            d = start_date + timedelta(days=i)
+            calendar_data[d] = {'Breakfast': None, 'Lunch': None, 'Snacks': None, 'Dinner': None}
+
+        if not mess_id:
+            return calendar_data
+
         end_date = start_date + timedelta(days=6)
         menus = MealMenu.query.filter(
             MealMenu.mess_id == mess_id,
@@ -90,14 +117,8 @@ class MessService:
             MealMenu.is_published == True
         ).order_by(MealMenu.meal_date.asc()).all()
 
-        # Organize by date -> meal_type
-        calendar_data = {}
-        for i in range(7):
-            d = start_date + timedelta(days=i)
-            calendar_data[d] = {'Breakfast': None, 'Lunch': None, 'Snacks': None, 'Dinner': None}
-
         for menu in menus:
-            if menu.meal_date in calendar_data:
+            if menu.meal_date in calendar_data and menu.meal_type in calendar_data[menu.meal_date]:
                 calendar_data[menu.meal_date][menu.meal_type] = menu
 
         return calendar_data
@@ -253,27 +274,51 @@ class MessService:
         return student
 
     @staticmethod
+    def generate_student_qr_data_uri(student):
+        """Generates an in-memory Base64 data URI for serverless-safe QR rendering"""
+        import io
+        import base64
+        payload = MessService.generate_student_qr_payload(student)
+        qr = qrcode.QRCode(
+            version=1,
+            error_correction=qrcode.constants.ERROR_CORRECT_M,
+            box_size=10,
+            border=4,
+        )
+        qr.add_data(payload)
+        qr.make(fit=True)
+        img = qr.make_image(fill_color="#0d6efd", back_color="white")
+        buf = io.BytesIO()
+        img.save(buf, format='PNG')
+        encoded = base64.b64encode(buf.getvalue()).decode('ascii')
+        return f"data:image/png;base64,{encoded}"
+
+    @staticmethod
     def generate_student_qr_image(student, app_root):
-        """Generates and saves the student mess QR code PNG file"""
-        qr_dir = os.path.join(app_root, 'static', 'uploads', 'qrcodes')
-        os.makedirs(qr_dir, exist_ok=True)
-        filename = f"mess_qr_{student.id}_{student.enrollment_no}.png"
-        filepath = os.path.join(qr_dir, filename)
+        """Generates and saves the student mess QR code PNG file with serverless fallback"""
+        try:
+            qr_dir = os.path.join(app_root, 'static', 'uploads', 'qrcodes')
+            os.makedirs(qr_dir, exist_ok=True)
+            filename = f"mess_qr_{student.id}_{student.enrollment_no}.png"
+            filepath = os.path.join(qr_dir, filename)
 
-        if not os.path.exists(filepath):
-            payload = MessService.generate_student_qr_payload(student)
-            qr = qrcode.QRCode(
-                version=1,
-                error_correction=qrcode.constants.ERROR_CORRECT_M,
-                box_size=10,
-                border=4,
-            )
-            qr.add_data(payload)
-            qr.make(fit=True)
-            img = qr.make_image(fill_color="#0d6efd", back_color="white")
-            img.save(filepath)
+            if not os.path.exists(filepath):
+                payload = MessService.generate_student_qr_payload(student)
+                qr = qrcode.QRCode(
+                    version=1,
+                    error_correction=qrcode.constants.ERROR_CORRECT_M,
+                    box_size=10,
+                    border=4,
+                )
+                qr.add_data(payload)
+                qr.make(fit=True)
+                img = qr.make_image(fill_color="#0d6efd", back_color="white")
+                img.save(filepath)
 
-        return f"uploads/qrcodes/{filename}"
+            return f"uploads/qrcodes/{filename}"
+        except OSError:
+            # Serverless read-only filesystem fallback
+            return None
 
     @staticmethod
     def record_meal_attendance(student_id, meal_menu_id, staff_user_id, verification_method='QR_Scan', remarks=None):
@@ -293,7 +338,7 @@ class MessService:
         mess = menu.mess
 
         # Check if student is allocated to this hostel / mess
-        student_alloc = BedAllocation.query.filter_by(student_id=student.id, status='Active').first()
+        student_alloc = BedAllocation.query.filter_by(student_id=student.id, status='active').first()
         if mess.hostel_id and student_alloc and student_alloc.hostel_id != mess.hostel_id:
             return {
                 'success': False,
@@ -568,7 +613,7 @@ class MessService:
             due_date = date(next_year, next_month, 10)
 
         # Query active resident students (from active allocations or active student records)
-        allocations = BedAllocation.query.filter_by(status='Active').all()
+        allocations = BedAllocation.query.filter_by(status='active').all()
         student_ids = [a.student_id for a in allocations if a.student_id]
         if student_ids:
             students = Student.query.filter(Student.id.in_(student_ids), Student.status == 'active').all()

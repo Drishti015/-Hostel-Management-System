@@ -498,7 +498,7 @@ def mess_dashboard():
     from app.models.mess import MealMenu, MealBooking, MealAttendance, MealFeedback, MessNotice
 
     mess = MessService.get_student_mess(student)
-    today_menus = MessService.get_today_menus(mess.id)
+    today_menus = MessService.get_today_menus(mess.id) if mess else []
 
     # Key statistics
     today = date.today()
@@ -525,10 +525,16 @@ def mess_dashboard():
 
     feedback_count = MealFeedback.query.filter_by(student_id=student.id).count()
 
-    notices = MessNotice.query.filter(
-        (MessNotice.mess_id == mess.id) | (MessNotice.mess_id == None),
-        MessNotice.is_active == True
-    ).order_by(MessNotice.created_at.desc()).limit(3).all()
+    if mess and mess.id:
+        notices = MessNotice.query.filter(
+            (MessNotice.mess_id == mess.id) | MessNotice.mess_id.is_(None),
+            MessNotice.is_active == True
+        ).order_by(MessNotice.created_at.desc()).limit(3).all()
+    else:
+        notices = MessNotice.query.filter(
+            MessNotice.mess_id.is_(None),
+            MessNotice.is_active == True
+        ).order_by(MessNotice.created_at.desc()).limit(3).all()
 
     upcoming_bookings = MealBooking.query.join(MealMenu).filter(
         MealBooking.student_id == student.id,
@@ -574,8 +580,11 @@ def mess_menu():
     else:
         current_date = date.today()
 
-    today_menus = MessService.get_today_menus(mess.id, current_date)
-    weekly_calendar = MessService.get_weekly_menus(mess.id, current_date)
+    today_menus = MessService.get_today_menus(mess.id, current_date) if mess else []
+    weekly_calendar = MessService.get_weekly_menus(mess.id, current_date) if mess else {
+        (current_date + timedelta(days=i)): {'Breakfast': None, 'Lunch': None, 'Snacks': None, 'Dinner': None}
+        for i in range(7)
+    }
 
     # Active student bookings for display
     student_bookings = MealBooking.query.filter_by(
@@ -675,7 +684,9 @@ def mess_qr():
 
     from app.services.mess_service import MessService
     qr_payload = MessService.generate_student_qr_payload(student)
+    qr_data_uri = MessService.generate_student_qr_data_uri(student)
     qr_rel_path = MessService.generate_student_qr_image(student, current_app.root_path)
+    qr_image_url = url_for('static', filename=qr_rel_path) if qr_rel_path else qr_data_uri
 
     allocation = student.current_allocation
     mess = MessService.get_student_mess(student)
@@ -683,7 +694,7 @@ def mess_qr():
     return render_template('student/mess/qr.html',
                            student=student,
                            qr_payload=qr_payload,
-                           qr_image_url=url_for('static', filename=qr_rel_path),
+                           qr_image_url=qr_image_url,
                            allocation=allocation,
                            mess=mess)
 

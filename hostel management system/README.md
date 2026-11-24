@@ -153,7 +153,7 @@ python run.py
 Open your web browser and visit: **`http://127.0.0.1:5000`**
 
 ### Step 5: Execute Test Suites
-Run the complete automated test suite (107 tests across all 6 test modules):
+Run the complete automated test suite (114 tests across all 6 test modules):
 ```powershell
 # Run Python syntax and bytecode compilation verification
 python -m compileall -q app tests migrate_demo_accounts_prod.py
@@ -689,7 +689,7 @@ HostelEase HMS has undergone comprehensive end-to-end quality assurance, vulnera
 
 1. **[`HOSTELEASE_COMPLETE_QA_REPORT.md`](file:///HOSTELEASE_COMPLETE_QA_REPORT.md):**
    - Complete feature inventory across all 8 user roles and 7 major workflows.
-   - Comprehensive test execution results (107 automated unit and integration tests passing).
+   - Comprehensive test execution results (114 automated unit and integration tests passing).
    - In-depth security analysis covering RBAC, IDOR protection, session boundaries, and CSRF defense.
    - Database schema and entity relationship consistency audit.
    - Vercel serverless deployment assessment and header verification.

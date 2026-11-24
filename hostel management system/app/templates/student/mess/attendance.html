@@ -40,14 +40,14 @@
             <tbody>
                 {% for a in attendances %}
                 <tr>
-                    <td class="fw-semibold">{{ a.meal_menu.meal_date.strftime('%d %b, %Y') }}</td>
+                    <td class="fw-semibold">{{ a.meal_menu.meal_date.strftime('%d %b, %Y') if a.meal_menu and a.meal_menu.meal_date else '' }}</td>
                     <td>
-                        <span class="badge {% if a.meal_menu.meal_type == 'Breakfast' %}bg-warning text-dark{% elif a.meal_menu.meal_type == 'Lunch' %}bg-success{% elif a.meal_menu.meal_type == 'Snacks' %}bg-info{% else %}bg-primary{% endif %}">
-                            {{ a.meal_menu.meal_type }}
+                        <span class="badge {% if a.meal_menu and a.meal_menu.meal_type == 'Breakfast' %}bg-warning text-dark{% elif a.meal_menu and a.meal_menu.meal_type == 'Lunch' %}bg-success{% elif a.meal_menu and a.meal_menu.meal_type == 'Snacks' %}bg-info{% else %}bg-primary{% endif %}">
+                            {{ a.meal_menu.meal_type if a.meal_menu else 'Meal' }}
                         </span>
                     </td>
-                    <td>{{ a.meal_menu.title }}</td>
-                    <td class="font-monospace small text-dark">{{ a.check_in_time.strftime('%I:%M %p') }}</td>
+                    <td>{{ a.meal_menu.title if a.meal_menu else 'Dining Check-in' }}</td>
+                    <td class="font-monospace small text-dark">{{ a.check_in_time.strftime('%I:%M %p') if a.check_in_time else '' }}</td>
                     <td>
                         <span class="badge bg-light text-dark border">
                             <i class="fa-solid {% if a.verification_method == 'QR_Scan' %}fa-qrcode{% else %}fa-id-card{% endif %} me-1"></i>

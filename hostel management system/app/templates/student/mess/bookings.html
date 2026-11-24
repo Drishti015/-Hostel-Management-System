@@ -67,17 +67,17 @@
             <tbody>
                 {% for b in bookings %}
                 <tr>
-                    <td class="fw-semibold">{{ b.meal_menu.meal_date.strftime('%d %b, %Y') }}</td>
+                    <td class="fw-semibold">{{ b.meal_menu.meal_date.strftime('%d %b, %Y') if b.meal_menu and b.meal_menu.meal_date else '' }}</td>
                     <td>
-                        <span class="badge {% if b.meal_menu.meal_type == 'Breakfast' %}bg-warning text-dark{% elif b.meal_menu.meal_type == 'Lunch' %}bg-success{% elif b.meal_menu.meal_type == 'Snacks' %}bg-info{% else %}bg-primary{% endif %}">
-                            {{ b.meal_menu.meal_type }}
+                        <span class="badge {% if b.meal_menu and b.meal_menu.meal_type == 'Breakfast' %}bg-warning text-dark{% elif b.meal_menu and b.meal_menu.meal_type == 'Lunch' %}bg-success{% elif b.meal_menu and b.meal_menu.meal_type == 'Snacks' %}bg-info{% else %}bg-primary{% endif %}">
+                            {{ b.meal_menu.meal_type if b.meal_menu else 'Meal' }}
                         </span>
                     </td>
                     <td>
-                        <div class="fw-semibold text-dark">{{ b.meal_menu.title }}</div>
-                        <small class="text-muted">{{ b.meal_menu.food_category }} &bull; {{ b.meal_menu.meal_timing }}</small>
+                        <div class="fw-semibold text-dark">{{ b.meal_menu.title if b.meal_menu else 'Reserved Meal' }}</div>
+                        <small class="text-muted">{{ b.meal_menu.food_category if b.meal_menu else '' }} &bull; {{ b.meal_menu.meal_timing if b.meal_menu else '' }}</small>
                     </td>
-                    <td class="small text-muted">{{ b.booking_date.strftime('%d %b %Y, %I:%M %p') }}</td>
+                    <td class="small text-muted">{{ b.booking_date.strftime('%d %b %Y, %I:%M %p') if b.booking_date else '' }}</td>
                     <td>
                         {% if b.booking_status == 'Booked' %}
                             <span class="badge bg-success-subtle text-success border border-success-subtle">Booked</span>
@@ -90,14 +90,14 @@
                         {% endif %}
                     </td>
                     <td class="text-end">
-                        {% if b.booking_status == 'Booked' and b.meal_menu.is_booking_open %}
+                        {% if b.booking_status == 'Booked' and b.meal_menu and b.meal_menu.is_booking_open %}
                         <form method="POST" action="{{ url_for('student.cancel_meal_booking', booking_id=b.id) }}" class="d-inline" onsubmit="return confirm('Cancel this meal reservation?');">
                             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                             <button type="submit" class="btn btn-outline-danger btn-sm py-1 px-3">
                                 <i class="fa-solid fa-xmark me-1"></i>Cancel
                             </button>
                         </form>
-                        {% elif b.booking_status == 'Consumed' and not b.meal_menu.feedbacks.filter_by(student_id=student.id).first() %}
+                        {% elif b.booking_status == 'Consumed' and b.meal_menu and not b.meal_menu.feedbacks.filter_by(student_id=student.id).first() %}
                         <a href="{{ url_for('student.mess_feedback') }}" class="btn btn-outline-warning btn-sm py-1 px-3">
                             <i class="fa-solid fa-star me-1"></i>Rate Meal
                         </a>

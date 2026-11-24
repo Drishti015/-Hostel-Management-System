@@ -9,7 +9,7 @@
             <i class="fa-solid fa-utensils text-primary me-2"></i>Hostel Mess & Dining Desk
         </h2>
         <p class="text-muted small mb-0">
-            Welcome, <strong>{{ student.full_name }}</strong> &bull; Facility: <strong>{{ mess.mess_name }}</strong>
+            Welcome, <strong>{{ student.full_name }}</strong> &bull; Facility: <strong>{{ mess.mess_name if mess else 'Hostel Dining Hall' }}</strong>
         </p>
     </div>
     <div class="d-flex gap-2">
@@ -116,7 +116,7 @@
         </div>
         <div>
             <span class="badge bg-light text-dark border px-3 py-2">
-                Policy: <strong class="text-capitalize">{{ mess.meal_policy.replace('_', ' ') }}</strong>
+                Policy: <strong class="text-capitalize">{{ mess.meal_policy.replace('_', ' ') if mess and mess.meal_policy else 'booking required' }}</strong>
             </span>
         </div>
     </div>
@@ -164,7 +164,7 @@
                         <div class="d-flex justify-content-between mb-1">
                             <span>Deadline:</span>
                             <span class="fw-semibold {% if not menu.is_booking_open %}text-danger{% else %}text-dark{% endif %}">
-                                {{ menu.booking_deadline.strftime('%I:%M %p') }}
+                                {{ menu.booking_deadline.strftime('%I:%M %p') if menu.booking_deadline else '' }}
                             </span>
                         </div>
                         <div class="d-flex justify-content-between">
@@ -232,12 +232,12 @@
                     <tbody>
                         {% for b in upcoming_bookings %}
                         <tr>
-                            <td class="fw-semibold">{{ b.meal_menu.meal_date.strftime('%d %b, %Y') }}</td>
-                            <td><span class="badge bg-secondary-subtle text-secondary">{{ b.meal_menu.meal_type }}</span></td>
-                            <td>{{ b.meal_menu.title }}</td>
+                            <td class="fw-semibold">{{ b.meal_menu.meal_date.strftime('%d %b, %Y') if b.meal_menu and b.meal_menu.meal_date else '' }}</td>
+                            <td><span class="badge bg-secondary-subtle text-secondary">{{ b.meal_menu.meal_type if b.meal_menu else 'Meal' }}</span></td>
+                            <td>{{ b.meal_menu.title if b.meal_menu else 'Reserved Meal' }}</td>
                             <td><span class="badge bg-success-subtle text-success">Confirmed</span></td>
                             <td>
-                                {% if b.meal_menu.is_booking_open %}
+                                {% if b.meal_menu and b.meal_menu.is_booking_open %}
                                 <form method="POST" action="{{ url_for('student.cancel_meal_booking', booking_id=b.id) }}" class="d-inline" onsubmit="return confirm('Cancel this meal reservation?');">
                                     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                                     <button type="submit" class="btn btn-outline-danger btn-sm py-0 px-2">Cancel</button>

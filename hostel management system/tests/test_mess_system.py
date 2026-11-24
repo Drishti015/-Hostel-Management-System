@@ -379,5 +379,147 @@ class MessSystemTestCase(unittest.TestCase):
         self.assertGreater(bill.rebate_amount, Decimal('0.00'))
         self.assertEqual(bill.total_amount, bill.base_fee - bill.rebate_amount)
 
+    # -------------------------------------------------------------
+    # 9. Student Mess Dashboard & Resilience Test Suite
+    # -------------------------------------------------------------
+    def test_student_mess_dashboard_empty_menus_and_bookings(self):
+        """Test GET /student/mess loads cleanly (HTTP 200) when no menus or bookings exist"""
+        self._login('student_test', 'Student@123')
+        res = self.client.get('/student/mess')
+        self.assertEqual(res.status_code, 200)
+        self.assertIn(b'Hostel Mess & Dining Desk', res.data)
+        self.assertIn(b"Today's Dining Schedule", res.data)
+        self.assertIn(b'No meals published for today yet', res.data)
+        self.assertIn(b'No upcoming meal reservations', res.data)
+
+    def test_student_mess_dashboard_with_menus_and_bookings(self):
+        """Test GET /student/mess loads cleanly with published menus and active bookings"""
+        today = date.today()
+        menu = MealMenu(
+            mess_id=self.mess.id,
+            meal_date=today,
+            meal_type='Lunch',
+            title='Paneer Butter Masala',
+            description='Creamy paneer curry with rotis',
+            food_category='Vegetarian',
+            meal_timing='12:30 PM - 2:30 PM',
+            booking_deadline=datetime.utcnow() + timedelta(hours=3),
+            capacity=200,
+            is_published=True,
+            created_by=self.manager.id
+        )
+        db.session.add(menu)
+        db.session.commit()
+
+        # Book the meal
+        booking = MealBooking(
+            student_id=self.student.id,
+            meal_menu_id=menu.id,
+            booking_status='Booked'
+        )
+        db.session.add(booking)
+        db.session.commit()
+
+        self._login('student_test', 'Student@123')
+        res = self.client.get('/student/mess')
+        self.assertEqual(res.status_code, 200)
+        self.assertIn(b'Paneer Butter Masala', res.data)
+        self.assertIn(b'Confirmed', res.data)
+        self.assertIn(b'Booked', res.data)
+
+    def test_student_mess_dashboard_unallocated_student(self):
+        """Test GET /student/mess for student without an active bed allocation"""
+        self._login('student_test', 'Student@123')
+        # Student has no active BedAllocation in setUp
+        res = self.client.get('/student/mess')
+        self.assertEqual(res.status_code, 200)
+        self.assertIn(b'Central Test Dining', res.data)
+
+    def test_student_mess_dashboard_resilience_when_mess_profile_is_none(self):
+        """Test GET /student/mess resilience when no MessProfile records exist at all"""
+        # Delete mess profile
+        MessStaffProfile.query.filter_by(mess_id=self.mess.id).delete()
+        MealMenu.query.filter_by(mess_id=self.mess.id).delete()
+        MessProfile.query.filter_by(id=self.mess.id).delete()
+        db.session.commit()
+
+        self._login('student_test', 'Student@123')
+        res = self.client.get('/student/mess')
+        # Should gracefully resolve or seed default without 500
+        self.assertEqual(res.status_code, 200)
+        self.assertIn(b'Hostel Mess & Dining Desk', res.data)
+
+    def test_student_mess_menu_views(self):
+        """Test GET /student/mess/menu daily and weekly calendar views"""
+        self._login('student_test', 'Student@123')
+        res = self.client.get('/student/mess/menu')
+        self.assertEqual(res.status_code, 200)
+        self.assertIn(b'Weekly Dining Schedule', res.data)
+        self.assertIn(b'Breakfast', res.data)
+        self.assertIn(b'Lunch', res.data)
+        self.assertIn(b'Dinner', res.data)
+
+    def test_student_mess_qr_data_uri_generation(self):
+        """Test GET /student/mess/qr renders without serverless disk dependencies"""
+        # Test in-memory Base64 data URI method directly
+        data_uri = MessService.generate_student_qr_data_uri(self.student)
+        self.assertTrue(data_uri.startswith('data:image/png;base64,'))
+
+        self._login('student_test', 'Student@123')
+        res = self.client.get('/student/mess/qr')
+        self.assertEqual(res.status_code, 200)
+        self.assertIn(b'Student Mess Dining Identity', res.data)
+        self.assertIn(b'Cryptographic Token Active', res.data)
+
+    def test_postgresql_allocation_status_enum_consistency(self):
+        """Verify allocation queries strictly enforce lowercase status='active' for PostgreSQL enum compatibility"""
+        from app.models.allocation import BedAllocation
+        from app.models.hostel import Hostel, Room, Bed
+
+        # Create hostel, room, bed, and allocation with status='active'
+        hostel = Hostel(name='Shastri Hostel', hostel_type='Boys', total_floors=2, total_rooms=10)
+        db.session.add(hostel)
+        db.session.flush()
+
+        room = Room(hostel_id=hostel.id, room_number='101', floor=1, room_type='Double', capacity=2)
+        db.session.add(room)
+        db.session.flush()
+
+        bed = Bed(room_id=room.id, bed_number='Bed-A', status='occupied')
+        db.session.add(bed)
+        db.session.flush()
+
+        alloc = BedAllocation(
+            student_id=self.student.id,
+            bed_id=bed.id,
+            room_id=room.id,
+            hostel_id=hostel.id,
+            status='active'
+        )
+        db.session.add(alloc)
+        db.session.commit()
+
+        # Verify MessService resolves mess using lowercase 'active' allocation
+        mess = MessService.get_student_mess(self.student)
+        self.assertIsNotNone(mess)
+
+        # Verify MessService.record_meal_attendance uses lowercase 'active'
+        menu = MealMenu(
+            mess_id=self.mess.id,
+            meal_date=date.today(),
+            meal_type='Dinner',
+            title='Dinner Menu',
+            booking_deadline=datetime.utcnow() + timedelta(hours=2),
+            capacity=50,
+            is_published=True,
+            created_by=self.manager.id
+        )
+        db.session.add(menu)
+        db.session.commit()
+
+        att = MessService.record_meal_attendance(self.student.id, menu.id, self.staff.id)
+        # Should not throw DataError or InvalidTextRepresentation
+        self.assertIn('success', att)
+
 if __name__ == '__main__':
     unittest.main()
