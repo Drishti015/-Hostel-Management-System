@@ -888,48 +888,338 @@ class MessService:
     @staticmethod
     def get_wastage_report(mess_id, target_date=None):
         """
-        Distinguishes estimated unconsumed meals from measured physical kitchen food wastage.
+        Comprehensive Food Wastage & Attendance Analytics Report.
+        Computes prepared vs consumed portions, unconsumed meals, physical kitchen wastage,
+        daily, weekly, and monthly summaries, meal-wise breakdowns, highest wasted items,
+        and historical audit logs.
+        Guarantees zero-division safety and handles empty records gracefully.
         """
         if target_date is None:
             target_date = date.today()
 
-        menus = MealMenu.query.filter_by(mess_id=mess_id, meal_date=target_date).all()
-        slot_report = []
+        empty_report = {
+            'date': target_date,
+            'target_date': target_date,
+            'total_bookings': 0,
+            'total_booked': 0,
+            'total_attendances': 0,
+            'total_present': 0,
+            'total_prepared': 0,
+            'total_consumed': 0,
+            'total_wasted': 0,
+            'wastage_percentage': 0.0,
+            'unconsumed_booked_meals': 0,
+            'estimated_unconsumed_meals': 0,
+            'estimated_unconsumed_cost': 0.0,
+            'measured_kitchen_wastage_kg': 0.0,
+            'measured_kitchen_waste_kg': 0.0,
+            'measured_kitchen_wastage_cost': 0.0,
+            'slots': [],
+            'slot_breakdown': [],
+            'daily_summary': {
+                'prepared': 0,
+                'consumed': 0,
+                'wasted': 0,
+                'wastage_pct': 0.0,
+                'bookings': 0,
+                'unconsumed_booked': 0,
+                'cost': 0.0,
+                'kitchen_waste_kg': 0.0,
+                'kitchen_waste_cost': 0.0
+            },
+            'weekly_summary': {
+                'start_date': target_date,
+                'end_date': target_date,
+                'prepared': 0,
+                'consumed': 0,
+                'wasted': 0,
+                'wastage_pct': 0.0,
+                'bookings': 0,
+                'kitchen_waste_kg': 0.0,
+                'kitchen_waste_cost': 0.0
+            },
+            'monthly_summary': {
+                'month_name': target_date.strftime('%B %Y'),
+                'prepared': 0,
+                'consumed': 0,
+                'wasted': 0,
+                'wastage_pct': 0.0,
+                'bookings': 0,
+                'kitchen_waste_kg': 0.0,
+                'kitchen_waste_cost': 0.0
+            },
+            'highest_wasted_items': [],
+            'historical_records': [],
+            'chart_labels': [],
+            'chart_prepared': [],
+            'chart_consumed': [],
+            'chart_wasted': [],
+            'meal_slot_wastage': {'Breakfast': 0, 'Lunch': 0, 'Snacks': 0, 'Dinner': 0}
+        }
 
-        total_booked = 0
-        total_present = 0
-        for m in menus:
-            booked = m.active_booking_count
-            present = m.attendance_count
-            unconsumed = max(0, booked - present)
-            total_booked += booked
-            total_present += present
-            slot_report.append({
-                'meal_type': m.meal_type,
-                'title': m.title,
-                'booked': booked,
-                'present': present,
-                'estimated_unconsumed': unconsumed
-            })
+        if not mess_id:
+            return empty_report
 
-        # Measured physical wastage from inventory transactions
-        wastage_txs = InventoryTransaction.query.join(MessInventory).filter(
-            MessInventory.mess_id == mess_id,
-            InventoryTransaction.transaction_type == 'Wastage',
-            InventoryTransaction.transaction_date == target_date
+        # 1. Date Horizons
+        # Weekly: Monday to Sunday of the target week
+        monday = target_date - timedelta(days=target_date.weekday())
+        sunday = monday + timedelta(days=6)
+
+        # Monthly: 1st of month to end of month
+        month_start = date(target_date.year, target_date.month, 1)
+        next_month = (month_start.replace(day=28) + timedelta(days=4))
+        month_end = next_month - timedelta(days=next_month.day)
+
+        # 2. Daily calculations for target_date
+        daily_menus = MealMenu.query.filter_by(
+            mess_id=mess_id,
+            meal_date=target_date
         ).all()
 
-        measured_waste_kg = sum(tx.quantity for tx in wastage_txs)
-        total_unconsumed = max(0, total_booked - total_present)
+        daily_prepared = 0
+        daily_booked = 0
+        daily_consumed = 0
+        slot_order = {'Breakfast': 1, 'Lunch': 2, 'Snacks': 3, 'Dinner': 4}
+        sorted_daily_menus = sorted(daily_menus, key=lambda m: slot_order.get(m.meal_type, 5))
+
+        slot_report = []
+        meal_slot_wastage = {'Breakfast': 0, 'Lunch': 0, 'Snacks': 0, 'Dinner': 0}
+
+        for m in sorted_daily_menus:
+            prep = m.capacity or 0
+            bk = m.active_booking_count or 0
+            att = m.attendance_count or 0
+            uncons = max(0, bk - att)
+            wasted_portions = max(0, prep - att)
+
+            daily_prepared += prep
+            daily_booked += bk
+            daily_consumed += att
+
+            if m.meal_type in meal_slot_wastage:
+                meal_slot_wastage[m.meal_type] += uncons
+
+            turnout = round(att / bk * 100, 1) if bk > 0 else (100.0 if att > 0 else 0.0)
+            waste_pct = round(uncons / bk * 100, 1) if bk > 0 else 0.0
+
+            slot_item = {
+                'slot': m.meal_type,
+                'meal_type': m.meal_type,
+                'menu_title': m.title,
+                'title': m.title,
+                'menu_id': m.id,
+                'prepared': prep,
+                'capacity': prep,
+                'bookings': bk,
+                'booked': bk,
+                'attendances': att,
+                'present': att,
+                'unconsumed': uncons,
+                'estimated_unconsumed': uncons,
+                'wasted_portions': wasted_portions,
+                'turnout': turnout,
+                'turnout_pct': turnout,
+                'wastage_pct': waste_pct,
+                'timing': m.meal_timing or '7:30 AM - 9:30 AM',
+                'food_category': m.food_category
+            }
+            slot_report.append(slot_item)
+
+        daily_wasted = max(0, daily_booked - daily_consumed)
+        daily_waste_pct = round(daily_wasted / daily_booked * 100, 1) if daily_booked > 0 else 0.0
+        est_daily_cost = float(Decimal(str(daily_wasted)) * Decimal('50.00'))
+
+        # 3. Weekly calculations (Monday - Sunday)
+        weekly_menus = MealMenu.query.filter(
+            MealMenu.mess_id == mess_id,
+            MealMenu.meal_date >= monday,
+            MealMenu.meal_date <= sunday
+        ).all()
+
+        weekly_prepared = sum(m.capacity or 0 for m in weekly_menus)
+        weekly_booked = sum(m.active_booking_count or 0 for m in weekly_menus)
+        weekly_consumed = sum(m.attendance_count or 0 for m in weekly_menus)
+        weekly_wasted = max(0, weekly_booked - weekly_consumed)
+        weekly_waste_pct = round(weekly_wasted / weekly_booked * 100, 1) if weekly_booked > 0 else 0.0
+
+        # Weekly physical wastage from inventory transactions
+        weekly_waste_txs = InventoryTransaction.query.join(MessInventory).filter(
+            MessInventory.mess_id == mess_id,
+            InventoryTransaction.transaction_type == 'Wastage',
+            InventoryTransaction.transaction_date >= monday,
+            InventoryTransaction.transaction_date <= sunday
+        ).all()
+        weekly_kitchen_waste_kg = float(sum(tx.quantity for tx in weekly_waste_txs))
+        weekly_kitchen_waste_cost = float(sum(tx.total_price for tx in weekly_waste_txs))
+
+        # 4. Monthly calculations
+        monthly_menus = MealMenu.query.filter(
+            MealMenu.mess_id == mess_id,
+            MealMenu.meal_date >= month_start,
+            MealMenu.meal_date <= month_end
+        ).all()
+
+        monthly_prepared = sum(m.capacity or 0 for m in monthly_menus)
+        monthly_booked = sum(m.active_booking_count or 0 for m in monthly_menus)
+        monthly_consumed = sum(m.attendance_count or 0 for m in monthly_menus)
+        monthly_wasted = max(0, monthly_booked - monthly_consumed)
+        monthly_waste_pct = round(monthly_wasted / monthly_booked * 100, 1) if monthly_booked > 0 else 0.0
+
+        monthly_waste_txs = InventoryTransaction.query.join(MessInventory).filter(
+            MessInventory.mess_id == mess_id,
+            InventoryTransaction.transaction_type == 'Wastage',
+            InventoryTransaction.transaction_date >= month_start,
+            InventoryTransaction.transaction_date <= month_end
+        ).all()
+        monthly_kitchen_waste_kg = float(sum(tx.quantity for tx in monthly_waste_txs))
+        monthly_kitchen_waste_cost = float(sum(tx.total_price for tx in monthly_waste_txs))
+
+        # 5. Daily physical wastage from inventory
+        daily_waste_txs = [tx for tx in weekly_waste_txs if tx.transaction_date == target_date]
+        if not daily_waste_txs:
+            daily_waste_txs = InventoryTransaction.query.join(MessInventory).filter(
+                MessInventory.mess_id == mess_id,
+                InventoryTransaction.transaction_type == 'Wastage',
+                InventoryTransaction.transaction_date == target_date
+            ).all()
+
+        daily_kitchen_waste_kg = float(sum(tx.quantity for tx in daily_waste_txs))
+        daily_kitchen_waste_cost = float(sum(tx.total_price for tx in daily_waste_txs))
+
+        # 6. Food items with the highest wastage
+        all_waste_txs = InventoryTransaction.query.join(MessInventory).filter(
+            MessInventory.mess_id == mess_id,
+            InventoryTransaction.transaction_type == 'Wastage'
+        ).all()
+
+        item_waste_map = {}
+        for tx in all_waste_txs:
+            item_name = tx.inventory_item.item_name if tx.inventory_item else 'General Food Provision'
+            unit = tx.inventory_item.unit if tx.inventory_item else 'kg'
+            category = tx.inventory_item.category if tx.inventory_item else 'Other'
+            if item_name not in item_waste_map:
+                item_waste_map[item_name] = {
+                    'item_name': item_name,
+                    'category': category,
+                    'unit': unit,
+                    'total_qty': Decimal('0.00'),
+                    'total_cost': Decimal('0.00'),
+                    'incident_count': 0
+                }
+            item_waste_map[item_name]['total_qty'] += tx.quantity
+            item_waste_map[item_name]['total_cost'] += tx.total_price
+            item_waste_map[item_name]['incident_count'] += 1
+
+        highest_wasted_items = sorted(
+            item_waste_map.values(),
+            key=lambda x: (x['total_cost'], x['total_qty']),
+            reverse=True
+        )[:5]
+
+        for item in highest_wasted_items:
+            item['total_qty_float'] = float(item['total_qty'])
+            item['total_cost_float'] = float(item['total_cost'])
+
+        # 7. Historical wastage records (recent 25 logs)
+        recent_waste_txs = InventoryTransaction.query.join(MessInventory).filter(
+            MessInventory.mess_id == mess_id,
+            InventoryTransaction.transaction_type == 'Wastage'
+        ).order_by(InventoryTransaction.transaction_date.desc(), InventoryTransaction.id.desc()).limit(25).all()
+
+        historical_records = []
+        for tx in recent_waste_txs:
+            historical_records.append({
+                'id': tx.id,
+                'date': tx.transaction_date,
+                'item_name': tx.inventory_item.item_name if tx.inventory_item else 'General Food Provision',
+                'category': tx.inventory_item.category if tx.inventory_item else 'Pantry',
+                'quantity': float(tx.quantity),
+                'unit': tx.inventory_item.unit if tx.inventory_item else 'kg',
+                'unit_price': float(tx.unit_price),
+                'total_price': float(tx.total_price),
+                'remarks': tx.remarks or 'Kitchen preparation residue / spoilage',
+                'recorded_by': tx.staff.username if tx.staff else 'Kitchen Staff'
+            })
+
+        # 8. Chart analytics: 7-day trend
+        chart_labels = []
+        chart_prepared = []
+        chart_consumed = []
+        chart_wasted = []
+
+        for i in range(6, -1, -1):
+            d = target_date - timedelta(days=i)
+            chart_labels.append(d.strftime('%a, %d %b'))
+
+            d_menus = MealMenu.query.filter_by(mess_id=mess_id, meal_date=d).all()
+            d_prep = sum(m.capacity or 0 for m in d_menus)
+            d_att = sum(m.attendance_count or 0 for m in d_menus)
+            d_bk = sum(m.active_booking_count or 0 for m in d_menus)
+            d_wst = max(0, d_bk - d_att)
+
+            chart_prepared.append(d_prep if d_prep > 0 else d_bk)
+            chart_consumed.append(d_att)
+            chart_wasted.append(d_wst)
 
         return {
+            'date': target_date,
             'target_date': target_date,
+            'total_bookings': daily_booked,
+            'total_booked': daily_booked,
+            'total_attendances': daily_consumed,
+            'total_present': daily_consumed,
+            'total_prepared': daily_prepared,
+            'total_consumed': daily_consumed,
+            'total_wasted': daily_wasted,
+            'wastage_percentage': daily_waste_pct,
+            'unconsumed_booked_meals': daily_wasted,
+            'estimated_unconsumed_meals': daily_wasted,
+            'estimated_unconsumed_cost': est_daily_cost,
+            'measured_kitchen_wastage_kg': daily_kitchen_waste_kg,
+            'measured_kitchen_waste_kg': daily_kitchen_waste_kg,
+            'measured_kitchen_wastage_cost': daily_kitchen_waste_cost,
+            'slots': slot_report,
             'slot_breakdown': slot_report,
-            'total_booked': total_booked,
-            'total_present': total_present,
-            'estimated_unconsumed_meals': total_unconsumed,
-            'measured_kitchen_waste_kg': measured_waste_kg,
-            'wastage_transactions': wastage_txs
+            'daily_summary': {
+                'prepared': daily_prepared,
+                'consumed': daily_consumed,
+                'wasted': daily_wasted,
+                'wastage_pct': daily_waste_pct,
+                'bookings': daily_booked,
+                'unconsumed_booked': daily_wasted,
+                'cost': est_daily_cost,
+                'kitchen_waste_kg': daily_kitchen_waste_kg,
+                'kitchen_waste_cost': daily_kitchen_waste_cost
+            },
+            'weekly_summary': {
+                'start_date': monday,
+                'end_date': sunday,
+                'prepared': weekly_prepared,
+                'consumed': weekly_consumed,
+                'wasted': weekly_wasted,
+                'wastage_pct': weekly_waste_pct,
+                'bookings': weekly_booked,
+                'kitchen_waste_kg': weekly_kitchen_waste_kg,
+                'kitchen_waste_cost': weekly_kitchen_waste_cost
+            },
+            'monthly_summary': {
+                'month_name': target_date.strftime('%B %Y'),
+                'prepared': monthly_prepared,
+                'consumed': monthly_consumed,
+                'wasted': monthly_wasted,
+                'wastage_pct': monthly_waste_pct,
+                'bookings': monthly_booked,
+                'kitchen_waste_kg': monthly_kitchen_waste_kg,
+                'kitchen_waste_cost': monthly_kitchen_waste_cost
+            },
+            'highest_wasted_items': highest_wasted_items,
+            'historical_records': historical_records,
+            'chart_labels': chart_labels,
+            'chart_prepared': chart_prepared,
+            'chart_consumed': chart_consumed,
+            'chart_wasted': chart_wasted,
+            'meal_slot_wastage': meal_slot_wastage,
+            'wastage_transactions': daily_waste_txs
         }
 
     @staticmethod

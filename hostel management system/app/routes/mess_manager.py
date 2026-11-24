@@ -683,14 +683,18 @@ def notices():
 def reports():
     """Food wastage analytics and dining attendance reports"""
     mess = _get_manager_mess()
-    report_date_str = request.args.get('date', date.today().strftime('%Y-%m-%d'))
+    report_date_str = request.args.get('date', '').strip()
 
-    try:
-        target_date = datetime.strptime(report_date_str, '%Y-%m-%d').date()
-    except ValueError:
+    if report_date_str:
+        try:
+            target_date = datetime.strptime(report_date_str, '%Y-%m-%d').date()
+        except (ValueError, TypeError):
+            target_date = date.today()
+    else:
         target_date = date.today()
 
-    wastage_data = MessService.get_wastage_report(mess.id, target_date)
+    mess_id = mess.id if mess else None
+    wastage_data = MessService.get_wastage_report(mess_id, target_date)
     return render_template('mess_manager/reports.html', mess=mess, report=wastage_data)
 
 

@@ -81,7 +81,7 @@ hostel_management_system/
 │   ├── test_parent_portal.py # Parent portal test suite
 │   ├── test_gate_system.py   # Security gate and QR out-pass test suite
 │   ├── test_leave_system.py  # Student leave application test suite
-│   └── test_mess_system.py   # Mess management test suite (22 tests, 120 total project tests)
+│   └── test_mess_system.py   # Mess management test suite (27 tests, 125 total project tests)
 ├── .env                      # Local environment configuration
 ├── .env.example              # Template environment configuration
 ├── requirements.txt          # Python package dependencies
@@ -155,7 +155,7 @@ python run.py
 Open your web browser and visit: **`http://127.0.0.1:5000`**
 
 ### Step 5: Execute Test Suites
-Run the complete automated test suite (114 tests across all 6 test modules):
+Run the complete automated test suite (125 tests across all 6 test modules):
 ```powershell
 # Run Python syntax and bytecode compilation verification
 python -m compileall -q app tests migrate_demo_accounts_prod.py
@@ -495,10 +495,10 @@ Execute the complete test suite including Parent Portal verification:
 # Run parent portal test suite
 python -m unittest tests/test_parent_portal.py -v
 
-# Run mess management test suite (9 tests)
+# Run mess management test suite (27 tests)
 python -m unittest tests/test_mess_system.py -v
 
-# Run complete application test suite (52 tests across all modules)
+# Run complete application test suite (125 tests across all modules)
 python -m unittest discover -s tests -p "test_*.py" -v
 ```
 
@@ -691,7 +691,7 @@ HostelEase HMS has undergone comprehensive end-to-end quality assurance, vulnera
 
 1. **[`HOSTELEASE_COMPLETE_QA_REPORT.md`](file:///HOSTELEASE_COMPLETE_QA_REPORT.md):**
    - Complete feature inventory across all 8 user roles and 7 major workflows.
-   - Comprehensive test execution results (114 automated unit and integration tests passing).
+   - Comprehensive test execution results (125 automated unit and integration tests passing).
    - In-depth security analysis covering RBAC, IDOR protection, session boundaries, and CSRF defense.
    - Database schema and entity relationship consistency audit.
    - Vercel serverless deployment assessment and header verification.

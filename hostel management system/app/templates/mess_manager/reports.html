@@ -8,65 +8,250 @@
         <h2 class="fw-bold text-dark mb-1">
             <i class="fa-solid fa-chart-pie text-primary me-2"></i>Food Wastage & Turnout Analytics
         </h2>
-        <p class="text-muted small mb-0">Monitor pre-booking turnout, measure unconsumed portions, and audit physical food wastage.</p>
+        <p class="text-muted small mb-0">Audit prepared portions, track verified dining attendance, and monitor kitchen food wastage.</p>
     </div>
     <div class="d-flex gap-2">
         <a href="{{ url_for('mess_manager.export_attendance_csv') }}" class="btn btn-outline-success">
             <i class="fa-solid fa-file-csv me-2"></i>Export Attendance CSV
         </a>
+        <a href="{{ url_for('mess_manager.dashboard') }}" class="btn btn-outline-secondary">
+            <i class="fa-solid fa-arrow-left me-2"></i>Dashboard
+        </a>
     </div>
 </div>
 
-<!-- Date Filter -->
+<!-- Date Filter with Quick Presets -->
 <div class="card border-0 shadow-sm rounded-4 p-3 bg-white mb-4">
     <form method="GET" action="{{ url_for('mess_manager.reports') }}" class="row g-2 align-items-end">
-        <div class="col-md-6 col-lg-4">
+        <div class="col-md-5 col-lg-4">
             <label class="form-label small fw-semibold text-secondary">Inspection Date</label>
-            <input type="date" name="date" class="form-control form-control-sm" value="{{ report.date.strftime('%Y-%m-%d') }}">
+            <div class="input-group input-group-sm">
+                <span class="input-group-text bg-light"><i class="fa-solid fa-calendar text-muted"></i></span>
+                <input type="date" name="date" class="form-control" value="{{ report.target_date.strftime('%Y-%m-%d') }}">
+            </div>
         </div>
-        <div class="col-md-4 col-lg-2">
-            <button type="submit" class="btn btn-primary-custom btn-sm w-100">
-                <i class="fa-solid fa-calendar-check me-1"></i>Analyze
+        <div class="col-md-4 col-lg-3 d-flex gap-2">
+            <button type="submit" class="btn btn-primary-custom btn-sm flex-grow-1">
+                <i class="fa-solid fa-magnifying-glass me-1"></i>Filter Report
             </button>
+            <a href="{{ url_for('mess_manager.reports') }}" class="btn btn-outline-secondary btn-sm" title="Reset to Today">
+                Today
+            </a>
+        </div>
+        <div class="col-md-3 col-lg-5 text-md-end text-muted small">
+            <span>Analyzing facility: <strong>{{ mess.mess_name if mess else 'Central Dining Hall' }}</strong></span>
         </div>
     </form>
 </div>
 
-<!-- KPI Cards -->
+<!-- Core Metric KPI Cards (Top Row) -->
 <div class="row g-3 mb-4">
-    <div class="col-md-3">
-        <div class="card border-0 shadow-sm rounded-4 p-3 bg-white">
-            <div class="text-muted small fw-semibold text-uppercase">Total Pre-Bookings</div>
-            <div class="fs-2 fw-bold text-dark mt-1">{{ report.total_bookings }}</div>
-            <div class="text-muted small">Registered meals</div>
+    <div class="col-sm-6 col-lg-3">
+        <div class="card border-0 shadow-sm rounded-4 p-3 bg-white h-100 border-start border-4 border-primary">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <div class="text-muted small fw-semibold text-uppercase">Total Food Prepared</div>
+                    <div class="fs-2 fw-bold text-dark mt-1">{{ report.total_prepared }} <span class="fs-6 text-muted fw-normal">portions</span></div>
+                </div>
+                <div class="bg-primary-subtle text-primary rounded-circle p-3">
+                    <i class="fa-solid fa-kitchen-set fa-lg"></i>
+                </div>
+            </div>
+            <div class="text-muted small mt-2">Planned kitchen capacity on this date</div>
         </div>
     </div>
-    <div class="col-md-3">
-        <div class="card border-0 shadow-sm rounded-4 p-3 bg-white">
-            <div class="text-muted small fw-semibold text-uppercase">Meals Consumed</div>
-            <div class="fs-2 fw-bold text-success mt-1">{{ report.total_attendances }}</div>
-            <div class="text-muted small">Actual verified diners</div>
+    <div class="col-sm-6 col-lg-3">
+        <div class="card border-0 shadow-sm rounded-4 p-3 bg-white h-100 border-start border-4 border-success">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <div class="text-muted small fw-semibold text-uppercase">Total Food Consumed</div>
+                    <div class="fs-2 fw-bold text-success mt-1">{{ report.total_consumed }} <span class="fs-6 text-muted fw-normal">portions</span></div>
+                </div>
+                <div class="bg-success-subtle text-success rounded-circle p-3">
+                    <i class="fa-solid fa-utensils fa-lg"></i>
+                </div>
+            </div>
+            <div class="text-muted small mt-2">Actual verified student diners</div>
         </div>
     </div>
-    <div class="col-md-3">
-        <div class="card border-0 shadow-sm rounded-4 p-3 bg-white border-start border-4 border-warning">
-            <div class="text-muted small fw-semibold text-uppercase">Unconsumed Booked Meals</div>
-            <div class="fs-2 fw-bold text-warning mt-1">{{ report.unconsumed_booked_meals }}</div>
-            <div class="text-muted small">No-shows (est. ₹{{ "%.2f"|format(report.estimated_unconsumed_cost) }})</div>
+    <div class="col-sm-6 col-lg-3">
+        <div class="card border-0 shadow-sm rounded-4 p-3 bg-white h-100 border-start border-4 border-warning">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <div class="text-muted small fw-semibold text-uppercase">Total Food Wasted</div>
+                    <div class="fs-2 fw-bold text-warning mt-1">{{ report.total_wasted }} <span class="fs-6 text-muted fw-normal">meals</span></div>
+                </div>
+                <div class="bg-warning-subtle text-warning rounded-circle p-3">
+                    <i class="fa-solid fa-trash-can fa-lg"></i>
+                </div>
+            </div>
+            <div class="text-muted small mt-2">Unconsumed portions (Est. ₹{{ "%.2f"|format(report.estimated_unconsumed_cost) }})</div>
         </div>
     </div>
-    <div class="col-md-3">
-        <div class="card border-0 shadow-sm rounded-4 p-3 bg-white border-start border-4 border-danger">
-            <div class="text-muted small fw-semibold text-uppercase">Measured Kitchen Wastage</div>
-            <div class="fs-2 fw-bold text-danger mt-1">{{ "%.1f"|format(report.measured_kitchen_wastage_kg) }} <span class="fs-6 text-muted">kg</span></div>
-            <div class="text-muted small">Discarded raw & prepared food</div>
+    <div class="col-sm-6 col-lg-3">
+        <div class="card border-0 shadow-sm rounded-4 p-3 bg-white h-100 border-start border-4 border-danger">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <div class="text-muted small fw-semibold text-uppercase">Wastage Percentage</div>
+                    <div class="fs-2 fw-bold text-danger mt-1">{{ "%.1f"|format(report.wastage_percentage) }}%</div>
+                </div>
+                <div class="bg-danger-subtle text-danger rounded-circle p-3">
+                    <i class="fa-solid fa-percent fa-lg"></i>
+                </div>
+            </div>
+            <div class="text-muted small mt-2">Kitchen Waste: <strong>{{ "%.1f"|format(report.measured_kitchen_wastage_kg) }} kg</strong></div>
         </div>
     </div>
 </div>
 
-<!-- Slot-by-Slot Breakdown -->
-<div class="card border-0 shadow-sm rounded-4 p-4 bg-white">
-    <h5 class="fw-bold text-dark mb-3">Meal Slot Turnout Breakdown</h5>
+<!-- Time Horizons: Daily, Weekly & Monthly Summaries -->
+<div class="row g-3 mb-4">
+    <!-- Daily Summary -->
+    <div class="col-lg-4">
+        <div class="card border-0 shadow-sm rounded-4 p-3 bg-white h-100">
+            <div class="d-flex justify-content-between align-items-center border-bottom pb-2 mb-3">
+                <h6 class="fw-bold text-dark mb-0">
+                    <i class="fa-solid fa-calendar-day text-primary me-2"></i>Daily Summary
+                </h6>
+                <span class="badge bg-light text-secondary border small">{{ report.target_date.strftime('%d %b, %Y') }}</span>
+            </div>
+            <ul class="list-unstyled small mb-0 d-flex flex-column gap-2">
+                <li class="d-flex justify-content-between">
+                    <span class="text-muted">Food Prepared (Capacity):</span>
+                    <strong class="text-dark">{{ report.daily_summary.prepared }} meals</strong>
+                </li>
+                <li class="d-flex justify-content-between">
+                    <span class="text-muted">Pre-Booked Count:</span>
+                    <strong class="text-dark">{{ report.daily_summary.bookings }} meals</strong>
+                </li>
+                <li class="d-flex justify-content-between">
+                    <span class="text-muted">Food Consumed:</span>
+                    <strong class="text-success">{{ report.daily_summary.consumed }} meals</strong>
+                </li>
+                <li class="d-flex justify-content-between">
+                    <span class="text-muted">Food Wasted / Unconsumed:</span>
+                    <strong class="text-warning">{{ report.daily_summary.wasted }} meals ({{ "%.1f"|format(report.daily_summary.wastage_pct) }}%)</strong>
+                </li>
+                <li class="d-flex justify-content-between border-top pt-2">
+                    <span class="text-muted">Physical Kitchen Waste:</span>
+                    <strong class="text-danger">{{ "%.1f"|format(report.daily_summary.kitchen_waste_kg) }} kg (₹{{ "%.2f"|format(report.daily_summary.kitchen_waste_cost) }})</strong>
+                </li>
+            </ul>
+        </div>
+    </div>
+
+    <!-- Weekly Summary -->
+    <div class="col-lg-4">
+        <div class="card border-0 shadow-sm rounded-4 p-3 bg-white h-100">
+            <div class="d-flex justify-content-between align-items-center border-bottom pb-2 mb-3">
+                <h6 class="fw-bold text-dark mb-0">
+                    <i class="fa-solid fa-calendar-week text-success me-2"></i>Weekly Summary
+                </h6>
+                <span class="badge bg-light text-secondary border small">{{ report.weekly_summary.start_date.strftime('%d %b') }} – {{ report.weekly_summary.end_date.strftime('%d %b') }}</span>
+            </div>
+            <ul class="list-unstyled small mb-0 d-flex flex-column gap-2">
+                <li class="d-flex justify-content-between">
+                    <span class="text-muted">Food Prepared (Weekly):</span>
+                    <strong class="text-dark">{{ report.weekly_summary.prepared }} meals</strong>
+                </li>
+                <li class="d-flex justify-content-between">
+                    <span class="text-muted">Pre-Booked Count:</span>
+                    <strong class="text-dark">{{ report.weekly_summary.bookings }} meals</strong>
+                </li>
+                <li class="d-flex justify-content-between">
+                    <span class="text-muted">Food Consumed:</span>
+                    <strong class="text-success">{{ report.weekly_summary.consumed }} meals</strong>
+                </li>
+                <li class="d-flex justify-content-between">
+                    <span class="text-muted">Weekly Wasted Portions:</span>
+                    <strong class="text-warning">{{ report.weekly_summary.wasted }} meals ({{ "%.1f"|format(report.weekly_summary.wastage_pct) }}%)</strong>
+                </li>
+                <li class="d-flex justify-content-between border-top pt-2">
+                    <span class="text-muted">Weekly Physical Waste:</span>
+                    <strong class="text-danger">{{ "%.1f"|format(report.weekly_summary.kitchen_waste_kg) }} kg (₹{{ "%.2f"|format(report.weekly_summary.kitchen_waste_cost) }})</strong>
+                </li>
+            </ul>
+        </div>
+    </div>
+
+    <!-- Monthly Summary -->
+    <div class="col-lg-4">
+        <div class="card border-0 shadow-sm rounded-4 p-3 bg-white h-100">
+            <div class="d-flex justify-content-between align-items-center border-bottom pb-2 mb-3">
+                <h6 class="fw-bold text-dark mb-0">
+                    <i class="fa-solid fa-calendar-days text-info me-2"></i>Monthly Summary
+                </h6>
+                <span class="badge bg-light text-secondary border small">{{ report.monthly_summary.month_name }}</span>
+            </div>
+            <ul class="list-unstyled small mb-0 d-flex flex-column gap-2">
+                <li class="d-flex justify-content-between">
+                    <span class="text-muted">Food Prepared (Month):</span>
+                    <strong class="text-dark">{{ report.monthly_summary.prepared }} meals</strong>
+                </li>
+                <li class="d-flex justify-content-between">
+                    <span class="text-muted">Total Monthly Bookings:</span>
+                    <strong class="text-dark">{{ report.monthly_summary.bookings }} meals</strong>
+                </li>
+                <li class="d-flex justify-content-between">
+                    <span class="text-muted">Food Consumed:</span>
+                    <strong class="text-success">{{ report.monthly_summary.consumed }} meals</strong>
+                </li>
+                <li class="d-flex justify-content-between">
+                    <span class="text-muted">Monthly Food Wasted:</span>
+                    <strong class="text-warning">{{ report.monthly_summary.wasted }} meals ({{ "%.1f"|format(report.monthly_summary.wastage_pct) }}%)</strong>
+                </li>
+                <li class="d-flex justify-content-between border-top pt-2">
+                    <span class="text-muted">Monthly Physical Waste:</span>
+                    <strong class="text-danger">{{ "%.1f"|format(report.monthly_summary.kitchen_waste_kg) }} kg (₹{{ "%.2f"|format(report.monthly_summary.kitchen_waste_cost) }})</strong>
+                </li>
+            </ul>
+        </div>
+    </div>
+</div>
+
+<!-- Charts & Visual Analytics Section -->
+<div class="row g-4 mb-4">
+    <!-- Chart 1: 7-Day Turnout vs Wastage Trend -->
+    <div class="col-lg-8">
+        <div class="card border-0 shadow-sm rounded-4 p-4 bg-white h-100">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h6 class="fw-bold text-dark mb-0">
+                    <i class="fa-solid fa-chart-line text-primary me-2"></i>7-Day Turnout vs Wastage Trend
+                </h6>
+                <small class="text-muted">Daily Prepared, Consumed & Wasted Portions</small>
+            </div>
+            <div style="min-height: 250px; height: 260px;">
+                <canvas id="wastageTrendChart"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <!-- Chart 2: Meal-Wise Wastage Distribution -->
+    <div class="col-lg-4">
+        <div class="card border-0 shadow-sm rounded-4 p-4 bg-white h-100">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h6 class="fw-bold text-dark mb-0">
+                    <i class="fa-solid fa-chart-pie text-warning me-2"></i>Meal-Wise Wastage
+                </h6>
+                <small class="text-muted">Unconsumed Distribution</small>
+            </div>
+            <div style="min-height: 250px; height: 260px;" class="d-flex align-items-center justify-content-center">
+                <canvas id="mealWastagePieChart"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Meal Slot Wastage Breakdown (Breakfast, Lunch, Snacks, Dinner) -->
+<div class="card border-0 shadow-sm rounded-4 p-4 bg-white mb-4">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <div>
+            <h5 class="fw-bold text-dark mb-0">
+                <i class="fa-solid fa-utensils text-primary me-2"></i>Meal-Wise Turnout & Wastage Breakdown
+            </h5>
+            <small class="text-muted">Detailed audit for {{ report.target_date.strftime('%A, %d %B %Y') }}</small>
+        </div>
+    </div>
 
     {% if report.slots %}
     <div class="table-responsive">
@@ -74,22 +259,28 @@
             <thead class="table-light text-secondary small text-uppercase">
                 <tr>
                     <th>Meal Slot</th>
-                    <th>Menu Title</th>
-                    <th>Bookings</th>
-                    <th>Attendance</th>
-                    <th>Turnout %</th>
-                    <th>Unconsumed Meals</th>
+                    <th>Menu Title & Timing</th>
+                    <th>Prepared (Capacity)</th>
+                    <th>Pre-Bookings</th>
+                    <th>Attendance (Consumed)</th>
+                    <th>Turnout Rate</th>
+                    <th>Unconsumed Portions</th>
                 </tr>
             </thead>
             <tbody>
                 {% for s in report.slots %}
-                {% set turnout = ((s.attendances / s.bookings * 100)|round(1)) if s.bookings > 0 else 0 %}
                 <tr>
                     <td>
-                        <span class="badge bg-light text-dark border fw-bold">{{ s.slot }}</span>
+                        <span class="badge {% if s.slot == 'Breakfast' %}bg-warning text-dark{% elif s.slot == 'Lunch' %}bg-success{% elif s.slot == 'Snacks' %}bg-info{% else %}bg-primary{% endif %}">
+                            {{ s.slot }}
+                        </span>
                     </td>
                     <td>
-                        <span class="text-dark fw-semibold">{{ s.menu_title }}</span>
+                        <div class="fw-bold text-dark">{{ s.menu_title }}</div>
+                        <small class="text-muted">{{ s.timing }}</small>
+                    </td>
+                    <td>
+                        <span class="fw-semibold text-dark">{{ s.prepared }}</span>
                     </td>
                     <td>
                         <span class="fw-semibold text-dark">{{ s.bookings }}</span>
@@ -99,17 +290,19 @@
                     </td>
                     <td>
                         <div class="d-flex align-items-center gap-2">
-                            <div class="progress flex-grow-1" style="height: 6px;">
-                                <div class="progress-bar {% if turnout >= 80 %}bg-success{% elif turnout >= 50 %}bg-warning{% else %}bg-danger{% endif %}" style="width: {{ turnout }}%;"></div>
+                            <div class="progress flex-grow-1" style="height: 6px; min-width: 80px;">
+                                <div class="progress-bar {% if s.turnout >= 80 %}bg-success{% elif s.turnout >= 50 %}bg-warning{% else %}bg-danger{% endif %}" style="width: {{ s.turnout }}%;"></div>
                             </div>
-                            <span class="small fw-semibold text-dark">{{ turnout }}%</span>
+                            <span class="small fw-semibold text-dark">{{ s.turnout }}%</span>
                         </div>
                     </td>
                     <td>
                         {% if s.unconsumed > 0 %}
-                        <span class="badge bg-warning text-dark"><i class="fa-solid fa-triangle-exclamation me-1"></i>{{ s.unconsumed }} missed</span>
+                        <span class="badge bg-warning text-dark">
+                            <i class="fa-solid fa-triangle-exclamation me-1"></i>{{ s.unconsumed }} unconsumed ({{ s.wastage_pct }}%)
+                        </span>
                         {% else %}
-                        <span class="badge bg-success-subtle text-success">0 missed</span>
+                        <span class="badge bg-success-subtle text-success">0 unconsumed</span>
                         {% endif %}
                     </td>
                 </tr>
@@ -118,11 +311,214 @@
         </table>
     </div>
     {% else %}
-    <div class="text-center py-5">
+    <!-- Friendly Empty State for Slots -->
+    <div class="text-center py-5 bg-light rounded-4">
         <i class="fa-solid fa-utensils fa-3x text-muted mb-3 opacity-50"></i>
-        <h6 class="fw-bold text-dark">No Meal Menus for this Date</h6>
-        <p class="text-muted small">No meal sessions were recorded on {{ report.date.strftime('%d %b, %Y') }}.</p>
+        <h6 class="fw-bold text-dark">No Meal Sessions Recorded for this Date</h6>
+        <p class="text-muted small mb-0">No meals were scheduled or registered on {{ report.target_date.strftime('%d %b, %Y') }}.</p>
     </div>
     {% endif %}
 </div>
+
+<!-- Food Items with Highest Wastage & Historical Audit Records -->
+<div class="row g-4 mb-4">
+    <!-- Highest Wastage Inventory Items -->
+    <div class="col-lg-5">
+        <div class="card border-0 shadow-sm rounded-4 p-4 bg-white h-100">
+            <h5 class="fw-bold text-dark mb-3">
+                <i class="fa-solid fa-triangle-exclamation text-danger me-2"></i>Highest Wastage Food Items
+            </h5>
+            <p class="text-muted small mb-3">Pantry items with the highest recorded preparation residue or spoilage losses.</p>
+
+            {% if report.highest_wasted_items %}
+            <div class="table-responsive">
+                <table class="table table-sm align-middle mb-0">
+                    <thead class="table-light small text-uppercase">
+                        <tr>
+                            <th>Item Name</th>
+                            <th>Quantity Wasted</th>
+                            <th>Financial Loss</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for item in report.highest_wasted_items %}
+                        <tr>
+                            <td>
+                                <strong class="text-dark small">{{ item.item_name }}</strong>
+                                <div class="text-muted" style="font-size: 0.75rem;">{{ item.category }} &bull; {{ item.incident_count }} log(s)</div>
+                            </td>
+                            <td>
+                                <span class="badge bg-danger-subtle text-danger fw-bold">
+                                    {{ "%.2f"|format(item.total_qty_float) }} {{ item.unit }}
+                                </span>
+                            </td>
+                            <td>
+                                <strong class="text-dark small">₹{{ "%.2f"|format(item.total_cost_float) }}</strong>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <!-- Friendly Empty State -->
+            <div class="text-center py-4 bg-light rounded-3">
+                <i class="fa-solid fa-circle-check text-success fa-2x mb-2"></i>
+                <h6 class="fw-bold text-dark small mb-1">Zero Kitchen Wastage Recorded</h6>
+                <p class="text-muted small mb-0">No food stock has been written off as wastage in the pantry ledger.</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Historical Wastage Audit Records -->
+    <div class="col-lg-7">
+        <div class="card border-0 shadow-sm rounded-4 p-4 bg-white h-100">
+            <h5 class="fw-bold text-dark mb-3">
+                <i class="fa-solid fa-clock-rotate-left text-primary me-2"></i>Historical Kitchen Wastage Log
+            </h5>
+            <p class="text-muted small mb-3">Recent immutable stock write-off audit trail recorded by kitchen attendants.</p>
+
+            {% if report.historical_records %}
+            <div class="table-responsive">
+                <table class="table table-sm table-hover align-middle mb-0 small">
+                    <thead class="table-light text-uppercase">
+                        <tr>
+                            <th>Date</th>
+                            <th>Item & Category</th>
+                            <th>Quantity</th>
+                            <th>Total Loss</th>
+                            <th>Remarks</th>
+                            <th>Logged By</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for rec in report.historical_records %}
+                        <tr>
+                            <td class="text-nowrap">{{ rec.date.strftime('%d %b, %Y') }}</td>
+                            <td>
+                                <strong class="text-dark">{{ rec.item_name }}</strong>
+                                <div class="text-muted" style="font-size: 0.72rem;">{{ rec.category }}</div>
+                            </td>
+                            <td>
+                                <span class="badge bg-danger-subtle text-danger">
+                                    {{ "%.2f"|format(rec.quantity) }} {{ rec.unit }}
+                                </span>
+                            </td>
+                            <td class="fw-semibold">₹{{ "%.2f"|format(rec.total_price) }}</td>
+                            <td class="text-muted text-truncate" style="max-width: 140px;" title="{{ rec.remarks }}">
+                                {{ rec.remarks }}
+                            </td>
+                            <td class="text-muted">{{ rec.recorded_by }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <!-- Friendly Empty State -->
+            <div class="text-center py-4 bg-light rounded-3">
+                <i class="fa-solid fa-clipboard-check text-primary fa-2x mb-2"></i>
+                <h6 class="fw-bold text-dark small mb-1">No Historical Wastage Records</h6>
+                <p class="text-muted small mb-0">Inventory write-offs and kitchen spoilage logs will appear here automatically.</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- Chart.js Visualization Scripts -->
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+    // 1. 7-Day Turnout vs Wastage Trend Chart
+    const trendCtx = document.getElementById('wastageTrendChart');
+    if (trendCtx) {
+        new Chart(trendCtx.getContext('2d'), {
+            type: 'bar',
+            data: {
+                labels: {{ report.chart_labels|tojson }},
+                datasets: [
+                    {
+                        label: 'Prepared Meals',
+                        data: {{ report.chart_prepared|tojson }},
+                        backgroundColor: 'rgba(79, 70, 229, 0.25)',
+                        borderColor: '#4f46e5',
+                        borderWidth: 1.5,
+                        borderRadius: 4
+                    },
+                    {
+                        label: 'Consumed (Diners)',
+                        data: {{ report.chart_consumed|tojson }},
+                        backgroundColor: 'rgba(16, 185, 129, 0.75)',
+                        borderColor: '#10b981',
+                        borderWidth: 1.5,
+                        borderRadius: 4
+                    },
+                    {
+                        label: 'Wasted / Unconsumed',
+                        data: {{ report.chart_wasted|tojson }},
+                        backgroundColor: 'rgba(239, 68, 68, 0.8)',
+                        borderColor: '#ef4444',
+                        borderWidth: 1.5,
+                        borderRadius: 4
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: { stepSize: 20 }
+                    }
+                },
+                plugins: {
+                    legend: { position: 'top' }
+                }
+            }
+        });
+    }
+
+    // 2. Meal-Slot Wastage Doughnut Chart
+    const pieCtx = document.getElementById('mealWastagePieChart');
+    if (pieCtx) {
+        const slotData = {{ report.meal_slot_wastage|tojson }};
+        const labels = Object.keys(slotData);
+        const dataValues = Object.values(slotData);
+        const totalWasted = dataValues.reduce((a, b) => a + b, 0);
+
+        new Chart(pieCtx.getContext('2d'), {
+            type: 'doughnut',
+            data: {
+                labels: labels,
+                datasets: [{
+                    data: totalWasted > 0 ? dataValues : [1, 1, 1, 1],
+                    backgroundColor: totalWasted > 0 ? [
+                        '#f59e0b', // Breakfast: Amber
+                        '#10b981', // Lunch: Emerald
+                        '#06b6d4', // Snacks: Cyan
+                        '#4f46e5'  // Dinner: Indigo
+                    ] : ['#e5e7eb', '#e5e7eb', '#e5e7eb', '#e5e7eb']
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { position: 'bottom' },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                if (totalWasted === 0) return ' No wastage recorded';
+                                return ` ${context.label}: ${context.raw} unconsumed meals`;
+                            }
+                        }
+                    }
+                }
+            }
+        });
+    }
+});
+</script>
 {% endblock %}

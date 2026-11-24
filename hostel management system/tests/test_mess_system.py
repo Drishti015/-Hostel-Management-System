@@ -681,5 +681,131 @@ class MessSystemTestCase(unittest.TestCase):
         self.assertEqual(mon_b.title, 'Custom Manager Special Breakfast')
         self.assertEqual(mon_b.special_dish, 'Exotic Fruit Platter')
 
+    # -------------------------------------------------------------
+    # 8. Food Wastage Reports & Analytics Test Suite
+    # -------------------------------------------------------------
+    def test_mess_manager_reports_empty_records_returns_200(self):
+        """Verify Wastage Reports returns HTTP 200 and safe zero totals when no records exist"""
+        self._login('manager_test', 'Manager@123')
+        res = self.client.get('/mess-manager/reports')
+        self.assertEqual(res.status_code, 200)
+        self.assertIn(b'Food Wastage & Turnout Analytics', res.data)
+        self.assertIn(b'Total Food Prepared', res.data)
+        self.assertIn(b'Total Food Consumed', res.data)
+        self.assertIn(b'Total Food Wasted', res.data)
+        self.assertIn(b'Wastage Percentage', res.data)
+        self.assertIn(b'Daily Summary', res.data)
+        self.assertIn(b'Weekly Summary', res.data)
+        self.assertIn(b'Monthly Summary', res.data)
+        self.assertIn(b'0.0%', res.data)
+
+    def test_mess_manager_reports_populated_records_and_kpis(self):
+        """Verify Wastage Reports accurately computes prepared, consumed, and unconsumed food metrics"""
+        self._login('manager_test', 'Manager@123')
+        today = date.today()
+
+        # Create menu: capacity 200
+        menu = MealMenu(
+            mess_id=self.mess.id,
+            meal_date=today,
+            meal_type='Lunch',
+            title='Deluxe Rajma Chawal',
+            booking_deadline=datetime.utcnow() + timedelta(hours=3),
+            capacity=200,
+            is_published=True,
+            created_by=self.manager.id
+        )
+        db.session.add(menu)
+        db.session.flush()
+
+        # Create 10 student bookings
+        booking = MealBooking(
+            student_id=self.student.id,
+            meal_menu_id=menu.id,
+            booking_status='Booked'
+        )
+        db.session.add(booking)
+        db.session.flush()
+
+        # Create 1 attendance check-in
+        attendance = MealAttendance(
+            student_id=self.student.id,
+            meal_menu_id=menu.id,
+            recorded_by=self.staff.id,
+            verification_method='QR_Scan',
+            attendance_status='Present'
+        )
+        db.session.add(attendance)
+
+        # Create inventory item and wastage transaction
+        inv_item = MessInventory(
+            mess_id=self.mess.id,
+            item_name='Fresh Tomatoes',
+            category='Vegetables',
+            quantity=Decimal('45.00'),
+            unit='kg',
+            minimum_stock_level=Decimal('10.00'),
+            purchase_price=Decimal('35.00')
+        )
+        db.session.add(inv_item)
+        db.session.flush()
+
+        waste_tx = InventoryTransaction(
+            inventory_id=inv_item.id,
+            transaction_type='Wastage',
+            quantity=Decimal('5.50'),
+            unit_price=Decimal('35.00'),
+            total_price=Decimal('192.50'),
+            transaction_date=today,
+            remarks='Spoiled during storage humidity',
+            recorded_by=self.staff.id
+        )
+        db.session.add(waste_tx)
+        db.session.commit()
+
+        # Fetch report
+        res = self.client.get('/mess-manager/reports')
+        self.assertEqual(res.status_code, 200)
+        self.assertIn(b'Deluxe Rajma Chawal', res.data)
+        self.assertIn(b'Fresh Tomatoes', res.data)
+        self.assertIn(b'5.5 kg', res.data)
+        self.assertIn(b'Spoiled during storage humidity', res.data)
+
+    def test_mess_manager_reports_date_filtering_and_invalid_date_fallback(self):
+        """Verify date parameter filtering and resilience against malformed date strings"""
+        self._login('manager_test', 'Manager@123')
+
+        # Valid date in past
+        res = self.client.get('/mess-manager/reports?date=2026-11-15')
+        self.assertEqual(res.status_code, 200)
+        self.assertIn(b'15 Nov, 2026', res.data)
+
+        # Invalid date string (should fallback to today safely without 500)
+        res_invalid = self.client.get('/mess-manager/reports?date=not-a-valid-date')
+        self.assertEqual(res_invalid.status_code, 200)
+        self.assertIn(date.today().strftime('%d %b, %Y').encode('utf-8'), res_invalid.data)
+
+    def test_mess_manager_reports_rbac_access_control(self):
+        """Verify student and unauthenticated users cannot access Mess Manager wastage reports"""
+        # 1. Unauthenticated -> 302 to login
+        self.client.get('/auth/logout', follow_redirects=True)
+        res_guest = self.client.get('/mess-manager/reports')
+        self.assertEqual(res_guest.status_code, 302)
+        self.assertIn('/auth/login', res_guest.headers.get('Location', ''))
+
+        # 2. Student -> 403 Forbidden
+        self._login('student_test', 'Student@123')
+        res_student = self.client.get('/mess-manager/reports')
+        self.assertEqual(res_student.status_code, 403)
+
+    def test_mess_manager_export_attendance_csv(self):
+        """Verify export_attendance_csv produces valid CSV response"""
+        self._login('manager_test', 'Manager@123')
+        res = self.client.get('/mess-manager/reports/export-attendance')
+        self.assertEqual(res.status_code, 200)
+        self.assertIn(b'Attendance ID', res.data)
+        self.assertIn(b'Meal Slot', res.data)
+        self.assertIn(b'Student Name', res.data)
+
 if __name__ == '__main__':
     unittest.main()
