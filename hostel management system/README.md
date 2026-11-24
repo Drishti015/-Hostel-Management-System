@@ -6,7 +6,7 @@
 > **B.Tech Computer Science & Engineering Mini Project**  
 > Affiliation: **Dr. A.P.J. Abdul Kalam Technical University (AKTU)**  
 > Architecture: **Layered MVC (Model - View - Controller / Service Architecture)**  
-> Tech Stack: **Python 3.12 | Flask | Flask-SQLAlchemy | MySQL 8.0 | Bootstrap 5 | Chart.js**
+> Tech Stack: **Python 3.12 | Flask | Flask-SQLAlchemy | PostgreSQL / MySQL / SQLite | Bootstrap 5 | Chart.js**
 
 ---
 
@@ -14,7 +14,7 @@
 **HostelEase HMS** is an enterprise-grade, database-driven web application built to digitize college campus hostel administration. It completely eliminates manual paperwork, physical ledger registers, duplicate room bookings, untracked fee receipts, and unmonitored night roll-calls.
 
 ### Key Capabilities
-- **Three-Tier Role-Based Access Control (RBAC):** Admin, Warden, and Student portals with strict session authorization and route guarding.
+- **Multi-Tier Role-Based Access Control (RBAC):** Admin, Warden (Boys & Girls), Student, Parent/Guardian, Security Guard, Mess Manager, and Mess Staff portals with strict session authorization and route guarding.
 - **Granular Bed Management:** Multi-hostel, multi-floor, and individual bed tracking (`Bed-A`, `Bed-B`) preventing overbooking.
 - **Smart Allocation Engine:** Atomic room booking, re-allocation, and checkout with historical auditing.
 - **Fee Ledger & Receipt Generation:** Record transactions, calculate remaining dues, and print official fee slips.
@@ -22,6 +22,7 @@
 - **Grievance Redressal (Complaint) System:** Categorized maintenance ticketing with priority flags and warden audit trails.
 - **Digital Notice Board:** Target circulars to all residents or specific hostel blocks.
 - **Student Leave & Out-Pass Management System:** End-to-end paperless leave applications with auto-verified resident profile binding, multi-day calendar validation, medical document uploads, host-based warden review desks, cancellation safeguards, and instant in-app notifications.
+- **Enterprise Mess & Dining Management:** Weekly menu scheduling, dynamic QR meal attendance, food wastage tracking, pantry inventory control, vendor management, and leave-based dining rebates.
 
 ---
 
@@ -90,30 +91,58 @@ hostel_management_system/
 
 ---
 
-## 3. Quick Start Guide
+## 3. Quick Start & Installation Guide
 
-### Step 1: Activate Virtual Environment
+### Step 1: Clone Repository & Create Virtual Environment
 ```powershell
+git clone https://github.com/Drishti015/-Hostel-Management-System.git
+cd "-Hostel-Management-System"
+
+# Create Python virtual environment
+python -m venv venv
+
+# Activate virtual environment (Windows PowerShell)
 .\venv\Scripts\Activate.ps1
+
+# Activate virtual environment (Linux / macOS)
+# source venv/bin/activate
+
+# Install dependencies
+pip install -r requirements.txt
 ```
 
-### Step 2: Configure Database Credentials
-Open `.env` and set your MySQL root password:
+### Step 2: Environment Configuration
+Copy `.env.example` to `.env` and configure your local or production environment variables:
+```powershell
+cp .env.example .env
+```
+
+#### Configuration Options (Placeholders):
 ```ini
+# Flask Core Configuration
+FLASK_APP=run.py
+FLASK_ENV=development
+SECRET_KEY=your_secure_random_secret_key_here
+
+# Database Configuration (Option A: PostgreSQL / Production Supabase)
+DATABASE_URL=postgresql://<DB_USER>:<DB_PASSWORD>@<DB_HOST>:<PORT>/<DB_NAME>?sslmode=require
+
+# Database Configuration (Option B: Development MySQL)
 MYSQL_HOST=localhost
 MYSQL_PORT=3306
 MYSQL_USER=root
-MYSQL_PASSWORD=your_mysql_password_here
+MYSQL_PASSWORD=your_local_mysql_password
 MYSQL_DB=hostel_db
+
+# Database Configuration (Option C: Local SQLite Fallback)
+# If neither DATABASE_URL nor MYSQL_PASSWORD is provided in development,
+# the system automatically defaults to a local instance/hostel.sqlite3 database.
 ```
 
-### Step 3: Verify Database Connection & Seed Data
-Run the diagnostic verifier:
+### Step 3: Database Initialization & Seeding
+For initial development setup or running database seeds:
 ```powershell
-python test_db.py
-```
-To populate initial demo data across all tables:
-```powershell
+python init_database.py
 python seed_db.py
 ```
 
@@ -123,29 +152,42 @@ python run.py
 ```
 Open your web browser and visit: **`http://127.0.0.1:5000`**
 
+### Step 5: Execute Test Suites
+Run the complete automated test suite (105 tests across all modules):
+```powershell
+python -m unittest discover tests
+```
+
 ---
 
-## 4. Default Demonstration Credentials (AKTU Practical Viva)
+## 4. Demonstration User Accounts & Role Matrix
 
-| Role | Username | Password | Access Scope |
+The system provides 8 distinct user roles for comprehensive campus administration:
+
+| Role | Demo Username | Portal Route | Access Scope & Responsibilities |
 | :--- | :--- | :--- | :--- |
-| **Admin** | `admin` | `Admin@123` | Full System Access, All Hostels, Reports, Audit Logs, Master Mess Policies |
-| **Warden (Boys)** | `warden_boys` | `Warden@123` | Block A Attendance, Grievances, Out-Pass Desk, Mess Quality Oversight |
-| **Warden (Girls)** | `warden_girls` | `Warden@123` | Block B Attendance, Grievances, Out-Pass Desk, Mess Quality Oversight |
-| **Student** | `rahul_sharma` | `Student@123` | Personal Room Info, Out-Passes, Dining QR Wallet, Meal Bookings, Feedback |
-| **Parent** | `rajesh_sharma` | `Parent@123` | Ward Digital Out-Pass Tracking, Leave Decisions, Fee Receipts, Attendance |
-| **Security Guard** | `guard_main` | `Guard@123` | Gate Camera QR Terminal, Manual Token Verify, Live Perimeter |
-| **Mess Manager** | `mess_manager` | `Manager@123` | Dynamic Weekly Menus, Pantry Inventory, Suppliers, Expenses, Feedback & Wastage Analytics |
-| **Mess Staff** | `mess_staff` | `Staff@123` | HTML5 Dining QR Scanner, Live Check-in Desk, Meal Attendance Register |
+| **Admin** | `admin` | `/admin/dashboard` | Full System Administration, Hostel Configuration, Room & Bed Allocations, Tariffs, Master Security Logs, Mess Management, System Audits. |
+| **Warden (Boys)** | `warden_boys` | `/warden/dashboard` | Block A Boys Hostel Administration, Night Roll-Call Attendance, Grievance Redressal, Leave & Out-Pass Review Desk, Dining Quality Inspection. |
+| **Warden (Girls)** | `warden_girls` | `/warden/dashboard` | Block B Girls Hostel Administration, Night Roll-Call Attendance, Grievance Redressal, Leave & Out-Pass Review Desk, Dining Quality Inspection. |
+| **Student** | `rahul_sharma` | `/student/dashboard` | Resident Portal, Room Particulars, Leave Applications, Digital Out-Pass Wallet (QR), Dining QR Wallet, Meal Reservations, Feedback, Fee Receipts. |
+| **Parent / Guardian** | `parent_rahul` | `/parent/dashboard` | Real-Time Ward Safety Tracking (Inside/Outside Campus Badge), Gate Passage Log, Leave Verification, Attendance Charts, Fee Ledger, Warden Inquiries. |
+| **Security Guard** | `guard_main` | `/security/scan` | Campus Gate QR Scanner Terminal, Live Ingress/Egress Verification (EXIT/ENTRY Modes), Overdue Curfew Alerts, Perimeter Tracking Roster. |
+| **Mess Manager** | `mess_manager` | `/mess-manager/dashboard` | Dynamic Weekly Menu Planning, Kitchen Inventory with Low-Stock Alerts, Supplier Directory, Expense Tracking, Wastage Analytics, Billing Reports. |
+| **Mess Staff** | `mess_staff` | `/mess-staff/scanner` | Dining Hall Live Camera QR Scanner, Cryptographic Token Verification, Atomic Attendance Check-in, Duplicate Scan Prevention, Manual Roll Search. |
+
+> **Security Notice**: In accordance with enterprise security standards, plaintext passwords are never committed to version control. Passwords for all accounts are hashed using salted Werkzeug `scrypt` algorithms. In production or local demonstration setups, credentials are securely provisioned via runtime environment variables (`DEMO_PASSWORD_<ROLE>`) or initial onboarding prompts.
 
 ---
 
 ## 5. Security & Engineering Best Practices
-- **Password Hashing:** Passwords hashed with salted `scrypt` (via `werkzeug.security`). Plaintext passwords are never stored.
+- **Password Hashing:** Passwords hashed with salted `scrypt` (via `werkzeug.security`). Plaintext passwords are never stored in databases or version control.
 - **CSRF Protection:** Every POST request is protected with CSRF token generation via `Flask-WTF`.
 - **SQL Injection Prevention:** 100% of queries use SQLAlchemy ORM with parameterized binding.
-- **Zero-Downtime Fallback:** Built-in dynamic database resolution that falls back gracefully to SQLite if MySQL service is unconfigured, ensuring the project never crashes in an viva demonstration.
-- **IDOR Protection & Authorization Guards:** In-flight session identity binding ensures students can never inspect or manipulate another student's leave requests, and wardens can only process leaves for their assigned hostel.
+- **Fail-Closed Production Safety:** Production migration utilities require explicit flags (`--execute-production-migration`) and interactive confirmation; preflight inspection operates under strict database-enforced read-only mode (`SET TRANSACTION READ ONLY`).
+- **Test Database Isolation:** Test suites strictly enforce isolated in-memory SQLite databases (`sqlite:///:memory:`), guarded by pre-execution URI validators to prevent accidental execution against development or production databases.
+- **Zero-Downtime Fallback:** Built-in dynamic database resolution that falls back gracefully to SQLite if local MySQL is unconfigured, ensuring resilient local demonstration without crashing.
+- **IDOR Protection & Authorization Guards:** In-flight session identity binding ensures students can never inspect or manipulate another resident's records, parents can only monitor their verified linked ward, and wardens can only process actions for their assigned hostel block.
+- **Cryptographic Gate & Dining Tokens:** QR codes contain HMAC-SHA256 hashed tokens with 32-byte secure entropy rather than exposing database IDs or PII.
 - **Secure File Storage:** Strict MIME-type and extension whitelisting (`.pdf`, `.png`, `.jpg`, `.jpeg`), size enforcement (5MB max), secure timestamped UUID filenames, and authorized serving routes.
 
 ---
@@ -266,7 +308,7 @@ python -m unittest tests/test_gate_system.py -v
    - Strict IDOR safeguards prevent any student from viewing or manipulating another resident's pass.
 
 3. **Security Guard Ingress/Egress Terminal:**
-   - Dedicated role-based portal for campus security guards (`guard_main / Guard@123`).
+   - Dedicated role-based portal for campus security guards (username: `guard_main`).
    - **Live Camera QR Scanning:** Integrates `html5-qrcode` to drive mobile or webcam scanning with live camera selector and audio-visual feedback.
    - **Mode-Enforced Verification:** Guards toggle between **EXIT** (departure) and **ENTRY** (arrival).
    - **Manual Fallback:** If a student's screen is cracked or battery is low, guards can manually verify the token.
@@ -622,10 +664,14 @@ HostelEase features an enterprise-grade, integrated **Mess Management System** d
 ## 11. Technology Stack Reference
 
 - **Backend:** Python 3.12, Flask 3.0.3, Flask-Login 0.6.3, Flask-WTF 1.2.1, Flask-SQLAlchemy 3.1.1
-- **Database:** SQLite 3 (Development & Automated Testing) / MySQL 8.0 (Production)
+- **Database Support:**
+  - **Production:** PostgreSQL (Supabase Transaction Pooler over SSL with NullPool / Serverless compatibility)
+  - **Development:** MySQL 8.0 (PyMySQL) / Local SQLite 3
+  - **Automated Testing:** In-memory SQLite (`sqlite:///:memory:`) with strict test isolation guards
 - **Frontend:** HTML5, CSS3, JavaScript (Vanilla ES6+), Bootstrap 5.3.3, Font Awesome 6.5.2, Chart.js 4.4.2
 - **QR Code Engine:** `qrcode[pil]` 7.4.2, `Pillow` 10.3.0, `html5-qrcode` 2.3.8 (Browser WebRTC)
-- **Security:** `werkzeug.security` (scrypt password hashing), `secrets` (32-byte cryptographic entropy), `hmac` (constant-time token comparison)
+- **Security:** `werkzeug.security` (salted `scrypt` password hashing), `secrets` (32-byte cryptographic entropy), `hmac` (constant-time token comparison)
+- **Deployment:** Vercel WSGI Serverless / Standard WSGI (Gunicorn)
 
 
 
