@@ -35,53 +35,55 @@
 
             <hr class="my-4">
 
-            <div class="text-start small">
-                <div class="d-flex justify-content-between py-2 border-bottom">
-                    <span class="text-muted">Username:</span>
-                    <span class="fw-semibold text-dark">{{ student.user_account.username }}</span>
+            <div class="text-start small profile-details">
+                <div class="d-flex justify-content-between py-2 border-bottom border-secondary border-opacity-25">
+                    <span class="detail-label">Username:</span>
+                    <span class="detail-value">{{ student.user_account.username }}</span>
                 </div>
-                <div class="d-flex justify-content-between py-2 border-bottom">
-                    <span class="text-muted">Email:</span>
-                    <span class="fw-semibold text-dark">{{ student.user_account.email }}</span>
+                <div class="d-flex justify-content-between py-2 border-bottom border-secondary border-opacity-25">
+                    <span class="detail-label">Email:</span>
+                    <span class="detail-value">{{ student.user_account.email }}</span>
                 </div>
-                <div class="d-flex justify-content-between py-2 border-bottom">
-                    <span class="text-muted">Contact:</span>
-                    <span class="fw-semibold text-dark">{{ student.phone }}</span>
+                <div class="d-flex justify-content-between py-2 border-bottom border-secondary border-opacity-25">
+                    <span class="detail-label">Contact:</span>
+                    <span class="detail-value">{{ student.phone }}</span>
                 </div>
-                <div class="d-flex justify-content-between py-2 border-bottom">
-                    <span class="text-muted">Branch:</span>
-                    <span class="fw-semibold text-dark">{{ student.branch }}</span>
+                <div class="d-flex justify-content-between py-2 border-bottom border-secondary border-opacity-25">
+                    <span class="detail-label">Branch:</span>
+                    <span class="detail-value">{{ student.branch }}</span>
                 </div>
-                <div class="d-flex justify-content-between py-2 border-bottom">
-                    <span class="text-muted">Year / Sem:</span>
-                    <span class="fw-semibold text-dark">Year {{ student.year }} (Sem {{ student.semester }})</span>
+                <div class="d-flex justify-content-between py-2 border-bottom border-secondary border-opacity-25">
+                    <span class="detail-label">Year / Sem:</span>
+                    <span class="detail-value">Year {{ student.year }} (Sem {{ student.semester }})</span>
                 </div>
                 <div class="d-flex justify-content-between py-2">
-                    <span class="text-muted">Blood Group:</span>
-                    <span class="fw-semibold text-dark">{{ student.blood_group or 'N/A' }}</span>
+                    <span class="detail-label">Blood Group:</span>
+                    <span class="detail-value">
+                        <span class="badge bg-danger-subtle text-danger px-2 py-0.5 fw-bold">{{ student.blood_group or 'N/A' }}</span>
+                    </span>
                 </div>
             </div>
         </div>
 
         <!-- Guardian Card -->
-        <div class="card border-0 shadow-sm rounded-4 p-4 bg-white">
-            <h5 class="fw-bold text-dark mb-3"><i class="fa-solid fa-house-chimney-user text-primary me-2"></i>Guardian & Address</h5>
+        <div class="card border-0 shadow-sm rounded-4 p-4 profile-details">
+            <h5 class="fw-bold text-white mb-3"><i class="fa-solid fa-house-chimney-user text-primary me-2"></i>Guardian & Address</h5>
             <div class="small">
                 <div class="mb-2">
-                    <span class="text-muted d-block">Guardian Name:</span>
-                    <span class="fw-semibold text-dark">{{ student.guardian_name }}</span>
+                    <span class="detail-label d-block">Guardian Name:</span>
+                    <span class="detail-value">{{ student.guardian_name }}</span>
                 </div>
                 <div class="mb-2">
-                    <span class="text-muted d-block">Guardian Phone:</span>
-                    <span class="fw-semibold text-dark">{{ student.guardian_phone }}</span>
+                    <span class="detail-label d-block">Guardian Phone:</span>
+                    <span class="detail-value">{{ student.guardian_phone }}</span>
                 </div>
                 <div class="mb-2">
-                    <span class="text-muted d-block">Emergency Alternate:</span>
-                    <span class="fw-semibold text-dark">{{ student.emergency_phone or 'None' }}</span>
+                    <span class="detail-label d-block">Emergency Alternate:</span>
+                    <span class="detail-value">{{ student.emergency_phone or 'None' }}</span>
                 </div>
                 <div>
-                    <span class="text-muted d-block">Permanent Address:</span>
-                    <span class="text-dark">{{ student.address }}</span>
+                    <span class="detail-label d-block">Permanent Address:</span>
+                    <span class="detail-value">{{ student.address }}</span>
                 </div>
             </div>
         </div>

@@ -55,11 +55,29 @@
     --info-light: rgba(34, 211, 238, 0.12);
     --info-border: rgba(34, 211, 238, 0.28);
 
-    /* Futuristic Typography Colors */
-    --text-main: #f8fafc;
-    --text-body: #cbd5e1;
-    --text-muted: #94a3b8;
-    --text-subtle: #64748b;
+    /* Futuristic Typography Colors & High Contrast Tokens */
+    --text-main: #F1F5F9;
+    --text-body: #CBD5E1;
+    --text-muted: #94A3B8;
+    --text-labels: #AAB8CC;
+    --text-subtle: #94A3B8;
+
+    /* High-contrast Semantic Status Accents */
+    --success-color: #34D399;
+    --success-light: rgba(52, 211, 153, 0.15);
+    --success-border: rgba(52, 211, 153, 0.35);
+
+    --warning-color: #FBBF24;
+    --warning-light: rgba(251, 191, 36, 0.15);
+    --warning-border: rgba(251, 191, 36, 0.35);
+
+    --danger-color: #FB7185;
+    --danger-light: rgba(251, 113, 133, 0.15);
+    --danger-border: rgba(251, 113, 133, 0.35);
+
+    --info-color: #38BDF8;
+    --info-light: rgba(56, 189, 248, 0.15);
+    --info-border: rgba(56, 189, 248, 0.35);
 
     /* Radii */
     --radius-xs: 4px;
@@ -880,6 +898,196 @@ a:hover {
     background: rgba(34, 211, 238, 0.08);
     border-color: var(--info-border);
     color: #cffafe;
+}
+
+/* ==========================================================================
+   High-Contrast Futuristic Typography & Text Visibility System
+   Fixes dark text on dark surfaces, low-contrast muted labels, and form fields.
+   ========================================================================== */
+
+/* Universal Text Contrast Overrides */
+.text-dark {
+    color: var(--text-main) !important;
+}
+
+.text-muted {
+    color: var(--text-muted) !important;
+    opacity: 0.95 !important;
+}
+
+.text-body, .text-secondary {
+    color: var(--text-body) !important;
+    opacity: 1 !important;
+}
+
+.text-white-50 {
+    color: var(--text-muted) !important;
+}
+
+/* Card Surface Overrides: Prevent inherited or hardcoded white panels */
+.bg-white {
+    background-color: var(--glass-surface) !important;
+    color: var(--text-body) !important;
+}
+
+.bg-light, .bg-light-subtle {
+    background-color: rgba(15, 23, 42, 0.6) !important;
+    color: var(--text-body) !important;
+}
+
+/* Profile Details & Data Value Panels */
+.profile-details {
+    color: var(--text-body);
+}
+
+.profile-details .detail-label,
+.profile-details label,
+.detail-label {
+    color: var(--text-labels) !important;
+    font-weight: 500;
+    font-size: 0.8125rem;
+    letter-spacing: 0.015em;
+    opacity: 0.95 !important;
+}
+
+.profile-details .detail-value,
+.detail-value {
+    color: var(--text-main) !important;
+    font-weight: 600;
+    font-size: 0.875rem;
+    letter-spacing: -0.01em;
+}
+
+.profile-details td,
+.profile-details th {
+    color: var(--text-body) !important;
+}
+
+.profile-details .table th {
+    color: var(--text-labels) !important;
+}
+
+/* Enhanced Form Controls & Floating Labels */
+.form-label, label {
+    color: var(--text-labels) !important;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+}
+
+.form-control, .form-select, textarea.form-control {
+    background-color: #0f172a !important;
+    color: #f1f5f9 !important;
+    border-color: rgba(148, 163, 184, 0.25) !important;
+}
+
+.form-control:focus, .form-select:focus {
+    background-color: #1e293b !important;
+    color: #ffffff !important;
+    border-color: var(--accent-cyan) !important;
+    box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.25) !important;
+}
+
+.form-control::placeholder {
+    color: #94a3b8 !important;
+    opacity: 0.75;
+}
+
+.form-text {
+    color: var(--text-muted) !important;
+}
+
+/* High Contrast Table & Data Matrix Legibility */
+.table {
+    --bs-table-color: var(--text-body) !important;
+    --bs-table-bg: transparent !important;
+    color: var(--text-body) !important;
+}
+
+.table th {
+    color: var(--text-labels) !important;
+    background-color: rgba(15, 23, 42, 0.9) !important;
+    font-weight: 700;
+}
+
+.table td {
+    color: var(--text-body) !important;
+}
+
+.table tr:hover td {
+    color: #ffffff !important;
+    background-color: rgba(56, 189, 248, 0.06) !important;
+}
+
+/* Table muted / small subtext */
+.table td .text-muted,
+.table td small {
+    color: var(--text-muted) !important;
+}
+
+.table td strong,
+.table td .fw-bold,
+.table td .fw-semibold {
+    color: var(--text-main) !important;
+}
+
+/* Badges & Status Indicators */
+.badge {
+    letter-spacing: 0.02em;
+    font-weight: 600;
+}
+
+.badge.bg-success-subtle,
+.badge-success {
+    background-color: rgba(52, 211, 153, 0.15) !important;
+    color: #34d399 !important;
+    border: 1px solid rgba(52, 211, 153, 0.35) !important;
+}
+
+.badge.bg-warning-subtle,
+.badge-warning {
+    background-color: rgba(251, 191, 36, 0.15) !important;
+    color: #fbbf24 !important;
+    border: 1px solid rgba(251, 191, 36, 0.35) !important;
+}
+
+.badge.bg-danger-subtle,
+.badge-danger {
+    background-color: rgba(251, 113, 133, 0.15) !important;
+    color: #fb7185 !important;
+    border: 1px solid rgba(251, 113, 133, 0.35) !important;
+}
+
+.badge.bg-primary-subtle,
+.badge.bg-info-subtle,
+.badge-primary,
+.badge-info {
+    background-color: rgba(56, 189, 248, 0.15) !important;
+    color: #38bdf8 !important;
+    border: 1px solid rgba(56, 189, 248, 0.35) !important;
+}
+
+.badge.bg-secondary-subtle,
+.badge-secondary {
+    background-color: rgba(148, 163, 184, 0.15) !important;
+    color: #cbd5e1 !important;
+    border: 1px solid rgba(148, 163, 184, 0.25) !important;
+}
+
+/* Modals & Dropdown Readability */
+.modal-content {
+    background-color: #0b1220 !important;
+    border: 1px solid var(--glass-border) !important;
+    color: var(--text-body) !important;
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.8) !important;
+}
+
+.modal-header {
+    border-bottom: 1px solid var(--glass-border) !important;
+    color: var(--text-main) !important;
+}
+
+.modal-footer {
+    border-top: 1px solid var(--glass-border) !important;
 }
 
 /* ==========================================================================

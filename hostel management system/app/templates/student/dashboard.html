@@ -145,26 +145,26 @@
                 <span class="badge bg-secondary-subtle text-muted">AKTU Enrolled</span>
             </div>
             <div class="card-body">
-                <div class="row g-3 small">
-                    <div class="col-sm-5 text-muted fw-medium">Department / Branch:</div>
-                    <div class="col-sm-7 fw-semibold text-white">{{ student.branch if student else 'N/A' }}</div>
+                <div class="row g-3 small profile-details">
+                    <div class="col-sm-5 detail-label">Department / Branch:</div>
+                    <div class="col-sm-7 detail-value">{{ student.branch if student else 'N/A' }}</div>
 
-                    <div class="col-sm-5 text-muted fw-medium">Year & Semester:</div>
-                    <div class="col-sm-7 fw-semibold text-white">Year {{ student.year if student else '-' }}, Semester {{ student.semester if student else '-' }}</div>
+                    <div class="col-sm-5 detail-label">Year & Semester:</div>
+                    <div class="col-sm-7 detail-value">Year {{ student.year if student else '-' }}, Semester {{ student.semester if student else '-' }}</div>
 
-                    <div class="col-sm-5 text-muted fw-medium">Student Contact:</div>
-                    <div class="col-sm-7 fw-semibold text-white">{{ student.phone if student else '-' }}</div>
+                    <div class="col-sm-5 detail-label">Student Contact:</div>
+                    <div class="col-sm-7 detail-value">{{ student.phone if student else '-' }}</div>
 
-                    <div class="col-sm-5 text-muted fw-medium">Blood Group:</div>
-                    <div class="col-sm-7 fw-semibold text-white">
-                        <span class="badge bg-danger-subtle text-danger">{{ student.blood_group or 'Not recorded' }}</span>
+                    <div class="col-sm-5 detail-label">Blood Group:</div>
+                    <div class="col-sm-7 detail-value">
+                        <span class="badge bg-danger-subtle text-danger px-2.5 py-1 fw-bold">{{ student.blood_group or 'Not recorded' }}</span>
                     </div>
 
-                    <div class="col-sm-5 text-muted fw-medium">Guardian Name & Phone:</div>
-                    <div class="col-sm-7 fw-semibold text-white">{{ student.guardian_name if student else '-' }} ({{ student.guardian_phone if student else '-' }})</div>
+                    <div class="col-sm-5 detail-label">Guardian Name & Phone:</div>
+                    <div class="col-sm-7 detail-value">{{ student.guardian_name if student else '-' }} ({{ student.guardian_phone if student else '-' }})</div>
 
-                    <div class="col-sm-5 text-muted fw-medium">Permanent Address:</div>
-                    <div class="col-sm-7 text-body">{{ student.address if student else '-' }}</div>
+                    <div class="col-sm-5 detail-label">Permanent Address:</div>
+                    <div class="col-sm-7 detail-value">{{ student.address if student else '-' }}</div>
                 </div>
             </div>
         </div>

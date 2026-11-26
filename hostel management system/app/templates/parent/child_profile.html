@@ -87,38 +87,38 @@
                 <h6 class="fw-bold mb-0 text-dark"><i class="fa-solid fa-graduation-cap me-2 text-primary"></i>Academic & Institutional Identity</h6>
             </div>
             <div class="card-body">
-                <div class="row g-3 small">
+                <div class="row g-3 small profile-details">
                     <div class="col-sm-6">
-                        <label class="text-muted d-block">Enrollment Number</label>
-                        <span class="fw-semibold font-monospace fs-6">{{ student.enrollment_no }}</span>
+                        <label class="detail-label d-block">Enrollment Number</label>
+                        <span class="detail-value font-monospace fs-6 text-info">{{ student.enrollment_no }}</span>
                     </div>
                     <div class="col-sm-6">
-                        <label class="text-muted d-block">University Roll Number</label>
-                        <span class="fw-semibold fs-6">{{ student.roll_no or 'N/A' }}</span>
+                        <label class="detail-label d-block">University Roll Number</label>
+                        <span class="detail-value fs-6">{{ student.roll_no or 'N/A' }}</span>
                     </div>
                     <div class="col-sm-6">
-                        <label class="text-muted d-block">Course & Department / Branch</label>
-                        <span class="fw-semibold">{{ student.branch }}</span>
+                        <label class="detail-label d-block">Course & Department / Branch</label>
+                        <span class="detail-value">{{ student.branch }}</span>
                     </div>
                     <div class="col-sm-6">
-                        <label class="text-muted d-block">Academic Year & Semester</label>
-                        <span class="fw-semibold">Year {{ student.year }}, Semester {{ student.semester }}</span>
+                        <label class="detail-label d-block">Academic Year & Semester</label>
+                        <span class="detail-value">Year {{ student.year }}, Semester {{ student.semester }}</span>
                     </div>
                     <div class="col-sm-6">
-                        <label class="text-muted d-block">Student Primary Contact</label>
-                        <span class="fw-semibold">{{ student.phone }}</span>
+                        <label class="detail-label d-block">Student Primary Contact</label>
+                        <span class="detail-value">{{ student.phone }}</span>
                     </div>
                     <div class="col-sm-6">
-                        <label class="text-muted d-block">Institutional Student Email</label>
-                        <span class="fw-semibold">{{ student.user_account.email }}</span>
+                        <label class="detail-label d-block">Institutional Student Email</label>
+                        <span class="detail-value">{{ student.user_account.email }}</span>
                     </div>
                     <div class="col-sm-6">
-                        <label class="text-muted d-block">Gender</label>
-                        <span class="fw-semibold text-capitalize">{{ student.gender }}</span>
+                        <label class="detail-label d-block">Gender</label>
+                        <span class="detail-value text-capitalize">{{ student.gender }}</span>
                     </div>
                     <div class="col-sm-6">
-                        <label class="text-muted d-block">Blood Group</label>
-                        <span class="badge bg-danger-subtle text-danger">{{ student.blood_group or 'Not Recorded' }}</span>
+                        <label class="detail-label d-block">Blood Group</label>
+                        <span class="badge bg-danger-subtle text-danger px-2.5 py-1 fw-bold">{{ student.blood_group or 'Not Recorded' }}</span>
                     </div>
                 </div>
             </div>
