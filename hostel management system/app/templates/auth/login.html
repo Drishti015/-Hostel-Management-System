@@ -1,63 +1,79 @@
 {% extends 'base.html' %}
 
-{% block title %}Sign In{% endblock %}
+{% block title %}Sign In | HostelEase HMS{% endblock %}
 
 {% block content %}
 <div class="row justify-content-center py-5">
-    <div class="col-md-6 col-lg-5 col-xl-4">
-        <div class="card border-0 shadow-lg rounded-4 overflow-hidden">
-            <div class="p-4 p-md-5 bg-white">
+    <div class="col-md-7 col-lg-5 col-xl-4">
+        <div class="card border-0 shadow-lg rounded-4 overflow-hidden bg-white">
+            <div class="p-4 p-md-5">
                 <div class="text-center mb-4">
-                    <div class="sidebar-brand-icon mx-auto mb-3" style="width: 48px; height: 48px; font-size: 1.5rem;">
-                        <i class="fa-solid fa-lock"></i>
+                    <div class="sidebar-brand-icon mx-auto mb-3"
+                        style="width: 52px; height: 52px; font-size: 1.5rem; border-radius: 12px;">
+                        <i class="fa-solid fa-hotel"></i>
                     </div>
-                    <h3 class="fw-bold text-dark">Portal Sign In</h3>
-                    <p class="text-muted small">Select your credentials to access your dashboard</p>
+                    <h3 class="fw-bold text-dark mb-1">Portal Sign In</h3>
+                    <p class="text-muted small">Sign in to access your HostelEase HMS portal</p>
                 </div>
 
                 <form method="POST" action="{{ url_for('auth.login') }}">
-                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
 
                     <div class="mb-3">
-                        <label for="identity" class="form-label fw-semibold text-secondary small">Username or Email</label>
+                        <label for="identity" class="form-label small fw-semibold text-secondary">Username or
+                            Email</label>
                         <div class="input-group">
-                            <span class="input-group-text bg-light border-end-0"><i class="fa-regular fa-user text-muted"></i></span>
-                            <input type="text" class="form-control border-start-0" id="identity" name="identity" placeholder="e.g. admin or rahul_sharma" required autofocus>
+                            <span class="input-group-text bg-light border-end-0 text-muted"><i
+                                    class="fa-regular fa-user"></i></span>
+                            <input type="text" class="form-control border-start-0 ps-0" id="identity" name="identity"
+                                placeholder="e.g. admin or rahul_sharma" required autofocus>
                         </div>
                     </div>
 
-                    <div class="mb-4">
-                        <label for="password" class="form-label fw-semibold text-secondary small">Password</label>
+                    <div class="mb-3">
+                        <div class="d-flex justify-content-between align-items-center mb-1">
+                            <label for="password"
+                                class="form-label small fw-semibold text-secondary mb-0">Password</label>
+                        </div>
                         <div class="input-group">
-                            <span class="input-group-text bg-light border-end-0"><i class="fa-solid fa-key text-muted"></i></span>
-                            <input type="password" class="form-control border-start-0" id="password" name="password" placeholder="••••••••" required>
+                            <span class="input-group-text bg-light border-end-0 text-muted"><i
+                                    class="fa-solid fa-lock"></i></span>
+                            <input type="password" class="form-control border-start-0 ps-0" id="password"
+                                name="password" placeholder="••••••••" required>
                         </div>
                     </div>
 
                     <div class="d-flex justify-content-between align-items-center mb-4">
                         <div class="form-check">
                             <input class="form-check-input" type="checkbox" id="remember" name="remember">
-                            <label class="form-check-label small text-muted" for="remember">Remember me</label>
+                            <label class="form-check-label small text-muted" for="remember">Remember session</label>
                         </div>
                     </div>
 
-                    <button type="submit" class="btn btn-primary-custom w-100 py-2">
-                        <i class="fa-solid fa-right-to-bracket me-2"></i>Sign In
+                    <button type="submit" class="btn btn-primary-custom w-100 py-2.5 shadow-sm">
+                        <i class="fa-solid fa-right-to-bracket me-2"></i>Sign In to Dashboard
                     </button>
                 </form>
 
                 <div class="mt-4 pt-3 border-top text-center">
-                    <p class="text-muted small mb-0">New student? <a href="{{ url_for('auth.register') }}" class="text-primary fw-semibold text-decoration-none">Register here</a></p>
+                    <p class="text-muted small mb-0">New resident? <a href="{{ url_for('auth.register') }}"
+                            class="text-primary fw-semibold text-decoration-none">Register student account</a></p>
                 </div>
 
                 <!-- Demonstration Credentials helper for Viva -->
                 <div class="mt-4 p-3 bg-light rounded-3 border">
-                    <div class="small fw-bold text-secondary mb-1"><i class="fa-solid fa-circle-info text-info me-1"></i> Demo Login Credentials (AKTU Viva)</div>
-                    <div class="small text-muted font-monospace">
-                        <strong>Admin:</strong> admin / Admin@123<br>
-                        <strong>Warden:</strong> warden_boys / Warden@123<br>
-                        <strong>Student:</strong> rahul_sharma / Student@123<br>
-                        <strong>Security Guard:</strong> guard_main / Guard@123
+                    <div class="d-flex align-items-center justify-content-between mb-2">
+                        <span class="small fw-bold text-dark"><i
+                                class="fa-solid fa-shield-halved text-primary me-1"></i> Quick Demo Logins</span>
+                        <span class="badge bg-white text-secondary border font-monospace"
+                            style="font-size: 0.65rem;">AKTU Viva</span>
+                    </div>
+                    <div class="small text-muted font-monospace lh-lg" style="font-size: 0.78rem;">
+                        <div><strong class="text-dark">Admin:</strong> admin / Admin@123</div>
+                        <div><strong class="text-dark">Warden:</strong> warden_boys / Warden@123</div>
+                        <div><strong class="text-dark">Student:</strong> rahul_sharma / Student@123</div>
+                        <div><strong class="text-dark">Security:</strong> guard_main / Guard@123</div>
+                        <div><strong class="text-dark">Mess Mgr:</strong> mess_manager / Manager@123</div>
                     </div>
                 </div>
 
@@ -66,4 +82,3 @@
     </div>
 </div>
 {% endblock %}
-

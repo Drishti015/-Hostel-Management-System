@@ -1,153 +1,189 @@
 {% extends 'base.html' %}
 
-{% block title %}Admin Dashboard{% endblock %}
+{% block title %}Admin Overview | HostelEase HMS{% endblock %}
 
 {% block content %}
-<div class="d-flex justify-content-between align-items-center mb-4">
+<!-- Top Header Bar -->
+<div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4">
     <div>
-        <h2 class="fw-bold text-dark mb-1">Administrative Overview</h2>
-        <p class="text-muted small mb-0">Real-time status of hostel occupancy, finance, attendance, and grievances</p>
+        <div class="d-flex align-items-center gap-2 mb-1">
+            <h2 class="fw-bold text-dark mb-0">System Administration Desk</h2>
+            <span class="badge bg-primary-subtle text-primary border border-primary-subtle">Executive Control</span>
+        </div>
+        <p class="text-muted small mb-0">Real-time status of hostel occupancy, fiscal balance, active leaves, and grievances</p>
     </div>
-    <div class="d-flex gap-2">
-        <span class="badge bg-white text-secondary border px-3 py-2 d-flex align-items-center gap-2">
-            <i class="fa-regular fa-clock text-primary"></i> Last synced: Real-time
+    <div class="d-flex align-items-center gap-2 flex-wrap">
+        <a href="{{ url_for('admin.add_student') }}" class="btn btn-primary-custom btn-sm">
+            <i class="fa-solid fa-user-plus me-1"></i>New Student
+        </a>
+        <a href="{{ url_for('admin.new_allocation') }}" class="btn btn-outline-secondary btn-sm">
+            <i class="fa-solid fa-key me-1"></i>Allocate Bed
+        </a>
+        <span class="badge bg-white text-secondary border px-3 py-2 d-none d-sm-inline-flex align-items-center gap-2 shadow-xs">
+            <span class="badge-status-dot bg-success animate-pulse"></span> Live Supabase Synced
         </span>
     </div>
 </div>
 
-<!-- Key Stat Cards -->
+<!-- Key Stat Cards (5 Columns) -->
 <div class="row g-3 mb-4">
+    <!-- Stat 1: Students -->
     <div class="col-sm-6 col-xl">
         <div class="stat-card">
-            <div class="d-flex justify-content-between align-items-center">
-                <div>
-                    <div class="stat-title">Active Residents</div>
-                    <div class="stat-value">{{ total_students }}</div>
+            <div>
+                <div class="stat-header">
+                    <span class="stat-title">Active Residents</span>
+                    <div class="stat-icon-wrapper bg-primary-subtle text-primary">
+                        <i class="fa-solid fa-user-graduate"></i>
+                    </div>
                 </div>
-                <div class="stat-icon-wrapper bg-primary-subtle text-primary">
-                    <i class="fa-solid fa-user-graduate"></i>
-                </div>
+                <div class="stat-value">{{ total_students }}</div>
             </div>
-            <div class="small text-muted mt-2">
-                Across {{ total_hostels }} Hostel Blocks
+            <div class="stat-subtitle">
+                <i class="fa-solid fa-building text-secondary me-1"></i>
+                <span>Across {{ total_hostels }} Hostel Blocks</span>
             </div>
         </div>
     </div>
 
+    <!-- Stat 2: Bed Occupancy -->
     <div class="col-sm-6 col-xl">
         <div class="stat-card">
-            <div class="d-flex justify-content-between align-items-center">
-                <div>
-                    <div class="stat-title">Bed Occupancy</div>
-                    <div class="stat-value text-success">{{ occupancy_rate }}%</div>
+            <div>
+                <div class="stat-header">
+                    <span class="stat-title">Bed Occupancy</span>
+                    <div class="stat-icon-wrapper bg-success-subtle text-success">
+                        <i class="fa-solid fa-bed"></i>
+                    </div>
                 </div>
-                <div class="stat-icon-wrapper bg-success-subtle text-success">
-                    <i class="fa-solid fa-bed"></i>
-                </div>
+                <div class="stat-value text-success">{{ occupancy_rate }}%</div>
             </div>
-            <div class="small text-muted mt-2">
-                {{ occupied_beds }} Occupied / {{ available_beds }} Free
+            <div class="stat-subtitle">
+                <span class="fw-semibold text-dark">{{ occupied_beds }}</span> occupied &bull; {{ available_beds }} free
             </div>
         </div>
     </div>
 
+    <!-- Stat 3: Fee Receipts -->
     <div class="col-sm-6 col-xl">
         <div class="stat-card">
-            <div class="d-flex justify-content-between align-items-center">
-                <div>
-                    <div class="stat-title">Fee Receipts</div>
-                    <div class="stat-value text-primary">₹{{ "{:,.0f}".format(total_fees_collected) }}</div>
+            <div>
+                <div class="stat-header">
+                    <span class="stat-title">Fee Receipts</span>
+                    <div class="stat-icon-wrapper bg-info-subtle text-info">
+                        <i class="fa-solid fa-indian-rupee-sign"></i>
+                    </div>
                 </div>
-                <div class="stat-icon-wrapper bg-info-subtle text-info">
-                    <i class="fa-solid fa-indian-rupee-sign"></i>
-                </div>
+                <div class="stat-value text-primary">₹{{ "{:,.0f}".format(total_fees_collected) }}</div>
             </div>
-            <div class="small text-muted mt-2">
-                Total verified fee collections
+            <div class="stat-subtitle text-truncate">
+                <i class="fa-solid fa-circle-check text-success me-1"></i>
+                <span>Verified ledger entries</span>
             </div>
         </div>
     </div>
 
+    <!-- Stat 4: Pending Leave -->
     <div class="col-sm-6 col-xl">
         <div class="stat-card">
-            <div class="d-flex justify-content-between align-items-center">
-                <div>
-                    <div class="stat-title">Pending Leave</div>
-                    <div class="stat-value text-warning">{{ pending_leaves }}</div>
+            <div>
+                <div class="stat-header">
+                    <span class="stat-title">Pending Leave</span>
+                    <div class="stat-icon-wrapper bg-warning-subtle text-warning">
+                        <i class="fa-solid fa-calendar-days"></i>
+                    </div>
                 </div>
-                <div class="stat-icon-wrapper bg-warning-subtle text-warning">
-                    <i class="fa-solid fa-calendar-days"></i>
-                </div>
+                <div class="stat-value text-warning">{{ pending_leaves }}</div>
             </div>
-            <div class="small text-muted mt-2">
-                Out-pass requests pending
+            <div class="stat-subtitle">
+                <a href="{{ url_for('admin.leaves_list') }}" class="text-decoration-none">
+                    Review out-passes &rarr;
+                </a>
             </div>
         </div>
     </div>
 
+    <!-- Stat 5: Open Complaints -->
     <div class="col-sm-6 col-xl">
         <div class="stat-card">
-            <div class="d-flex justify-content-between align-items-center">
-                <div>
-                    <div class="stat-title">Open Complaints</div>
-                    <div class="stat-value text-danger">{{ pending_complaints }}</div>
+            <div>
+                <div class="stat-header">
+                    <span class="stat-title">Open Grievances</span>
+                    <div class="stat-icon-wrapper bg-danger-subtle text-danger">
+                        <i class="fa-solid fa-triangle-exclamation"></i>
+                    </div>
                 </div>
-                <div class="stat-icon-wrapper bg-danger-subtle text-danger">
-                    <i class="fa-solid fa-triangle-exclamation"></i>
-                </div>
+                <div class="stat-value text-danger">{{ pending_complaints }}</div>
             </div>
-            <div class="small text-muted mt-2">
-                Maintenance tickets open
+            <div class="stat-subtitle">
+                <a href="{{ url_for('admin.complaints_list') }}" class="text-decoration-none text-danger">
+                    View maintenance &rarr;
+                </a>
             </div>
         </div>
     </div>
 </div>
 
-<!-- MODULE 9: Chart.js Analytics Row -->
+<!-- Chart.js Analytics Row -->
 <div class="row g-4 mb-4">
     <!-- Occupancy Bar Chart -->
     <div class="col-lg-7">
-        <div class="card border-0 shadow-sm rounded-4 p-4 bg-white h-100">
-            <div class="d-flex justify-content-between align-items-center mb-3">
-                <h5 class="fw-bold text-dark mb-0"><i class="fa-solid fa-chart-column text-primary me-2"></i>Hostel Occupancy Distribution</h5>
+        <div class="card h-100">
+            <div class="card-header">
+                <div class="d-flex align-items-center gap-2">
+                    <i class="fa-solid fa-chart-column text-primary"></i>
+                    <span>Hostel Occupancy Distribution</span>
+                </div>
                 <span class="badge bg-light text-muted border">Beds per Block</span>
             </div>
-            <div style="height: 280px; position: relative;">
-                <canvas id="occupancyChart"></canvas>
+            <div class="card-body">
+                <div style="height: 290px; position: relative;">
+                    <canvas id="occupancyChart"></canvas>
+                </div>
             </div>
         </div>
     </div>
 
     <!-- Grievance Breakdown Doughnut Chart -->
     <div class="col-lg-5">
-        <div class="card border-0 shadow-sm rounded-4 p-4 bg-white h-100">
-            <div class="d-flex justify-content-between align-items-center mb-3">
-                <h5 class="fw-bold text-dark mb-0"><i class="fa-solid fa-chart-pie text-warning me-2"></i>Grievances by Category</h5>
+        <div class="card h-100">
+            <div class="card-header">
+                <div class="d-flex align-items-center gap-2">
+                    <i class="fa-solid fa-chart-pie text-warning"></i>
+                    <span>Grievances by Category</span>
+                </div>
                 <span class="badge bg-light text-muted border">Active Tickets</span>
             </div>
-            <div style="height: 280px; position: relative;">
-                <canvas id="complaintsChart"></canvas>
+            <div class="card-body">
+                <div style="height: 290px; position: relative;">
+                    <canvas id="complaintsChart"></canvas>
+                </div>
             </div>
         </div>
     </div>
 </div>
 
-<!-- Tables Row -->
+<!-- Data Tables Row -->
 <div class="row g-4">
     <!-- Recent Students Table -->
     <div class="col-lg-7">
-        <div class="card border-0 shadow-sm rounded-4 p-3 bg-white">
-            <div class="d-flex justify-content-between align-items-center mb-3 px-2 pt-2">
-                <h5 class="fw-bold text-dark mb-0"><i class="fa-solid fa-users text-primary me-2"></i>Recently Registered Students</h5>
-                <a href="{{ url_for('admin.students_list') }}" class="btn btn-sm btn-outline-primary">View All</a>
+        <div class="card">
+            <div class="card-header">
+                <div class="d-flex align-items-center gap-2">
+                    <i class="fa-solid fa-users text-primary"></i>
+                    <span>Recently Registered Students</span>
+                </div>
+                <a href="{{ url_for('admin.students_list') }}" class="btn btn-sm btn-outline-secondary">
+                    View Directory &rarr;
+                </a>
             </div>
             <div class="table-responsive">
-                <table class="table table-hover align-middle mb-0">
-                    <thead class="table-light">
+                <table class="table-modern">
+                    <thead>
                         <tr>
                             <th>Student</th>
-                            <th>Enrollment</th>
-                            <th>Branch</th>
+                            <th>Enrollment No</th>
+                            <th>Branch / Year</th>
                             <th>Status</th>
                         </tr>
                     </thead>
@@ -155,18 +191,33 @@
                         {% for s in recent_students %}
                             <tr>
                                 <td>
-                                    <div class="fw-semibold text-dark">{{ s.full_name }}</div>
-                                    <small class="text-muted">{{ s.phone }}</small>
+                                    <div class="d-flex align-items-center gap-2">
+                                        <div class="user-avatar" style="width: 32px; height: 32px; font-size: 0.8rem;">
+                                            {{ s.full_name[:1].upper() }}
+                                        </div>
+                                        <div>
+                                            <div class="fw-semibold text-dark small">{{ s.full_name }}</div>
+                                            <small class="text-muted" style="font-size: 0.75rem;">{{ s.phone }}</small>
+                                        </div>
+                                    </div>
                                 </td>
-                                <td><span class="font-monospace small">{{ s.enrollment_no }}</span></td>
-                                <td>{{ s.branch }} (Yr {{ s.year }})</td>
                                 <td>
-                                    <span class="badge-status badge-{{ s.status }}">{{ s.status|capitalize }}</span>
+                                    <span class="badge bg-light text-dark border font-monospace small">{{ s.enrollment_no }}</span>
+                                </td>
+                                <td class="small">{{ s.branch }} (Yr {{ s.year }})</td>
+                                <td>
+                                    <span class="badge-status badge-{{ s.status }}">
+                                        <span class="badge-status-dot {% if s.status == 'active' %}bg-success{% else %}bg-secondary{% endif %}"></span>
+                                        {{ s.status|capitalize }}
+                                    </span>
                                 </td>
                             </tr>
                         {% else %}
                             <tr>
-                                <td colspan="4" class="text-center py-4 text-muted">No student records yet.</td>
+                                <td colspan="4" class="text-center py-4 text-muted small">
+                                    <i class="fa-regular fa-folder-open d-block fs-4 mb-2 text-secondary opacity-50"></i>
+                                    No student records registered yet.
+                                </td>
                             </tr>
                         {% endfor %}
                     </tbody>
@@ -177,24 +228,40 @@
 
     <!-- Recent Complaints Table -->
     <div class="col-lg-5">
-        <div class="card border-0 shadow-sm rounded-4 p-3 bg-white">
-            <div class="d-flex justify-content-between align-items-center mb-3 px-2 pt-2">
-                <h5 class="fw-bold text-dark mb-0"><i class="fa-solid fa-bell text-danger me-2"></i>Active Complaints</h5>
-                <a href="{{ url_for('admin.complaints_list') }}" class="btn btn-sm btn-outline-secondary">View All</a>
+        <div class="card">
+            <div class="card-header">
+                <div class="d-flex align-items-center gap-2">
+                    <i class="fa-solid fa-bell text-danger"></i>
+                    <span>Active Grievances</span>
+                </div>
+                <a href="{{ url_for('admin.complaints_list') }}" class="btn btn-sm btn-outline-secondary">
+                    Manage All &rarr;
+                </a>
             </div>
             <div class="list-group list-group-flush">
                 {% for c in recent_complaints %}
-                    <div class="list-group-item px-2 py-3">
-                        <div class="d-flex justify-content-between align-items-start mb-1">
-                            <a href="{{ url_for('admin.view_complaint', id=c.id) }}" class="fw-semibold text-dark text-decoration-none">{{ c.title }}</a>
-                            <span class="badge-status badge-{{ c.status }}">{{ c.status|replace('_', ' ')|capitalize }}</span>
+                    <div class="list-group-item px-3 py-3 border-bottom">
+                        <div class="d-flex justify-content-between align-items-start mb-1 gap-2">
+                            <a href="{{ url_for('admin.view_complaint', id=c.id) }}" class="fw-semibold text-dark small text-decoration-none">
+                                {{ c.title }}
+                            </a>
+                            <span class="badge-status badge-{{ c.status }}" style="font-size: 0.7rem;">
+                                {{ c.status|replace('_', ' ')|capitalize }}
+                            </span>
                         </div>
-                        <small class="text-muted d-block">
-                            Category: {{ c.category|capitalize }} | Priority: {{ c.priority|capitalize }}
-                        </small>
+                        <div class="d-flex align-items-center gap-2 text-muted" style="font-size: 0.75rem;">
+                            <span class="badge bg-light text-secondary border py-0 px-1">{{ c.category|capitalize }}</span>
+                            <span>&bull;</span>
+                            <span class="text-{% if c.priority == 'high' or c.priority == 'urgent' %}danger fw-bold{% else %}secondary{% endif %}">
+                                Priority: {{ c.priority|capitalize }}
+                            </span>
+                        </div>
                     </div>
                 {% else %}
-                    <div class="text-center py-4 text-muted">No active grievances filed.</div>
+                    <div class="text-center py-5 text-muted small">
+                        <i class="fa-solid fa-circle-check fs-3 d-block mb-2 text-success opacity-75"></i>
+                        Zero active grievances. All student maintenance requests resolved!
+                    </div>
                 {% endfor %}
             </div>
         </div>
@@ -234,9 +301,13 @@ document.addEventListener('DOMContentLoaded', function () {
                         responsive: true,
                         maintainAspectRatio: false,
                         plugins: {
-                            legend: { position: 'top' }
+                            legend: {
+                                position: 'top',
+                                labels: { font: { family: 'Inter', size: 12, weight: 500 } }
+                            }
                         },
                         scales: {
+                            x: { grid: { display: false } },
                             y: { beginAtZero: true, ticks: { precision: 0 } }
                         }
                     }
@@ -259,8 +330,12 @@ document.addEventListener('DOMContentLoaded', function () {
                         responsive: true,
                         maintainAspectRatio: false,
                         plugins: {
-                            legend: { position: 'bottom' }
-                        }
+                            legend: {
+                                position: 'bottom',
+                                labels: { font: { family: 'Inter', size: 12, weight: 500 } }
+                            }
+                        },
+                        cutout: '68%'
                     }
                 });
             }

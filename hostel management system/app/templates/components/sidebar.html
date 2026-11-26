@@ -1,221 +1,244 @@
 <aside class="sidebar">
     {% set ep = request.endpoint or '' %}
     {% set bp = request.blueprint or '' %}
+    
+    <!-- Sidebar Header & Branding -->
     <div class="sidebar-header">
-        <div class="sidebar-brand-icon">
-            <i class="fa-solid fa-hotel"></i>
-        </div>
-        <div class="sidebar-brand-text">{{ app_name }}</div>
+        <a href="{% if current_user.is_admin %}{{ url_for('admin.dashboard') }}{% elif current_user.is_warden %}{{ url_for('warden.dashboard') }}{% elif current_user.is_student %}{{ url_for('student.dashboard') }}{% elif current_user.is_parent %}{{ url_for('parent.dashboard') }}{% elif current_user.is_security %}{{ url_for('security.dashboard') }}{% elif current_user.is_mess_manager %}{{ url_for('mess_manager.dashboard') }}{% elif current_user.is_mess_staff %}{{ url_for('mess_staff.dashboard') }}{% else %}{{ url_for('main.index') }}{% endif %}" class="sidebar-brand">
+            <div class="sidebar-brand-icon">
+                <i class="fa-solid fa-hotel"></i>
+            </div>
+            <div class="sidebar-brand-text">
+                <div class="sidebar-brand-title">{{ app_name }}</div>
+                <div class="sidebar-brand-badge">Enterprise HMS</div>
+            </div>
+        </a>
+        <button class="btn btn-link text-white-50 p-0 d-lg-none" id="sidebarClose" type="button" aria-label="Close sidebar">
+            <i class="fa-solid fa-xmark fs-5"></i>
+        </button>
     </div>
 
+    <!-- Navigation Menu Items -->
     <div class="sidebar-nav">
         {% if current_user.is_admin %}
             <!-- ADMIN NAVIGATION -->
             <div class="nav-section-title">Core Management</div>
             <a href="{{ url_for('admin.dashboard') }}" class="sidebar-link {% if ep == 'admin.dashboard' %}active{% endif %}">
-                <i class="fa-solid fa-chart-line"></i> Dashboard
+                <i class="fa-solid fa-chart-line"></i> <span>Dashboard</span>
             </a>
             <a href="{{ url_for('admin.students_list') }}" class="sidebar-link {% if 'student' in ep and bp == 'admin' %}active{% endif %}">
-                <i class="fa-solid fa-user-graduate"></i> Students
+                <i class="fa-solid fa-user-graduate"></i> <span>Students</span>
             </a>
             <a href="{{ url_for('admin.parents_list') }}" class="sidebar-link {% if 'parent' in ep and bp == 'admin' %}active{% endif %}">
-                <i class="fa-solid fa-users"></i> Parents & Guardians
+                <i class="fa-solid fa-users"></i> <span>Parents & Guardians</span>
             </a>
 
-            <div class="nav-section-title">Hostel & Rooms</div>
+            <div class="nav-section-title">Hostel & Facilities</div>
             <a href="{{ url_for('admin.hostels_list') }}" class="sidebar-link {% if 'hostel' in ep and bp == 'admin' %}active{% endif %}">
-                <i class="fa-solid fa-building"></i> Hostels & Blocks
+                <i class="fa-solid fa-building"></i> <span>Hostels & Blocks</span>
             </a>
             <a href="{{ url_for('admin.rooms_list') }}" class="sidebar-link {% if 'room' in ep and bp == 'admin' %}active{% endif %}">
-                <i class="fa-solid fa-door-open"></i> Rooms & Beds
+                <i class="fa-solid fa-door-open"></i> <span>Rooms & Beds</span>
             </a>
             <a href="{{ url_for('admin.allocations_list') }}" class="sidebar-link {% if 'allocation' in ep and bp == 'admin' %}active{% endif %}">
-                <i class="fa-solid fa-key"></i> Bed Allocations
+                <i class="fa-solid fa-key"></i> <span>Bed Allocations</span>
             </a>
 
-            <div class="nav-section-title">Operations</div>
+            <div class="nav-section-title">Campus Operations</div>
             <a href="{{ url_for('admin.leaves_list') }}" class="sidebar-link {% if 'leave' in ep and bp == 'admin' %}active{% endif %}">
-                <i class="fa-solid fa-calendar-days"></i> Leave Applications
+                <i class="fa-solid fa-calendar-days"></i> <span>Leave Applications</span>
             </a>
             <a href="{{ url_for('admin.outpasses_list') }}" class="sidebar-link {% if 'outpass' in ep and bp == 'admin' %}active{% endif %}">
-                <i class="fa-solid fa-qrcode"></i> Digital Out-Passes
+                <i class="fa-solid fa-qrcode"></i> <span>Digital Out-Passes</span>
             </a>
             <a href="{{ url_for('admin.gate_transactions') }}" class="sidebar-link {% if 'gate' in ep and bp == 'admin' %}active{% endif %}">
-                <i class="fa-solid fa-door-open"></i> Gate Security Logs
+                <i class="fa-solid fa-shield-halved"></i> <span>Gate Security Logs</span>
             </a>
             <a href="{{ url_for('admin.fees_list') }}" class="sidebar-link {% if 'fee' in ep and bp == 'admin' %}active{% endif %}">
-                <i class="fa-solid fa-receipt"></i> Fee Records
+                <i class="fa-solid fa-receipt"></i> <span>Fee Records</span>
             </a>
             <a href="{{ url_for('admin.mess_dashboard') }}" class="sidebar-link {% if 'mess' in ep and bp == 'admin' %}active{% endif %}">
-                <i class="fa-solid fa-utensils"></i> Mess Management
+                <i class="fa-solid fa-utensils"></i> <span>Mess Management</span>
             </a>
             <a href="{{ url_for('admin.attendance_list') }}" class="sidebar-link {% if 'attendance' in ep and bp == 'admin' %}active{% endif %}">
-                <i class="fa-solid fa-clipboard-user"></i> Attendance Logs
+                <i class="fa-solid fa-clipboard-user"></i> <span>Attendance Logs</span>
             </a>
             <a href="{{ url_for('admin.complaints_list') }}" class="sidebar-link {% if 'complaint' in ep and bp == 'admin' %}active{% endif %}">
-                <i class="fa-solid fa-triangle-exclamation"></i> Grievances
+                <i class="fa-solid fa-triangle-exclamation"></i> <span>Grievances</span>
             </a>
             <a href="{{ url_for('admin.notices_list') }}" class="sidebar-link {% if 'notice' in ep and bp == 'admin' %}active{% endif %}">
-                <i class="fa-solid fa-bullhorn"></i> Bulletins & Notices
+                <i class="fa-solid fa-bullhorn"></i> <span>Bulletins & Notices</span>
             </a>
 
         {% elif current_user.is_warden %}
             <!-- WARDEN NAVIGATION -->
             <div class="nav-section-title">Warden Desk</div>
             <a href="{{ url_for('warden.dashboard') }}" class="sidebar-link {% if ep == 'warden.dashboard' %}active{% endif %}">
-                <i class="fa-solid fa-chart-line"></i> Dashboard
+                <i class="fa-solid fa-chart-line"></i> <span>Dashboard</span>
             </a>
             <a href="{{ url_for('warden.leaves_list') }}" class="sidebar-link {% if 'leave' in ep and bp == 'warden' %}active{% endif %}">
-                <i class="fa-solid fa-envelope-open-text"></i> Leave Requests
+                <i class="fa-solid fa-envelope-open-text"></i> <span>Leave Requests</span>
             </a>
             <a href="{{ url_for('warden.outpasses_list') }}" class="sidebar-link {% if 'outpass' in ep and bp == 'warden' %}active{% endif %}">
-                <i class="fa-solid fa-id-card-clip"></i> Out-Pass Management
+                <i class="fa-solid fa-id-card-clip"></i> <span>Out-Pass Management</span>
             </a>
             <a href="{{ url_for('warden.attendance_view') }}" class="sidebar-link {% if 'attendance' in ep and bp == 'warden' %}active{% endif %}">
-                <i class="fa-solid fa-clipboard-check"></i> Mark Attendance
+                <i class="fa-solid fa-clipboard-check"></i> <span>Mark Attendance</span>
             </a>
             <a href="{{ url_for('warden.complaints_list') }}" class="sidebar-link {% if 'complaint' in ep and bp == 'warden' %}active{% endif %}">
-                <i class="fa-solid fa-triangle-exclamation"></i> Resolve Grievances
+                <i class="fa-solid fa-triangle-exclamation"></i> <span>Resolve Grievances</span>
             </a>
             <a href="{{ url_for('warden.notices_list') }}" class="sidebar-link {% if 'notice' in ep and bp == 'warden' %}active{% endif %}">
-                <i class="fa-solid fa-bullhorn"></i> Post Notices
+                <i class="fa-solid fa-bullhorn"></i> <span>Post Notices</span>
             </a>
             <a href="{{ url_for('warden.parent_inquiries') }}" class="sidebar-link {% if 'inquir' in ep and bp == 'warden' %}active{% endif %}">
-                <i class="fa-solid fa-comments"></i> Parent Inquiries
+                <i class="fa-solid fa-comments"></i> <span>Parent Inquiries</span>
             </a>
             <a href="{{ url_for('warden.mess_view') }}" class="sidebar-link {% if 'mess' in ep and bp == 'warden' %}active{% endif %}">
-                <i class="fa-solid fa-utensils"></i> Mess Monitoring
+                <i class="fa-solid fa-utensils"></i> <span>Mess Monitoring</span>
             </a>
 
         {% elif current_user.is_security %}
             <!-- SECURITY GUARD NAVIGATION -->
             <div class="nav-section-title">Security Gate Desk</div>
             <a href="{{ url_for('security.dashboard') }}" class="sidebar-link {% if ep == 'security.dashboard' %}active{% endif %}">
-                <i class="fa-solid fa-chart-line"></i> Station Overview
+                <i class="fa-solid fa-chart-line"></i> <span>Station Overview</span>
             </a>
             <a href="{{ url_for('security.scan_terminal') }}" class="sidebar-link {% if ep == 'security.scan_terminal' %}active{% endif %}">
-                <i class="fa-solid fa-qrcode"></i> Scan QR Terminal
+                <i class="fa-solid fa-qrcode"></i> <span>Scan QR Terminal</span>
             </a>
             <a href="{{ url_for('security.outside_list') }}" class="sidebar-link {% if ep == 'security.outside_list' %}active{% endif %}">
-                <i class="fa-solid fa-person-walking-arrow-right"></i> Students Outside
+                <i class="fa-solid fa-person-walking-arrow-right"></i> <span>Students Outside</span>
             </a>
             <a href="{{ url_for('security.transactions_list') }}" class="sidebar-link {% if ep == 'security.transactions_list' %}active{% endif %}">
-                <i class="fa-solid fa-clock-rotate-left"></i> Gate Activity Log
+                <i class="fa-solid fa-clock-rotate-left"></i> <span>Gate Activity Log</span>
             </a>
 
         {% elif current_user.is_student %}
             <!-- STUDENT NAVIGATION -->
             <div class="nav-section-title">Student Portal</div>
             <a href="{{ url_for('student.dashboard') }}" class="sidebar-link {% if ep == 'student.dashboard' %}active{% endif %}">
-                <i class="fa-solid fa-chart-pie"></i> Overview
+                <i class="fa-solid fa-chart-pie"></i> <span>Overview</span>
             </a>
             <a href="{{ url_for('student.leaves_list') }}" class="sidebar-link {% if 'leave' in ep and bp == 'student' %}active{% endif %}">
-                <i class="fa-solid fa-calendar-days"></i> Leave Application
+                <i class="fa-solid fa-calendar-days"></i> <span>Leave Application</span>
             </a>
             <a href="{{ url_for('student.outpasses_list') }}" class="sidebar-link {% if 'outpass' in ep and bp == 'student' %}active{% endif %}">
-                <i class="fa-solid fa-qrcode"></i> Digital Out-Pass
+                <i class="fa-solid fa-qrcode"></i> <span>Digital Out-Pass</span>
             </a>
             <a href="{{ url_for('student.fees_view') }}" class="sidebar-link {% if 'fee' in ep and bp == 'student' %}active{% endif %}">
-                <i class="fa-solid fa-file-invoice-dollar"></i> Fee Dues & Receipts
+                <i class="fa-solid fa-file-invoice-dollar"></i> <span>Fee Dues & Receipts</span>
             </a>
             <a href="{{ url_for('student.attendance_view') }}" class="sidebar-link {% if 'attendance' in ep and bp == 'student' %}active{% endif %}">
-                <i class="fa-solid fa-calendar-check"></i> My Attendance
+                <i class="fa-solid fa-calendar-check"></i> <span>My Attendance</span>
             </a>
             <a href="{{ url_for('student.complaints_list') }}" class="sidebar-link {% if 'complaint' in ep and bp == 'student' %}active{% endif %}">
-                <i class="fa-solid fa-circle-question"></i> Grievances
+                <i class="fa-solid fa-circle-question"></i> <span>Grievances</span>
             </a>
             <a href="{{ url_for('student.notices_view') }}" class="sidebar-link {% if 'notice' in ep and bp == 'student' %}active{% endif %}">
-                <i class="fa-solid fa-bullhorn"></i> Bulletins & Notices
+                <i class="fa-solid fa-bullhorn"></i> <span>Bulletins & Notices</span>
             </a>
             <a href="{{ url_for('student.mess_dashboard') }}" class="sidebar-link {% if 'mess' in ep and bp == 'student' %}active{% endif %}">
-                <i class="fa-solid fa-utensils"></i> Mess & Dining
+                <i class="fa-solid fa-utensils"></i> <span>Mess & Dining</span>
             </a>
 
         {% elif current_user.is_parent %}
             <!-- PARENT NAVIGATION -->
             <div class="nav-section-title">Parent Portal</div>
             <a href="{{ url_for('parent.dashboard') }}" class="sidebar-link {% if ep == 'parent.dashboard' %}active{% endif %}">
-                <i class="fa-solid fa-chart-line"></i> Dashboard
+                <i class="fa-solid fa-chart-line"></i> <span>Dashboard</span>
             </a>
             <a href="{{ url_for('parent.child_profile') }}" class="sidebar-link {% if ep == 'parent.child_profile' %}active{% endif %}">
-                <i class="fa-solid fa-user-graduate"></i> My Child
+                <i class="fa-solid fa-user-graduate"></i> <span>My Child</span>
             </a>
             <a href="{{ url_for('parent.leaves_list') }}" class="sidebar-link {% if 'leave' in ep and bp == 'parent' %}active{% endif %}">
-                <i class="fa-solid fa-calendar-days"></i> Leave Requests
+                <i class="fa-solid fa-calendar-days"></i> <span>Leave Requests</span>
             </a>
             <a href="{{ url_for('parent.outpasses_list') }}" class="sidebar-link {% if 'outpass' in ep and bp == 'parent' %}active{% endif %}">
-                <i class="fa-solid fa-id-card-clip"></i> Movement & Out-Pass
+                <i class="fa-solid fa-id-card-clip"></i> <span>Movement & Out-Pass</span>
             </a>
             <a href="{{ url_for('parent.attendance_view') }}" class="sidebar-link {% if 'attendance' in ep and bp == 'parent' %}active{% endif %}">
-                <i class="fa-solid fa-clipboard-user"></i> Attendance Records
+                <i class="fa-solid fa-clipboard-user"></i> <span>Attendance Records</span>
             </a>
             <a href="{{ url_for('parent.fees_view') }}" class="sidebar-link {% if 'fee' in ep and bp == 'parent' %}active{% endif %}">
-                <i class="fa-solid fa-receipt"></i> Fee Status & Receipts
+                <i class="fa-solid fa-receipt"></i> <span>Fee Status & Receipts</span>
             </a>
             <a href="{{ url_for('parent.inquiries_list') }}" class="sidebar-link {% if 'inquir' in ep and bp == 'parent' %}active{% endif %}">
-                <i class="fa-solid fa-envelope-open-text"></i> Contact Warden
+                <i class="fa-solid fa-envelope-open-text"></i> <span>Contact Warden</span>
             </a>
             <a href="{{ url_for('parent.notifications_list') }}" class="sidebar-link {% if 'notification' in ep and bp == 'parent' %}active{% endif %}">
-                <i class="fa-solid fa-bell"></i> Notifications
+                <i class="fa-solid fa-bell"></i> <span>Notifications</span>
             </a>
 
         {% elif current_user.is_mess_manager %}
             <!-- MESS MANAGER NAVIGATION -->
             <div class="nav-section-title">Mess Operations</div>
             <a href="{{ url_for('mess_manager.dashboard') }}" class="sidebar-link {% if ep == 'mess_manager.dashboard' %}active{% endif %}">
-                <i class="fa-solid fa-chart-line"></i> Dashboard
+                <i class="fa-solid fa-chart-line"></i> <span>Dashboard</span>
             </a>
             <a href="{{ url_for('mess_manager.menu_list') }}" class="sidebar-link {% if 'menu' in ep and bp == 'mess_manager' %}active{% endif %}">
-                <i class="fa-solid fa-utensils"></i> Menu Planner
+                <i class="fa-solid fa-utensils"></i> <span>Menu Planner</span>
             </a>
             <a href="{{ url_for('mess_manager.bookings_list') }}" class="sidebar-link {% if 'booking' in ep and bp == 'mess_manager' %}active{% endif %}">
-                <i class="fa-solid fa-bookmark"></i> Reservations
+                <i class="fa-solid fa-bookmark"></i> <span>Reservations</span>
             </a>
             <a href="{{ url_for('mess_manager.attendance_list') }}" class="sidebar-link {% if 'attendance' in ep and bp == 'mess_manager' %}active{% endif %}">
-                <i class="fa-solid fa-clipboard-user"></i> Dining Register
+                <i class="fa-solid fa-clipboard-user"></i> <span>Dining Register</span>
             </a>
             <div class="nav-section-title">Stock & Procurement</div>
             <a href="{{ url_for('mess_manager.inventory_list') }}" class="sidebar-link {% if 'inventory' in ep and bp == 'mess_manager' %}active{% endif %}">
-                <i class="fa-solid fa-boxes-stacked"></i> Pantry Inventory
+                <i class="fa-solid fa-boxes-stacked"></i> <span>Pantry Inventory</span>
             </a>
             <a href="{{ url_for('mess_manager.suppliers') }}" class="sidebar-link {% if 'supplier' in ep and bp == 'mess_manager' %}active{% endif %}">
-                <i class="fa-solid fa-truck-field"></i> Food Vendors
+                <i class="fa-solid fa-truck-field"></i> <span>Food Vendors</span>
             </a>
             <a href="{{ url_for('mess_manager.expenses') }}" class="sidebar-link {% if 'expense' in ep and bp == 'mess_manager' %}active{% endif %}">
-                <i class="fa-solid fa-receipt"></i> Kitchen Expenses
+                <i class="fa-solid fa-receipt"></i> <span>Kitchen Expenses</span>
             </a>
             <div class="nav-section-title">Quality & Reports</div>
             <a href="{{ url_for('mess_manager.feedback') }}" class="sidebar-link {% if 'feedback' in ep and bp == 'mess_manager' %}active{% endif %}">
-                <i class="fa-solid fa-star-half-stroke"></i> Food Feedback
+                <i class="fa-solid fa-star-half-stroke"></i> <span>Food Feedback</span>
             </a>
             <a href="{{ url_for('mess_manager.notices') }}" class="sidebar-link {% if 'notice' in ep and bp == 'mess_manager' %}active{% endif %}">
-                <i class="fa-solid fa-bullhorn"></i> Dining Bulletins
+                <i class="fa-solid fa-bullhorn"></i> <span>Dining Bulletins</span>
             </a>
             <a href="{{ url_for('mess_manager.reports') }}" class="sidebar-link {% if 'report' in ep and bp == 'mess_manager' %}active{% endif %}">
-                <i class="fa-solid fa-chart-pie"></i> Wastage Reports
+                <i class="fa-solid fa-chart-pie"></i> <span>Wastage Reports</span>
             </a>
             <a href="{{ url_for('mess_manager.staff_list') }}" class="sidebar-link {% if 'staff' in ep and bp == 'mess_manager' %}active{% endif %}">
-                <i class="fa-solid fa-users-gear"></i> Counter Staff
+                <i class="fa-solid fa-users-gear"></i> <span>Counter Staff</span>
             </a>
 
         {% elif current_user.is_mess_staff %}
             <!-- MESS STAFF NAVIGATION -->
             <div class="nav-section-title">Mess Counter Desk</div>
             <a href="{{ url_for('mess_staff.dashboard') }}" class="sidebar-link {% if ep == 'mess_staff.dashboard' %}active{% endif %}">
-                <i class="fa-solid fa-chart-line"></i> Counter Overview
+                <i class="fa-solid fa-chart-line"></i> <span>Counter Overview</span>
             </a>
             <a href="{{ url_for('mess_staff.scanner') }}" class="sidebar-link {% if ep == 'mess_staff.scanner' %}active{% endif %}">
-                <i class="fa-solid fa-qrcode"></i> Scan Meal QR
+                <i class="fa-solid fa-qrcode"></i> <span>Scan Meal QR</span>
             </a>
             <a href="{{ url_for('mess_staff.attendance') }}" class="sidebar-link {% if ep == 'mess_staff.attendance' %}active{% endif %}">
-                <i class="fa-solid fa-clipboard-check"></i> Today's Attendance
+                <i class="fa-solid fa-clipboard-check"></i> <span>Today's Attendance</span>
             </a>
         {% endif %}
     </div>
 
+    <!-- Sidebar Bottom User Card & Logout -->
     <div class="sidebar-footer">
-        <a href="{{ url_for('auth.logout') }}" class="sidebar-link text-danger">
-            <i class="fa-solid fa-right-from-bracket"></i> Logout
-        </a>
+        <div class="sidebar-user-card">
+            <div class="d-flex align-items-center gap-2 overflow-hidden">
+                <div class="sidebar-user-avatar">
+                    {{ current_user.username[:1].upper() }}
+                </div>
+                <div class="sidebar-user-info">
+                    <div class="sidebar-user-name" title="{{ current_user.username }}">{{ current_user.username }}</div>
+                    <div class="sidebar-user-role">{{ current_user.role.replace('_', ' ') }}</div>
+                </div>
+            </div>
+            <a href="{{ url_for('auth.logout') }}" class="btn btn-sm btn-link text-danger p-0" title="Sign Out">
+                <i class="fa-solid fa-arrow-right-from-bracket"></i>
+            </a>
+        </div>
     </div>
 </aside>

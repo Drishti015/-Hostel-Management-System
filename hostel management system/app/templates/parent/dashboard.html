@@ -1,21 +1,24 @@
 {% extends 'base.html' %}
 
-{% block title %}Parent Portal Dashboard{% endblock %}
+{% block title %}Parent Portal | HostelEase HMS{% endblock %}
 
 {% block content %}
 <!-- Header Bar -->
 <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4">
     <div>
-        <h2 class="fw-bold text-dark mb-1">Parent & Guardian Desk</h2>
+        <div class="d-flex align-items-center gap-2 mb-1">
+            <h2 class="fw-bold text-dark mb-0">Parent & Guardian Desk</h2>
+            <span class="badge bg-primary-subtle text-primary border border-primary-subtle">Family Portal</span>
+        </div>
         <p class="text-muted small mb-0">
             Welcome, <strong>{{ parent.parent_name }}</strong> ({{ parent.relationship_to_student }} of <strong>{{ data.student.full_name }}</strong>)
         </p>
     </div>
     <div class="d-flex align-items-center gap-2">
-        <span class="badge bg-primary-subtle text-primary border border-primary-subtle px-3 py-2 font-monospace">
-            <i class="fa-solid fa-graduation-cap me-1"></i>{{ data.student.enrollment_no }}
+        <span class="badge bg-white text-secondary border px-3 py-2 font-monospace shadow-xs">
+            <i class="fa-solid fa-graduation-cap text-primary me-1"></i>{{ data.student.enrollment_no }}
         </span>
-        <a href="{{ url_for('parent.child_profile') }}" class="btn btn-outline-primary btn-sm">
+        <a href="{{ url_for('parent.child_profile') }}" class="btn btn-outline-secondary btn-sm">
             <i class="fa-solid fa-user me-1"></i>Child Profile
         </a>
     </div>
@@ -23,23 +26,23 @@
 
 <!-- Prominent Real-Time Movement Status Banner -->
 <div class="card border-0 shadow-sm mb-4 overflow-hidden">
-    <div class="card-body p-4 bg-light border-start border-4 {% if data.movement.code == 'OVERDUE' %}border-danger{% elif data.movement.code == 'OUTSIDE' %}border-warning{% elif data.movement.code == 'APPROVED_PENDING_EXIT' %}border-info{% else %}border-success{% endif %}">
+    <div class="card-body p-4 bg-white border-start border-4 {% if data.movement.code == 'OVERDUE' %}border-danger{% elif data.movement.code == 'OUTSIDE' %}border-warning{% elif data.movement.code == 'APPROVED_PENDING_EXIT' %}border-info{% else %}border-success{% endif %}">
         <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3">
             <div class="d-flex align-items-center gap-3">
-                <span class="d-inline-flex align-items-center justify-content-center rounded-circle p-3 {{ data.movement.badge_class }}" style="width: 54px; height: 54px;">
+                <span class="d-inline-flex align-items-center justify-content-center rounded-circle p-3 {{ data.movement.badge_class }}" style="width: 52px; height: 52px; flex-shrink: 0;">
                     <i class="fa-solid {{ data.movement.icon }} fs-4"></i>
                 </span>
                 <div>
                     <div class="d-flex align-items-center gap-2 mb-1">
                         <span class="small text-uppercase fw-bold text-muted">Gate & Movement Status:</span>
-                        <span class="badge {{ data.movement.badge_class }} px-2 py-1 fs-6">{{ data.movement.badge_text }}</span>
+                        <span class="badge {{ data.movement.badge_class }} px-2.5 py-1 small">{{ data.movement.badge_text }}</span>
                     </div>
                     <p class="mb-0 text-dark small">{{ data.movement.description }}</p>
                 </div>
             </div>
             <div class="text-md-end text-nowrap">
-                <a href="{{ url_for('parent.outpasses_list') }}" class="btn btn-primary btn-sm">
-                    <i class="fa-solid fa-clock-rotate-left me-1"></i>View Movement History
+                <a href="{{ url_for('parent.outpasses_list') }}" class="btn btn-primary-custom btn-sm">
+                    <i class="fa-solid fa-clock-rotate-left me-1"></i>Movement History &rarr;
                 </a>
             </div>
         </div>
@@ -51,20 +54,20 @@
     <!-- Stat 1: Attendance -->
     <div class="col-sm-6 col-xl-3">
         <div class="stat-card">
-            <div class="d-flex justify-content-between align-items-center">
-                <div>
-                    <div class="stat-title">Attendance Rate</div>
-                    <div class="stat-value text-success">
-                        {{ data.attendance.percentage }}%
+            <div>
+                <div class="stat-header">
+                    <span class="stat-title">Attendance Rate</span>
+                    <div class="stat-icon-wrapper bg-success-subtle text-success">
+                        <i class="fa-solid fa-calendar-check"></i>
                     </div>
                 </div>
-                <div class="stat-icon-wrapper bg-success-subtle text-success">
-                    <i class="fa-solid fa-calendar-check"></i>
+                <div class="stat-value text-success">
+                    {{ data.attendance.percentage }}%
                 </div>
             </div>
-            <div class="small text-muted mt-2 d-flex justify-content-between">
+            <div class="stat-subtitle d-flex justify-content-between align-items-center">
                 <span>{{ data.attendance.present_days }}/{{ data.attendance.total_days }} Present</span>
-                <a href="{{ url_for('parent.attendance_view') }}" class="text-decoration-none">Details &rarr;</a>
+                <a href="{{ url_for('parent.attendance_view') }}" class="text-decoration-none">Logs &rarr;</a>
             </div>
         </div>
     </div>
@@ -72,18 +75,18 @@
     <!-- Stat 2: Fee Balance -->
     <div class="col-sm-6 col-xl-3">
         <div class="stat-card">
-            <div class="d-flex justify-content-between align-items-center">
-                <div>
-                    <div class="stat-title">Fee Balance Due</div>
-                    <div class="stat-value {% if data.fees.balance_due > 0 %}text-danger{% else %}text-dark{% endif %}">
-                        ₹{{ "{:,.0f}".format(data.fees.balance_due) }}
+            <div>
+                <div class="stat-header">
+                    <span class="stat-title">Fee Balance Due</span>
+                    <div class="stat-icon-wrapper bg-warning-subtle text-warning">
+                        <i class="fa-solid fa-receipt"></i>
                     </div>
                 </div>
-                <div class="stat-icon-wrapper bg-warning-subtle text-warning">
-                    <i class="fa-solid fa-receipt"></i>
+                <div class="stat-value {% if data.fees.balance_due > 0 %}text-danger{% else %}text-dark{% endif %}">
+                    ₹{{ "{:,.0f}".format(data.fees.balance_due) }}
                 </div>
             </div>
-            <div class="small text-muted mt-2 d-flex justify-content-between">
+            <div class="stat-subtitle d-flex justify-content-between align-items-center">
                 <span>Paid: ₹{{ "{:,.0f}".format(data.fees.total_paid) }} ({{ data.fees.status }})</span>
                 <a href="{{ url_for('parent.fees_view') }}" class="text-decoration-none">Ledger &rarr;</a>
             </div>
@@ -93,19 +96,19 @@
     <!-- Stat 3: Leave Requests -->
     <div class="col-sm-6 col-xl-3">
         <div class="stat-card">
-            <div class="d-flex justify-content-between align-items-center">
-                <div>
-                    <div class="stat-title">Leave Applications</div>
-                    <div class="stat-value text-primary">
-                        {{ data.leaves.total }}
+            <div>
+                <div class="stat-header">
+                    <span class="stat-title">Leave Applications</span>
+                    <div class="stat-icon-wrapper bg-primary-subtle text-primary">
+                        <i class="fa-solid fa-calendar-days"></i>
                     </div>
                 </div>
-                <div class="stat-icon-wrapper bg-primary-subtle text-primary">
-                    <i class="fa-solid fa-calendar-days"></i>
+                <div class="stat-value text-primary">
+                    {{ data.leaves.total }}
                 </div>
             </div>
-            <div class="small text-muted mt-2 d-flex justify-content-between">
-                <span>{{ data.leaves.pending }} Pending | {{ data.leaves.approved }} Approved</span>
+            <div class="stat-subtitle d-flex justify-content-between align-items-center">
+                <span>{{ data.leaves.pending }} Pending &bull; {{ data.leaves.approved }} Approved</span>
                 <a href="{{ url_for('parent.leaves_list') }}" class="text-decoration-none">Track &rarr;</a>
             </div>
         </div>
@@ -114,23 +117,24 @@
     <!-- Stat 4: Accommodation -->
     <div class="col-sm-6 col-xl-3">
         <div class="stat-card">
-            <div class="d-flex justify-content-between align-items-center">
-                <div>
-                    <div class="stat-title">Room & Bed</div>
-                    <div class="stat-value fs-4 text-info">
-                        {% if data.room %}
-                            {{ data.room.room_number }} ({{ data.bed.bed_number if data.bed else 'A' }})
-                        {% else %}
-                            <span class="text-muted fs-6">Unassigned</span>
-                        {% endif %}
+            <div>
+                <div class="stat-header">
+                    <span class="stat-title">Room & Bed</span>
+                    <div class="stat-icon-wrapper bg-info-subtle text-info">
+                        <i class="fa-solid fa-door-open"></i>
                     </div>
                 </div>
-                <div class="stat-icon-wrapper bg-info-subtle text-info">
-                    <i class="fa-solid fa-door-open"></i>
+                <div class="stat-value text-primary">
+                    {% if data.room %}
+                        Room {{ data.room.room_number }} <span class="fs-6 text-muted">({{ data.bed.bed_number if data.bed else 'A' }})</span>
+                    {% else %}
+                        <span class="text-muted fs-6">Unassigned</span>
+                    {% endif %}
                 </div>
             </div>
-            <div class="small text-muted mt-2 text-truncate">
-                {{ data.hostel.name if data.hostel else 'General Campus' }}
+            <div class="stat-subtitle text-truncate">
+                <i class="fa-solid fa-building text-secondary me-1"></i>
+                <span>{{ data.hostel.name if data.hostel else 'General Campus' }}</span>
             </div>
         </div>
     </div>
@@ -141,14 +145,17 @@
     <!-- Left Column: Resident & Warden Particulars -->
     <div class="col-lg-5">
         <!-- Resident Card -->
-        <div class="card shadow-sm border-0 mb-4">
-            <div class="card-header bg-white py-3 border-bottom d-flex justify-content-between align-items-center">
-                <h6 class="fw-bold mb-0 text-dark"><i class="fa-solid fa-id-card me-2 text-primary"></i>Resident Ward Details</h6>
-                <span class="badge bg-success-subtle text-success">Active Resident</span>
+        <div class="card mb-4">
+            <div class="card-header">
+                <div class="d-flex align-items-center gap-2">
+                    <i class="fa-solid fa-id-card text-primary"></i>
+                    <span>Resident Ward Details</span>
+                </div>
+                <span class="badge bg-success-subtle text-success border border-success-subtle">Active Resident</span>
             </div>
             <div class="card-body">
                 <div class="d-flex align-items-center gap-3 mb-3 pb-3 border-bottom">
-                    <div class="rounded-circle bg-primary text-white d-flex align-items-center justify-content-center fw-bold fs-4" style="width: 56px; height: 56px;">
+                    <div class="user-avatar" style="width: 52px; height: 52px; font-size: 1.25rem;">
                         {{ data.student.full_name[:1].upper() }}
                     </div>
                     <div>
@@ -182,9 +189,12 @@
         </div>
 
         <!-- Warden Contact Card -->
-        <div class="card shadow-sm border-0">
-            <div class="card-header bg-white py-3 border-bottom d-flex justify-content-between align-items-center">
-                <h6 class="fw-bold mb-0 text-dark"><i class="fa-solid fa-user-shield me-2 text-primary"></i>Assigned Hostel Warden</h6>
+        <div class="card">
+            <div class="card-header">
+                <div class="d-flex align-items-center gap-2">
+                    <i class="fa-solid fa-user-shield text-primary"></i>
+                    <span>Assigned Hostel Warden</span>
+                </div>
                 <a href="{{ url_for('parent.inquiries_list') }}" class="btn btn-outline-primary btn-sm">
                     <i class="fa-solid fa-paper-plane me-1"></i>Contact
                 </a>
@@ -192,7 +202,7 @@
             <div class="card-body">
                 {% if data.warden %}
                     <div class="d-flex align-items-center gap-3 mb-3">
-                        <div class="rounded-circle bg-secondary-subtle text-secondary d-flex align-items-center justify-content-center fw-bold fs-5" style="width: 48px; height: 48px;">
+                        <div class="user-avatar" style="width: 44px; height: 44px; font-size: 1.1rem; background-color: var(--primary-light);">
                             {{ data.warden.full_name[:1].upper() }}
                         </div>
                         <div>
@@ -200,7 +210,7 @@
                             <small class="text-muted">{{ data.warden.designation }} &bull; {{ data.hostel.name }}</small>
                         </div>
                     </div>
-                    <div class="bg-light p-3 rounded small">
+                    <div class="bg-light p-3 rounded-3 small border">
                         <div class="d-flex align-items-center mb-2">
                             <i class="fa-solid fa-phone text-primary me-2"></i>
                             <span class="text-muted me-2">Phone:</span>
@@ -222,104 +232,107 @@
     <!-- Right Column: Recent Activities -->
     <div class="col-lg-7">
         <!-- Recent Leave Requests -->
-        <div class="card shadow-sm border-0 mb-4">
-            <div class="card-header bg-white py-3 border-bottom d-flex justify-content-between align-items-center">
-                <h6 class="fw-bold mb-0 text-dark"><i class="fa-solid fa-calendar-days me-2 text-primary"></i>Recent Leave Requests</h6>
-                <a href="{{ url_for('parent.leaves_list') }}" class="btn btn-link btn-sm text-decoration-none p-0">View All</a>
-            </div>
-            <div class="card-body p-0">
-                <div class="table-responsive">
-                    <table class="table table-hover align-middle mb-0 small">
-                        <thead class="table-light">
-                            <tr>
-                                <th>Leave Type</th>
-                                <th>Duration</th>
-                                <th>Destination</th>
-                                <th>Status</th>
-                                <th class="text-end">Action</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {% for leave in data.recent_leaves %}
-                                <tr>
-                                    <td>
-                                        <div class="fw-semibold text-dark">{{ leave.leave_type }}</div>
-                                        <div class="text-muted" style="font-size: 0.72rem;">#LV-{{ leave.id }}</div>
-                                    </td>
-                                    <td>
-                                        <div>{{ leave.from_date.strftime('%d %b') }} &rarr; {{ leave.to_date.strftime('%d %b, %Y') }}</div>
-                                        <small class="text-muted">{{ leave.number_of_days }} day(s)</small>
-                                    </td>
-                                    <td class="text-truncate" style="max-width: 140px;">{{ leave.destination }}</td>
-                                    <td>
-                                        <span class="badge {{ leave.status_badge_class }}">{{ leave.status }}</span>
-                                    </td>
-                                    <td class="text-end">
-                                        <a href="{{ url_for('parent.view_leave', id=leave.id) }}" class="btn btn-outline-secondary btn-sm py-0 px-2" title="Inspect Leave Slip">
-                                            <i class="fa-solid fa-eye"></i>
-                                        </a>
-                                    </td>
-                                </tr>
-                            {% else %}
-                                <tr>
-                                    <td colspan="5" class="text-center py-4 text-muted">
-                                        No recent leave applications submitted.
-                                    </td>
-                                </tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
+        <div class="card mb-4">
+            <div class="card-header">
+                <div class="d-flex align-items-center gap-2">
+                    <i class="fa-solid fa-calendar-days text-primary"></i>
+                    <span>Recent Leave Requests</span>
                 </div>
+                <a href="{{ url_for('parent.leaves_list') }}" class="btn btn-sm btn-outline-secondary">View All</a>
+            </div>
+            <div class="table-responsive">
+                <table class="table-modern">
+                    <thead>
+                        <tr>
+                            <th>Leave Type</th>
+                            <th>Duration</th>
+                            <th>Destination</th>
+                            <th>Status</th>
+                            <th class="text-end">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for leave in data.recent_leaves %}
+                            <tr>
+                                <td>
+                                    <div class="fw-semibold text-dark small">{{ leave.leave_type }}</div>
+                                    <div class="text-muted" style="font-size: 0.72rem;">#LV-{{ leave.id }}</div>
+                                </td>
+                                <td class="small">
+                                    <div>{{ leave.from_date.strftime('%d %b') }} &rarr; {{ leave.to_date.strftime('%d %b, %Y') }}</div>
+                                    <small class="text-muted">{{ leave.number_of_days }} day(s)</small>
+                                </td>
+                                <td class="text-truncate small" style="max-width: 140px;">{{ leave.destination }}</td>
+                                <td>
+                                    <span class="badge {{ leave.status_badge_class }}">{{ leave.status }}</span>
+                                </td>
+                                <td class="text-end">
+                                    <a href="{{ url_for('parent.view_leave', id=leave.id) }}" class="btn btn-outline-secondary btn-sm py-0 px-2" title="Inspect Leave Slip">
+                                        <i class="fa-solid fa-eye"></i>
+                                    </a>
+                                </td>
+                            </tr>
+                        {% else %}
+                            <tr>
+                                <td colspan="5" class="text-center py-4 text-muted small">
+                                    <i class="fa-regular fa-calendar-check fs-4 d-block mb-1 text-secondary opacity-50"></i>
+                                    No recent leave applications submitted.
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
             </div>
         </div>
 
         <!-- Recent Gate Scans & Movement -->
-        <div class="card shadow-sm border-0">
-            <div class="card-header bg-white py-3 border-bottom d-flex justify-content-between align-items-center">
-                <h6 class="fw-bold mb-0 text-dark"><i class="fa-solid fa-door-open me-2 text-primary"></i>Recent Gate Movements</h6>
-                <a href="{{ url_for('parent.outpasses_list') }}" class="btn btn-link btn-sm text-decoration-none p-0">View All</a>
-            </div>
-            <div class="card-body p-0">
-                <div class="table-responsive">
-                    <table class="table table-hover align-middle mb-0 small">
-                        <thead class="table-light">
-                            <tr>
-                                <th>Movement</th>
-                                <th>Gate Location</th>
-                                <th>Timestamp</th>
-                                <th>Pass Reference</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {% for tx in data.recent_transactions %}
-                                <tr>
-                                    <td>
-                                        <span class="badge {% if tx.event_type == 'EXIT' %}bg-warning text-dark{% else %}bg-success{% endif %}">
-                                            <i class="fa-solid {% if tx.event_type == 'EXIT' %}fa-arrow-right-from-bracket{% else %}fa-arrow-right-to-bracket{% endif %} me-1"></i>
-                                            {{ tx.event_type }}
-                                        </span>
-                                    </td>
-                                    <td>{{ tx.gate_location }}</td>
-                                    <td>{{ tx.scanned_at.strftime('%d %b %Y, %I:%M %p') }}</td>
-                                    <td>
-                                        <a href="{{ url_for('parent.view_outpass', id=tx.outpass_id) }}" class="fw-semibold text-decoration-none">
-                                            #OP-{{ tx.outpass_id }}
-                                        </a>
-                                    </td>
-                                </tr>
-                            {% else %}
-                                <tr>
-                                    <td colspan="4" class="text-center py-4 text-muted">
-                                        No gate movements logged yet.
-                                    </td>
-                                </tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
+        <div class="card">
+            <div class="card-header">
+                <div class="d-flex align-items-center gap-2">
+                    <i class="fa-solid fa-door-open text-primary"></i>
+                    <span>Recent Gate Movements</span>
                 </div>
+                <a href="{{ url_for('parent.outpasses_list') }}" class="btn btn-sm btn-outline-secondary">View All</a>
+            </div>
+            <div class="table-responsive">
+                <table class="table-modern">
+                    <thead>
+                        <tr>
+                            <th>Movement</th>
+                            <th>Gate Location</th>
+                            <th>Timestamp</th>
+                            <th>Pass Reference</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for tx in data.recent_transactions %}
+                            <tr>
+                                <td>
+                                    <span class="badge {% if tx.event_type == 'EXIT' %}bg-warning-subtle text-warning border border-warning-subtle{% else %}bg-success-subtle text-success border border-success-subtle{% endif %}">
+                                        <i class="fa-solid {% if tx.event_type == 'EXIT' %}fa-arrow-right-from-bracket{% else %}fa-arrow-right-to-bracket{% endif %} me-1"></i>
+                                        {{ tx.event_type }}
+                                    </span>
+                                </td>
+                                <td class="small">{{ tx.gate_location }}</td>
+                                <td class="small">{{ tx.scanned_at.strftime('%d %b %Y, %I:%M %p') }}</td>
+                                <td>
+                                    <a href="{{ url_for('parent.view_outpass', id=tx.outpass_id) }}" class="fw-semibold text-decoration-none small">
+                                        #OP-{{ tx.outpass_id }}
+                                    </a>
+                                </td>
+                            </tr>
+                        {% else %}
+                            <tr>
+                                <td colspan="4" class="text-center py-4 text-muted small">
+                                    <i class="fa-solid fa-shield-halved fs-4 d-block mb-1 text-secondary opacity-50"></i>
+                                    No gate movements logged yet.
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
             </div>
         </div>
     </div>
 </div>
 {% endblock %}
-

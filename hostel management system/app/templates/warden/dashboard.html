@@ -1,136 +1,251 @@
 {% extends 'base.html' %}
 
-{% block title %}Warden Dashboard{% endblock %}
+{% block title %}Warden Desk | HostelEase HMS{% endblock %}
 
 {% block content %}
-<div class="d-flex justify-content-between align-items-center mb-4">
+<div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4">
     <div>
-        <h2 class="fw-bold text-dark mb-1">Warden Operational Desk</h2>
+        <div class="d-flex align-items-center gap-2 mb-1">
+            <h2 class="fw-bold text-dark mb-0">Warden Operational Desk</h2>
+            {% if assigned_hostel %}
+                <span class="badge bg-primary-subtle text-primary border border-primary-subtle font-monospace">
+                    {{ assigned_hostel.name }}
+                </span>
+            {% endif %}
+        </div>
         <p class="text-muted small mb-0">
-            Welcome, <strong>{{ warden_profile.full_name if warden_profile else current_user.username }}</strong> 
-            {% if assigned_hostel %}(Assigned: {{ assigned_hostel.name }}){% endif %}
+            Welcome back, <strong>{{ warden_profile.full_name if warden_profile else current_user.username }}</strong>
+            &bull; Operational supervisory overview
         </p>
     </div>
-    <div>
-        <span class="badge bg-primary px-3 py-2">
-            <i class="fa-regular fa-calendar me-1"></i> Today: {{ today_date }}
+    <div class="d-flex align-items-center gap-2">
+        <span class="badge bg-white text-secondary border px-3 py-2 d-flex align-items-center gap-2 shadow-xs">
+            <i class="fa-regular fa-calendar-check text-primary"></i> Roll Call Date: <strong>{{ today_date }}</strong>
         </span>
+        <a href="{{ url_for('warden.attendance_view') }}" class="btn btn-primary-custom btn-sm">
+            <i class="fa-solid fa-clipboard-user me-1"></i>Mark Attendance
+        </a>
     </div>
 </div>
 
+<!-- 4 Key Stat Cards -->
 <div class="row g-3 mb-4">
+    <!-- Stat 1: Students -->
     <div class="col-sm-6 col-xl-3">
         <div class="stat-card">
-            <div class="d-flex justify-content-between align-items-center">
-                <div>
-                    <div class="stat-title">Hostel Students</div>
-                    <div class="stat-value">{{ student_count }}</div>
+            <div>
+                <div class="stat-header">
+                    <span class="stat-title">Hostel Students</span>
+                    <div class="stat-icon-wrapper bg-primary-subtle text-primary">
+                        <i class="fa-solid fa-users"></i>
+                    </div>
                 </div>
-                <div class="stat-icon-wrapper bg-primary-subtle text-primary">
-                    <i class="fa-solid fa-users"></i>
-                </div>
+                <div class="stat-value">{{ student_count }}</div>
             </div>
-            <div class="small text-muted mt-2">Active residents in assigned block</div>
+            <div class="stat-subtitle">
+                <i class="fa-solid fa-building text-secondary me-1"></i>
+                <span>Active block residents</span>
+            </div>
         </div>
     </div>
 
+    <!-- Stat 2: Pending Leave -->
     <div class="col-sm-6 col-xl-3">
         <div class="stat-card">
-            <div class="d-flex justify-content-between align-items-center">
-                <div>
-                    <div class="stat-title">Pending Leave</div>
-                    <div class="stat-value text-warning">{{ pending_leaves }}</div>
+            <div>
+                <div class="stat-header">
+                    <span class="stat-title">Pending Leave</span>
+                    <div class="stat-icon-wrapper bg-warning-subtle text-warning">
+                        <i class="fa-solid fa-envelope-open-text"></i>
+                    </div>
                 </div>
-                <div class="stat-icon-wrapper bg-warning-subtle text-warning">
-                    <i class="fa-solid fa-envelope-open-text"></i>
-                </div>
+                <div class="stat-value text-warning">{{ pending_leaves }}</div>
             </div>
-            <div class="small text-muted mt-2">Out-pass requests awaiting review</div>
+            <div class="stat-subtitle">
+                <a href="{{ url_for('warden.leaves_list') }}" class="text-decoration-none">
+                    Awaiting authorization &rarr;
+                </a>
+            </div>
         </div>
     </div>
 
+    <!-- Stat 3: Pending Complaints -->
     <div class="col-sm-6 col-xl-3">
         <div class="stat-card">
-            <div class="d-flex justify-content-between align-items-center">
-                <div>
-                    <div class="stat-title">Pending Complaints</div>
-                    <div class="stat-value text-danger">{{ pending_complaints }}</div>
+            <div>
+                <div class="stat-header">
+                    <span class="stat-title">Open Complaints</span>
+                    <div class="stat-icon-wrapper bg-danger-subtle text-danger">
+                        <i class="fa-solid fa-triangle-exclamation"></i>
+                    </div>
                 </div>
-                <div class="stat-icon-wrapper bg-danger-subtle text-danger">
-                    <i class="fa-solid fa-triangle-exclamation"></i>
-                </div>
+                <div class="stat-value text-danger">{{ pending_complaints }}</div>
             </div>
-            <div class="small text-muted mt-2">Maintenance tickets requiring action</div>
+            <div class="stat-subtitle">
+                <a href="{{ url_for('warden.complaints_list') }}" class="text-decoration-none text-danger">
+                    Maintenance pending &rarr;
+                </a>
+            </div>
         </div>
     </div>
 
+    <!-- Stat 4: Night Attendance -->
     <div class="col-sm-6 col-xl-3">
         <div class="stat-card">
-            <div class="d-flex justify-content-between align-items-center">
-                <div>
-                    <div class="stat-title">Night Attendance</div>
-                    <div class="stat-value"><i class="fa-solid fa-clipboard-check text-success"></i> Ready</div>
+            <div>
+                <div class="stat-header">
+                    <span class="stat-title">Night Attendance</span>
+                    <div class="stat-icon-wrapper bg-success-subtle text-success">
+                        <i class="fa-solid fa-clipboard-check"></i>
+                    </div>
                 </div>
-                <div class="stat-icon-wrapper bg-success-subtle text-success">
-                    <i class="fa-solid fa-calendar-day"></i>
+                <div class="stat-value text-success" style="font-size: 1.5rem;">
+                    Daily Roster
                 </div>
             </div>
-            <div class="small text-muted mt-2">Daily roll-call for {{ today_date }}</div>
+            <div class="stat-subtitle">
+                <a href="{{ url_for('warden.attendance_view') }}" class="text-decoration-none text-success">
+                    Ready for {{ today_date }} &rarr;
+                </a>
+            </div>
         </div>
     </div>
 </div>
 
 <div class="row g-4">
+    <!-- Quick Warden Actions Module -->
     <div class="col-lg-8">
-        <div class="card border-0 shadow-sm rounded-4 p-4 bg-white">
-            <h5 class="fw-bold text-dark mb-3"><i class="fa-solid fa-bolt text-warning me-2"></i>Quick Warden Actions</h5>
-            <div class="row g-3">
-                <div class="col-md-4">
-                    <div class="p-3 border rounded-3 bg-light h-100 d-flex flex-column justify-content-between">
-                        <div>
-                            <h6 class="fw-bold mb-1"><i class="fa-solid fa-envelope-open-text text-warning me-2"></i>Leave Desk</h6>
-                            <p class="small text-muted mb-3">Review out-station travel & medical leaves.</p>
+        <div class="card h-100">
+            <div class="card-header">
+                <div class="d-flex align-items-center gap-2">
+                    <i class="fa-solid fa-bolt text-warning"></i>
+                    <span>Primary Operational Workflows</span>
+                </div>
+                <span class="badge bg-light text-muted border">Quick Launchers</span>
+            </div>
+            <div class="card-body">
+                <div class="row g-3">
+                    <div class="col-md-4">
+                        <div class="p-3 border rounded-3 bg-light-subtle h-100 d-flex flex-column justify-content-between">
+                            <div>
+                                <div class="d-flex align-items-center gap-2 mb-2">
+                                    <span class="badge bg-warning-subtle text-warning border border-warning-subtle p-2 rounded-2">
+                                        <i class="fa-solid fa-envelope-open-text fs-6"></i>
+                                    </span>
+                                    <h6 class="fw-bold mb-0 text-dark">Leave Requests</h6>
+                                </div>
+                                <p class="small text-muted mb-3">Review out-station travel permissions, medical leaves, and out-passes.</p>
+                            </div>
+                            <a href="{{ url_for('warden.leaves_list') }}" class="btn btn-sm btn-primary-custom w-100">
+                                Open Leave Desk
+                            </a>
                         </div>
-                        <a href="{{ url_for('warden.leaves_list') }}" class="btn btn-sm btn-primary-custom">Open Leave Desk</a>
+                    </div>
+
+                    <div class="col-md-4">
+                        <div class="p-3 border rounded-3 bg-light-subtle h-100 d-flex flex-column justify-content-between">
+                            <div>
+                                <div class="d-flex align-items-center gap-2 mb-2">
+                                    <span class="badge bg-primary-subtle text-primary border border-primary-subtle p-2 rounded-2">
+                                        <i class="fa-solid fa-clipboard-user fs-6"></i>
+                                    </span>
+                                    <h6 class="fw-bold mb-0 text-dark">Mark Attendance</h6>
+                                </div>
+                                <p class="small text-muted mb-3">Conduct night hostel roll-call and record presence, absence, or leave status.</p>
+                            </div>
+                            <a href="{{ url_for('warden.attendance_view') }}" class="btn btn-sm btn-outline-secondary w-100">
+                                Open Roll-Call
+                            </a>
+                        </div>
+                    </div>
+
+                    <div class="col-md-4">
+                        <div class="p-3 border rounded-3 bg-light-subtle h-100 d-flex flex-column justify-content-between">
+                            <div>
+                                <div class="d-flex align-items-center gap-2 mb-2">
+                                    <span class="badge bg-danger-subtle text-danger border border-danger-subtle p-2 rounded-2">
+                                        <i class="fa-solid fa-wrench fs-6"></i>
+                                    </span>
+                                    <h6 class="fw-bold mb-0 text-dark">Grievances</h6>
+                                </div>
+                                <p class="small text-muted mb-3">Inspect electrical, plumbing, hygiene, Wi-Fi, or hostel maintenance issues.</p>
+                            </div>
+                            <a href="{{ url_for('warden.complaints_list') }}" class="btn btn-sm btn-outline-secondary w-100">
+                                Resolve Tickets
+                            </a>
+                        </div>
                     </div>
                 </div>
-                <div class="col-md-4">
-                    <div class="p-3 border rounded-3 bg-light h-100 d-flex flex-column justify-content-between">
-                        <div>
-                            <h6 class="fw-bold mb-1"><i class="fa-solid fa-clipboard-user text-primary me-2"></i>Mark Attendance</h6>
-                            <p class="small text-muted mb-3">Record roll call status for residents.</p>
+
+                <!-- Secondary Row of Actions -->
+                <div class="row g-3 mt-1">
+                    <div class="col-md-6">
+                        <div class="p-3 border rounded-3 bg-white d-flex align-items-center justify-content-between">
+                            <div class="d-flex align-items-center gap-2">
+                                <i class="fa-solid fa-comments text-info fs-5"></i>
+                                <div>
+                                    <div class="fw-semibold text-dark small">Parent Inquiries</div>
+                                    <small class="text-muted">Direct communication channel with guardians</small>
+                                </div>
+                            </div>
+                            <a href="{{ url_for('warden.parent_inquiries') }}" class="btn btn-sm btn-outline-primary">
+                                Inquiries &rarr;
+                            </a>
                         </div>
-                        <a href="{{ url_for('warden.attendance_view') }}" class="btn btn-sm btn-outline-secondary">Open Roll-Call</a>
                     </div>
-                </div>
-                <div class="col-md-4">
-                    <div class="p-3 border rounded-3 bg-light h-100 d-flex flex-column justify-content-between">
-                        <div>
-                            <h6 class="fw-bold mb-1"><i class="fa-solid fa-wrench text-danger me-2"></i>Grievances</h6>
-                            <p class="small text-muted mb-3">Inspect electrical, plumbing, Wi-Fi or mess issues.</p>
+                    <div class="col-md-6">
+                        <div class="p-3 border rounded-3 bg-white d-flex align-items-center justify-content-between">
+                            <div class="d-flex align-items-center gap-2">
+                                <i class="fa-solid fa-utensils text-success fs-5"></i>
+                                <div>
+                                    <div class="fw-semibold text-dark small">Mess Monitoring</div>
+                                    <small class="text-muted">Inspect weekly menus and dining quality</small>
+                                </div>
+                            </div>
+                            <a href="{{ url_for('warden.mess_view') }}" class="btn btn-sm btn-outline-primary">
+                                Mess Desk &rarr;
+                            </a>
                         </div>
-                        <a href="{{ url_for('warden.complaints_list') }}" class="btn btn-sm btn-outline-secondary">Open Grievances</a>
                     </div>
                 </div>
             </div>
         </div>
     </div>
 
+    <!-- Active Notices & Bulletins -->
     <div class="col-lg-4">
-        <div class="card border-0 shadow-sm rounded-4 p-4 bg-white">
-            <h5 class="fw-bold text-dark mb-3"><i class="fa-solid fa-bullhorn text-primary me-2"></i>Latest Notices</h5>
-            <div class="list-group list-group-flush">
-                {% for n in notices %}
-                    <div class="list-group-item px-0 py-2">
-                        <div class="fw-semibold text-dark small">{{ n.title }}</div>
-                        <small class="text-muted">{{ n.created_at.strftime('%d %b %Y') }}</small>
-                    </div>
-                {% else %}
-                    <div class="text-muted small py-3">No active circulars.</div>
-                {% endfor %}
+        <div class="card h-100">
+            <div class="card-header">
+                <div class="d-flex align-items-center gap-2">
+                    <i class="fa-solid fa-bullhorn text-primary"></i>
+                    <span>Published Notices</span>
+                </div>
+                <a href="{{ url_for('warden.notices_list') }}" class="btn btn-sm btn-outline-secondary">
+                    Post Notice
+                </a>
+            </div>
+            <div class="card-body p-0">
+                <div class="list-group list-group-flush">
+                    {% for n in notices %}
+                        <div class="list-group-item px-3 py-3 border-bottom">
+                            <div class="fw-semibold text-dark small mb-1">{{ n.title }}</div>
+                            <div class="d-flex align-items-center gap-2 text-muted" style="font-size: 0.75rem;">
+                                <span><i class="fa-regular fa-clock me-1"></i>{{ n.created_at.strftime('%d %b %Y') }}</span>
+                                {% if n.priority %}
+                                    <span>&bull;</span>
+                                    <span class="badge bg-light text-secondary border">{{ n.priority|capitalize }}</span>
+                                {% endif %}
+                            </div>
+                        </div>
+                    {% else %}
+                        <div class="text-center py-5 text-muted small">
+                            <i class="fa-regular fa-newspaper fs-4 d-block mb-2 text-secondary opacity-50"></i>
+                            No active circulars published for this block.
+                        </div>
+                    {% endfor %}
+                </div>
             </div>
         </div>
     </div>
 </div>
 {% endblock %}
-

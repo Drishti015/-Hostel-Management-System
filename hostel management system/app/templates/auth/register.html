@@ -1,130 +1,151 @@
 {% extends 'base.html' %}
 
-{% block title %}Student Registration{% endblock %}
+{% block title %}Resident Registration | HostelEase HMS{% endblock %}
 
 {% block content %}
 <div class="row justify-content-center py-4">
-    <div class="col-lg-9 col-xl-8">
-        <div class="card border-0 shadow-lg rounded-4 overflow-hidden">
-            <div class="p-4 p-md-5 bg-white">
+    <div class="col-lg-10 col-xl-8">
+        <div class="card border-0 shadow-lg rounded-4 overflow-hidden bg-white">
+            <div class="p-4 p-md-5">
                 <div class="text-center mb-4">
-                    <h3 class="fw-bold text-dark">Hostel Resident Registration</h3>
-                    <p class="text-muted small">Fill in your official college academic and guardian details</p>
+                    <div class="sidebar-brand-icon mx-auto mb-3" style="width: 52px; height: 52px; font-size: 1.5rem; border-radius: 12px;">
+                        <i class="fa-solid fa-user-plus"></i>
+                    </div>
+                    <h3 class="fw-bold text-dark mb-1">Hostel Resident Registration</h3>
+                    <p class="text-muted small">Enroll official academic, personal, and guardian emergency contact details</p>
                 </div>
 
                 <form method="POST" action="{{ url_for('auth.register') }}">
                     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
 
-                    <h5 class="fw-bold text-primary border-bottom pb-2 mb-3">1. Account Credentials</h5>
-                    <div class="row g-3 mb-4">
-                        <div class="col-md-6">
-                            <label class="form-label small fw-semibold">Choose Username *</label>
-                            <input type="text" class="form-control" name="username" placeholder="e.g. rohit_kumar" required>
+                    <!-- Section 1 -->
+                    <div class="card border mb-4 rounded-3 p-3 bg-light-subtle">
+                        <div class="d-flex align-items-center gap-2 mb-3">
+                            <span class="badge bg-primary text-white rounded-circle p-2" style="width: 26px; height: 26px; display: inline-flex; align-items: center; justify-content: center; font-size: 0.75rem;">1</span>
+                            <h6 class="fw-bold text-dark mb-0">Account Credentials</h6>
                         </div>
-                        <div class="col-md-6">
-                            <label class="form-label small fw-semibold">Email Address *</label>
-                            <input type="email" class="form-control" name="email" placeholder="name@aktu.ac.in" required>
-                        </div>
-                        <div class="col-md-6">
-                            <label class="form-label small fw-semibold">Password *</label>
-                            <input type="password" class="form-control" name="password" placeholder="At least 6 characters" required>
-                        </div>
-                        <div class="col-md-6">
-                            <label class="form-label small fw-semibold">Confirm Password *</label>
-                            <input type="password" class="form-control" name="confirm_password" placeholder="Confirm password" required>
-                        </div>
-                    </div>
-
-                    <h5 class="fw-bold text-primary border-bottom pb-2 mb-3">2. Student Profile Details</h5>
-                    <div class="row g-3 mb-4">
-                        <div class="col-md-6">
-                            <label class="form-label small fw-semibold">Full Name *</label>
-                            <input type="text" class="form-control" name="full_name" placeholder="Full Name as per 10th marksheet" required>
-                        </div>
-                        <div class="col-md-6">
-                            <label class="form-label small fw-semibold">University Enrollment Number *</label>
-                            <input type="text" class="form-control" name="enrollment_no" placeholder="e.g. AKTU2023CSE0105" required>
-                        </div>
-                        <div class="col-md-6">
-                            <label class="form-label small fw-semibold">University Roll Number</label>
-                            <input type="text" class="form-control" name="roll_no" placeholder="e.g. 23000101005">
-                        </div>
-                        <div class="col-md-6">
-                            <label class="form-label small fw-semibold">Phone Number *</label>
-                            <input type="tel" class="form-control" name="phone" placeholder="+91 9876543210" required>
-                        </div>
-                        <div class="col-md-4">
-                            <label class="form-label small fw-semibold">Gender *</label>
-                            <select class="form-select" name="gender" required>
-                                <option value="male" selected>Male (Boys Hostel)</option>
-                                <option value="female">Female (Girls Hostel)</option>
-                                <option value="other">Other</option>
-                            </select>
-                        </div>
-                        <div class="col-md-4">
-                            <label class="form-label small fw-semibold">Branch / Department *</label>
-                            <select class="form-select" name="branch" required>
-                                <option value="Computer Science & Engineering" selected>CSE</option>
-                                <option value="Information Technology">IT</option>
-                                <option value="Electronics & Communication">ECE</option>
-                                <option value="Mechanical Engineering">ME</option>
-                                <option value="Civil Engineering">CE</option>
-                                <option value="Electrical Engineering">EE</option>
-                            </select>
-                        </div>
-                        <div class="col-md-2">
-                            <label class="form-label small fw-semibold">Year *</label>
-                            <select class="form-select" name="year" required>
-                                <option value="1">1st Year</option>
-                                <option value="2">2nd Year</option>
-                                <option value="3" selected>3rd Year</option>
-                                <option value="4">4th Year</option>
-                            </select>
-                        </div>
-                        <div class="col-md-2">
-                            <label class="form-label small fw-semibold">Semester *</label>
-                            <input type="number" class="form-control" name="semester" min="1" max="8" value="5" required>
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label class="form-label small fw-semibold">Choose Username *</label>
+                                <input type="text" class="form-control" name="username" placeholder="e.g. rohit_kumar" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label small fw-semibold">Official Email Address *</label>
+                                <input type="email" class="form-control" name="email" placeholder="name@aktu.ac.in" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label small fw-semibold">Password *</label>
+                                <input type="password" class="form-control" name="password" placeholder="At least 6 characters" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label small fw-semibold">Confirm Password *</label>
+                                <input type="password" class="form-control" name="confirm_password" placeholder="Confirm password" required>
+                            </div>
                         </div>
                     </div>
 
-                    <h5 class="fw-bold text-primary border-bottom pb-2 mb-3">3. Guardian & Emergency Contact</h5>
-                    <div class="row g-3 mb-4">
-                        <div class="col-md-6">
-                            <label class="form-label small fw-semibold">Guardian / Parent Name *</label>
-                            <input type="text" class="form-control" name="guardian_name" placeholder="Father/Mother/Guardian" required>
+                    <!-- Section 2 -->
+                    <div class="card border mb-4 rounded-3 p-3 bg-light-subtle">
+                        <div class="d-flex align-items-center gap-2 mb-3">
+                            <span class="badge bg-primary text-white rounded-circle p-2" style="width: 26px; height: 26px; display: inline-flex; align-items: center; justify-content: center; font-size: 0.75rem;">2</span>
+                            <h6 class="fw-bold text-dark mb-0">Student Academic & Hostel Profile</h6>
                         </div>
-                        <div class="col-md-6">
-                            <label class="form-label small fw-semibold">Guardian Contact Phone *</label>
-                            <input type="tel" class="form-control" name="guardian_phone" placeholder="+91 9876543210" required>
-                        </div>
-                        <div class="col-md-6">
-                            <label class="form-label small fw-semibold">Emergency Phone</label>
-                            <input type="tel" class="form-control" name="emergency_phone" placeholder="Alternate phone">
-                        </div>
-                        <div class="col-md-6">
-                            <label class="form-label small fw-semibold">Blood Group</label>
-                            <select class="form-select" name="blood_group">
-                                <option value="A+">A+</option>
-                                <option value="A-">A-</option>
-                                <option value="B+" selected>B+</option>
-                                <option value="B-">B-</option>
-                                <option value="O+">O+</option>
-                                <option value="O-">O-</option>
-                                <option value="AB+">AB+</option>
-                                <option value="AB-">AB-</option>
-                            </select>
-                        </div>
-                        <div class="col-12">
-                            <label class="form-label small fw-semibold">Permanent Home Address *</label>
-                            <textarea class="form-control" name="address" rows="2" placeholder="House No, Village/Street, District, State, PIN" required></textarea>
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label class="form-label small fw-semibold">Full Legal Name *</label>
+                                <input type="text" class="form-control" name="full_name" placeholder="Full Name as per 10th marksheet" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label small fw-semibold">University Enrollment Number *</label>
+                                <input type="text" class="form-control" name="enrollment_no" placeholder="e.g. AKTU2023CSE0105" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label small fw-semibold">University Roll Number</label>
+                                <input type="text" class="form-control" name="roll_no" placeholder="e.g. 23000101005">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label small fw-semibold">Phone Number *</label>
+                                <input type="tel" class="form-control" name="phone" placeholder="+91 9876543210" required>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label small fw-semibold">Gender *</label>
+                                <select class="form-select" name="gender" required>
+                                    <option value="male" selected>Male (Boys Hostel)</option>
+                                    <option value="female">Female (Girls Hostel)</option>
+                                    <option value="other">Other</option>
+                                </select>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label small fw-semibold">Branch / Department *</label>
+                                <select class="form-select" name="branch" required>
+                                    <option value="Computer Science & Engineering" selected>CSE</option>
+                                    <option value="Information Technology">IT</option>
+                                    <option value="Electronics & Communication">ECE</option>
+                                    <option value="Mechanical Engineering">ME</option>
+                                    <option value="Civil Engineering">CE</option>
+                                    <option value="Electrical Engineering">EE</option>
+                                </select>
+                            </div>
+                            <div class="col-md-2">
+                                <label class="form-label small fw-semibold">Year *</label>
+                                <select class="form-select" name="year" required>
+                                    <option value="1">1st Year</option>
+                                    <option value="2">2nd Year</option>
+                                    <option value="3" selected>3rd Year</option>
+                                    <option value="4">4th Year</option>
+                                </select>
+                            </div>
+                            <div class="col-md-2">
+                                <label class="form-label small fw-semibold">Semester *</label>
+                                <input type="number" class="form-control" name="semester" min="1" max="8" value="5" required>
+                            </div>
                         </div>
                     </div>
 
-                    <div class="d-flex justify-content-between align-items-center mt-4">
-                        <a href="{{ url_for('auth.login') }}" class="text-secondary text-decoration-none small">
+                    <!-- Section 3 -->
+                    <div class="card border mb-4 rounded-3 p-3 bg-light-subtle">
+                        <div class="d-flex align-items-center gap-2 mb-3">
+                            <span class="badge bg-primary text-white rounded-circle p-2" style="width: 26px; height: 26px; display: inline-flex; align-items: center; justify-content: center; font-size: 0.75rem;">3</span>
+                            <h6 class="fw-bold text-dark mb-0">Guardian & Emergency Information</h6>
+                        </div>
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label class="form-label small fw-semibold">Guardian / Parent Name *</label>
+                                <input type="text" class="form-control" name="guardian_name" placeholder="Father/Mother/Guardian" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label small fw-semibold">Guardian Contact Phone *</label>
+                                <input type="tel" class="form-control" name="guardian_phone" placeholder="+91 9876543210" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label small fw-semibold">Emergency Alternate Phone</label>
+                                <input type="tel" class="form-control" name="emergency_phone" placeholder="Alternate phone">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label small fw-semibold">Blood Group</label>
+                                <select class="form-select" name="blood_group">
+                                    <option value="A+">A+</option>
+                                    <option value="A-">A-</option>
+                                    <option value="B+" selected>B+</option>
+                                    <option value="B-">B-</option>
+                                    <option value="O+">O+</option>
+                                    <option value="O-">O-</option>
+                                    <option value="AB+">AB+</option>
+                                    <option value="AB-">AB-</option>
+                                </select>
+                            </div>
+                            <div class="col-12">
+                                <label class="form-label small fw-semibold">Permanent Home Address *</label>
+                                <textarea class="form-control" name="address" rows="2" placeholder="House No, Village/Street, District, State, PIN" required></textarea>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="d-flex justify-content-between align-items-center pt-2">
+                        <a href="{{ url_for('auth.login') }}" class="btn btn-outline-secondary">
                             <i class="fa-solid fa-arrow-left me-1"></i> Back to Login
                         </a>
-                        <button type="submit" class="btn btn-primary-custom px-4 py-2">
+                        <button type="submit" class="btn btn-primary-custom px-4 py-2.5 shadow-sm">
                             <i class="fa-solid fa-check me-2"></i>Complete Registration
                         </button>
                     </div>
@@ -134,4 +155,3 @@
     </div>
 </div>
 {% endblock %}
-

@@ -1,63 +1,66 @@
 {% extends 'base.html' %}
 
-{% block title %}Mess Menu Schedule{% endblock %}
+{% block title %}Weekly Dining Schedule | HostelEase HMS{% endblock %}
 
 {% block content %}
 <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4">
     <div>
-        <h2 class="fw-bold text-dark mb-1">
-            <i class="fa-solid fa-calendar-days text-primary me-2"></i>Weekly Dining Schedule
-        </h2>
+        <div class="d-flex align-items-center gap-2 mb-1">
+            <h2 class="fw-bold text-dark mb-0">Weekly Dining Schedule</h2>
+            <span class="badge bg-success-subtle text-success border border-success-subtle">7-Day Menu</span>
+        </div>
         <p class="text-muted small mb-0">
             Browse upcoming breakfast, lunch, snacks, and dinner options &bull; {{ mess.mess_name if mess else 'Hostel Dining Hall' }}
         </p>
     </div>
     <div class="d-flex gap-2">
         <a href="{{ url_for('student.mess_dashboard') }}" class="btn btn-outline-secondary">
-            <i class="fa-solid fa-arrow-left me-2"></i>Back to Dashboard
+            <i class="fa-solid fa-arrow-left me-1"></i>Mess Portal
         </a>
         <a href="{{ url_for('student.mess_qr') }}" class="btn btn-primary-custom">
-            <i class="fa-solid fa-qrcode me-2"></i>My Mess QR
+            <i class="fa-solid fa-qrcode me-1"></i>My Mess QR
         </a>
     </div>
 </div>
 
-<!-- Weekly Schedule Table -->
+<!-- Weekly Schedule Container -->
 <div class="card border-0 shadow-sm rounded-4 p-4 bg-white mb-4">
-    <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-2 mb-3">
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-2 mb-4">
         <div>
-            <h5 class="fw-bold text-dark mb-0">
+            <h5 class="fw-bold text-dark mb-1">
                 <i class="fa-solid fa-utensils text-primary me-2"></i>Full 7-Day Food Menu (Monday – Sunday)
             </h5>
-            <small class="text-muted">Week of {{ (weekly_calendar.keys()|list)[0].strftime('%d %B') if weekly_calendar else '' }} to {{ (weekly_calendar.keys()|list)[-1].strftime('%d %B, %Y') if weekly_calendar else '' }}</small>
+            <small class="text-muted">
+                Week of {{ (weekly_calendar.keys()|list)[0].strftime('%d %B') if weekly_calendar else '' }} to {{ (weekly_calendar.keys()|list)[-1].strftime('%d %B, %Y') if weekly_calendar else '' }}
+            </small>
         </div>
         <div>
-            <span class="badge bg-light text-dark border px-3 py-2">
-                <i class="fa-solid fa-circle-info text-info me-1"></i>Current Day is auto-highlighted below
+            <span class="badge bg-primary-subtle text-primary border border-primary-subtle px-3 py-2">
+                <i class="fa-solid fa-circle-check me-1"></i>Current Day auto-highlighted in blue
             </span>
         </div>
     </div>
 
     <div class="table-responsive">
-        <table class="table table-bordered align-middle text-center mb-0">
-            <thead class="table-light">
-                <tr>
-                    <th style="width: 14%;">Day & Date</th>
-                    <th style="width: 21.5%;">
-                        <div class="fw-bold text-dark"><i class="fa-solid fa-mug-hot text-warning me-1"></i>Breakfast</div>
-                        <small class="text-muted fw-normal">7:30 - 9:30 AM</small>
+        <table class="table table-bordered align-middle text-center mb-0" style="border-color: var(--border-color);">
+            <thead>
+                <tr class="bg-light">
+                    <th style="width: 14%; background-color: #f8fafc;" class="py-3 text-secondary small text-uppercase fw-bold">Day & Date</th>
+                    <th style="width: 21.5%; background-color: #f8fafc;" class="py-3">
+                        <div class="fw-bold text-dark"><i class="fa-solid fa-mug-hot text-warning me-1.5"></i>Breakfast</div>
+                        <small class="text-muted fw-normal" style="font-size: 0.75rem;">7:30 - 9:30 AM</small>
                     </th>
-                    <th style="width: 21.5%;">
-                        <div class="fw-bold text-dark"><i class="fa-solid fa-bowl-rice text-success me-1"></i>Lunch</div>
-                        <small class="text-muted fw-normal">12:30 - 2:30 PM</small>
+                    <th style="width: 21.5%; background-color: #f8fafc;" class="py-3">
+                        <div class="fw-bold text-dark"><i class="fa-solid fa-bowl-rice text-success me-1.5"></i>Lunch</div>
+                        <small class="text-muted fw-normal" style="font-size: 0.75rem;">12:30 - 2:30 PM</small>
                     </th>
-                    <th style="width: 21.5%;">
-                        <div class="fw-bold text-dark"><i class="fa-solid fa-cookie-bite text-info me-1"></i>Snacks</div>
-                        <small class="text-muted fw-normal">5:00 - 6:00 PM</small>
+                    <th style="width: 21.5%; background-color: #f8fafc;" class="py-3">
+                        <div class="fw-bold text-dark"><i class="fa-solid fa-cookie-bite text-info me-1.5"></i>Snacks</div>
+                        <small class="text-muted fw-normal" style="font-size: 0.75rem;">5:00 - 6:00 PM</small>
                     </th>
-                    <th style="width: 21.5%;">
-                        <div class="fw-bold text-dark"><i class="fa-solid fa-plate-wheat text-primary me-1"></i>Dinner</div>
-                        <small class="text-muted fw-normal">7:30 - 9:30 PM</small>
+                    <th style="width: 21.5%; background-color: #f8fafc;" class="py-3">
+                        <div class="fw-bold text-dark"><i class="fa-solid fa-plate-wheat text-primary me-1.5"></i>Dinner</div>
+                        <small class="text-muted fw-normal" style="font-size: 0.75rem;">7:30 - 9:30 PM</small>
                     </th>
                 </tr>
             </thead>
@@ -65,11 +68,11 @@
                 {% for day_date, slots in weekly_calendar.items() %}
                 {% set is_today = (day_date == today) %}
                 <tr {% if is_today %}class="table-primary border-primary border-2"{% endif %}>
-                    <td class="table-light fw-bold text-start p-3 {% if is_today %}bg-primary-subtle text-primary border-primary{% endif %}">
-                        <div class="d-flex align-items-center justify-content-between">
-                            <span class="fs-6 text-dark">{{ day_date.strftime('%A') }}</span>
+                    <td class="text-start p-3 {% if is_today %}bg-primary-subtle text-primary border-primary{% else %}bg-light-subtle{% endif %}">
+                        <div class="d-flex align-items-center justify-content-between mb-1">
+                            <span class="fs-6 fw-bold text-dark">{{ day_date.strftime('%A') }}</span>
                             {% if is_today %}
-                            <span class="badge bg-primary text-white text-uppercase" style="font-size: 0.65rem;">Today</span>
+                                <span class="badge bg-primary text-white text-uppercase" style="font-size: 0.65rem;">Today</span>
                             {% endif %}
                         </div>
                         <div class="small text-muted">{{ day_date.strftime('%d %b, %Y') }}</div>
@@ -82,25 +85,25 @@
                                 <em>Menu Pending</em>
                             </div>
                         {% else %}
-                            <div class="text-start p-2 rounded bg-light border h-100 d-flex flex-column justify-content-between">
+                            <div class="text-start p-2.5 rounded-3 bg-white border h-100 d-flex flex-column justify-content-between shadow-xs">
                                 <div>
-                                    <div class="d-flex justify-content-between align-items-center mb-1">
-                                        <span class="badge {% if meal.food_category == 'Vegetarian' %}bg-success{% elif meal.food_category == 'Non-Vegetarian' %}bg-danger{% else %}bg-info{% endif %} small">
+                                    <div class="d-flex justify-content-between align-items-center mb-1.5">
+                                        <span class="badge {% if meal.food_category == 'Vegetarian' %}bg-success-subtle text-success border border-success-subtle{% elif meal.food_category == 'Non-Vegetarian' %}bg-danger-subtle text-danger border border-danger-subtle{% else %}bg-info-subtle text-info border border-info-subtle{% endif %}" style="font-size: 0.7rem;">
                                             {{ meal.food_category }}
                                         </span>
-                                        <span class="small text-muted">{{ meal.meal_timing }}</span>
+                                        <small class="text-muted" style="font-size: 0.7rem;">{{ meal.meal_timing }}</small>
                                     </div>
                                     <div class="fw-bold small text-dark mb-1">{{ meal.title }}</div>
                                     
                                     {% if meal.special_dish %}
-                                    <div class="mb-1">
-                                        <span class="badge bg-warning-subtle text-warning-emphasis border border-warning-subtle small py-1 px-2" style="font-size: 0.72rem;">
+                                    <div class="mb-1.5">
+                                        <span class="badge bg-warning-subtle text-warning-emphasis border border-warning-subtle py-0.5 px-1.5" style="font-size: 0.7rem;">
                                             <i class="fa-solid fa-crown me-1 text-warning"></i>{{ meal.special_dish }}
                                         </span>
                                     </div>
                                     {% endif %}
 
-                                    <div class="small text-muted mb-2" style="font-size: 0.8rem; line-height: 1.3;">
+                                    <div class="small text-muted mb-2" style="font-size: 0.78rem; line-height: 1.35;">
                                         {{ meal.food_items_display or 'Wholesome student meal' }}
                                     </div>
                                 </div>
@@ -109,23 +112,31 @@
                                 <div class="pt-2 border-top mt-auto">
                                     {% if meal.id in booked_menu_ids %}
                                         <div class="d-flex justify-content-between align-items-center">
-                                            <span class="badge bg-success text-white small"><i class="fa-solid fa-check me-1"></i>Booked</span>
+                                            <span class="badge bg-success text-white small py-1 px-2">
+                                                <i class="fa-solid fa-check me-1"></i>Booked
+                                            </span>
                                             {% if meal.is_booking_open %}
                                             <form method="POST" action="{{ url_for('student.cancel_meal_booking', booking_id=booked_menu_ids[meal.id]) }}">
                                                 <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                                                <button type="submit" class="btn btn-link text-danger p-0 small text-decoration-none" onclick="return confirm('Cancel this meal booking?');">Cancel</button>
+                                                <button type="submit" class="btn btn-link text-danger p-0 small text-decoration-none" style="font-size: 0.75rem;" onclick="return confirm('Cancel this meal booking?');">
+                                                    Cancel
+                                                </button>
                                             </form>
                                             {% endif %}
                                         </div>
                                     {% elif not meal.is_booking_open %}
-                                        <span class="badge bg-secondary text-white small w-100 py-1"><i class="fa-solid fa-lock me-1"></i>Closed</span>
+                                        <span class="badge bg-secondary-subtle text-secondary border small w-100 py-1" style="font-size: 0.72rem;">
+                                            <i class="fa-solid fa-lock me-1"></i>Booking Closed
+                                        </span>
                                     {% elif meal.is_capacity_full %}
-                                        <span class="badge bg-danger text-white small w-100 py-1">Full</span>
+                                        <span class="badge bg-danger-subtle text-danger border border-danger-subtle small w-100 py-1" style="font-size: 0.72rem;">
+                                            Full Capacity
+                                        </span>
                                     {% else %}
                                         <form method="POST" action="{{ url_for('student.book_meal', menu_id=meal.id) }}">
                                             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                                            <button type="submit" class="btn btn-outline-primary btn-sm w-100 py-1">
-                                                <i class="fa-solid fa-bookmark me-1"></i>Book
+                                            <button type="submit" class="btn btn-primary-custom btn-sm w-100 py-1">
+                                                <i class="fa-solid fa-bookmark me-1"></i>Book Meal
                                             </button>
                                         </form>
                                     {% endif %}
