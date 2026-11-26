@@ -2,15 +2,15 @@
     {% set ep = request.endpoint or '' %}
     {% set bp = request.blueprint or '' %}
     
-    <!-- Sidebar Header & Branding -->
+    <!-- Sidebar Header & Futuristic Nexus Branding -->
     <div class="sidebar-header">
         <a href="{% if current_user.is_admin %}{{ url_for('admin.dashboard') }}{% elif current_user.is_warden %}{{ url_for('warden.dashboard') }}{% elif current_user.is_student %}{{ url_for('student.dashboard') }}{% elif current_user.is_parent %}{{ url_for('parent.dashboard') }}{% elif current_user.is_security %}{{ url_for('security.dashboard') }}{% elif current_user.is_mess_manager %}{{ url_for('mess_manager.dashboard') }}{% elif current_user.is_mess_staff %}{{ url_for('mess_staff.dashboard') }}{% else %}{{ url_for('main.index') }}{% endif %}" class="sidebar-brand">
             <div class="sidebar-brand-icon">
-                <i class="fa-solid fa-hotel"></i>
+                <i class="fa-solid fa-atom"></i>
             </div>
             <div class="sidebar-brand-text">
-                <div class="sidebar-brand-title">{{ app_name }}</div>
-                <div class="sidebar-brand-badge">Enterprise HMS</div>
+                <div class="sidebar-brand-title">HOSTEL<span>EASE</span></div>
+                <div class="sidebar-brand-badge">NEXUS INFRASTRUCTURE</div>
             </div>
         </a>
         <button class="btn btn-link text-white-50 p-0 d-lg-none" id="sidebarClose" type="button" aria-label="Close sidebar">
@@ -21,7 +21,7 @@
     <!-- Navigation Menu Items -->
     <div class="sidebar-nav">
         {% if current_user.is_admin %}
-            <!-- ADMIN NAVIGATION -->
+            <!-- ADMIN COMMAND NAVIGATION -->
             <div class="nav-section-title">Core Management</div>
             <a href="{{ url_for('admin.dashboard') }}" class="sidebar-link {% if ep == 'admin.dashboard' %}active{% endif %}">
                 <i class="fa-solid fa-chart-line"></i> <span>Dashboard</span>
@@ -71,7 +71,7 @@
             </a>
 
         {% elif current_user.is_warden %}
-            <!-- WARDEN NAVIGATION -->
+            <!-- WARDEN SUPERVISORY NAVIGATION -->
             <div class="nav-section-title">Warden Desk</div>
             <a href="{{ url_for('warden.dashboard') }}" class="sidebar-link {% if ep == 'warden.dashboard' %}active{% endif %}">
                 <i class="fa-solid fa-chart-line"></i> <span>Dashboard</span>
@@ -99,7 +99,7 @@
             </a>
 
         {% elif current_user.is_security %}
-            <!-- SECURITY GUARD NAVIGATION -->
+            <!-- SECURITY GATE DESK NAVIGATION -->
             <div class="nav-section-title">Security Gate Desk</div>
             <a href="{{ url_for('security.dashboard') }}" class="sidebar-link {% if ep == 'security.dashboard' %}active{% endif %}">
                 <i class="fa-solid fa-chart-line"></i> <span>Station Overview</span>
@@ -115,7 +115,7 @@
             </a>
 
         {% elif current_user.is_student %}
-            <!-- STUDENT NAVIGATION -->
+            <!-- STUDENT RESIDENT NAVIGATION -->
             <div class="nav-section-title">Student Portal</div>
             <a href="{{ url_for('student.dashboard') }}" class="sidebar-link {% if ep == 'student.dashboard' %}active{% endif %}">
                 <i class="fa-solid fa-chart-pie"></i> <span>Overview</span>
@@ -143,7 +143,7 @@
             </a>
 
         {% elif current_user.is_parent %}
-            <!-- PARENT NAVIGATION -->
+            <!-- PARENT GUARDIAN NAVIGATION -->
             <div class="nav-section-title">Parent Portal</div>
             <a href="{{ url_for('parent.dashboard') }}" class="sidebar-link {% if ep == 'parent.dashboard' %}active{% endif %}">
                 <i class="fa-solid fa-chart-line"></i> <span>Dashboard</span>
@@ -171,7 +171,7 @@
             </a>
 
         {% elif current_user.is_mess_manager %}
-            <!-- MESS MANAGER NAVIGATION -->
+            <!-- MESS OPERATIONS NAVIGATION -->
             <div class="nav-section-title">Mess Operations</div>
             <a href="{{ url_for('mess_manager.dashboard') }}" class="sidebar-link {% if ep == 'mess_manager.dashboard' %}active{% endif %}">
                 <i class="fa-solid fa-chart-line"></i> <span>Dashboard</span>
@@ -224,7 +224,7 @@
         {% endif %}
     </div>
 
-    <!-- Sidebar Bottom User Card & Logout -->
+    <!-- Sidebar Bottom User Profile Card -->
     <div class="sidebar-footer">
         <div class="sidebar-user-card">
             <div class="d-flex align-items-center gap-2 overflow-hidden">
@@ -236,8 +236,8 @@
                     <div class="sidebar-user-role">{{ current_user.role.replace('_', ' ') }}</div>
                 </div>
             </div>
-            <a href="{{ url_for('auth.logout') }}" class="btn btn-sm btn-link text-danger p-0" title="Sign Out">
-                <i class="fa-solid fa-arrow-right-from-bracket"></i>
+            <a href="{{ url_for('auth.logout') }}" class="btn btn-sm btn-link text-danger p-0" title="Disconnect Session">
+                <i class="fa-solid fa-power-off"></i>
             </a>
         </div>
     </div>

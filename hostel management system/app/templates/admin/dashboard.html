@@ -1,16 +1,16 @@
 {% extends 'base.html' %}
 
-{% block title %}Admin Overview | HostelEase HMS{% endblock %}
+{% block title %}Nexus Admin Command Center | HOSTELEASE NEXUS{% endblock %}
 
 {% block content %}
 <!-- Top Header Bar -->
 <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4">
     <div>
         <div class="d-flex align-items-center gap-2 mb-1">
-            <h2 class="fw-bold text-dark mb-0">System Administration Desk</h2>
-            <span class="badge bg-primary-subtle text-primary border border-primary-subtle">Executive Control</span>
+            <h2 class="fw-bold text-white mb-0">Nexus Admin Command Center</h2>
+            <span class="badge bg-primary-subtle text-info border font-monospace">ROOT LEVEL // SECURE</span>
         </div>
-        <p class="text-muted small mb-0">Real-time status of hostel occupancy, fiscal balance, active leaves, and grievances</p>
+        <p class="text-muted small mb-0">Autonomous monitoring of hostel blocks, real-time bed telemetry, fiscal reserves, and maintenance nodes</p>
     </div>
     <div class="d-flex align-items-center gap-2 flex-wrap">
         <a href="{{ url_for('admin.add_student') }}" class="btn btn-primary-custom btn-sm">
@@ -19,8 +19,8 @@
         <a href="{{ url_for('admin.new_allocation') }}" class="btn btn-outline-secondary btn-sm">
             <i class="fa-solid fa-key me-1"></i>Allocate Bed
         </a>
-        <span class="badge bg-white text-secondary border px-3 py-2 d-none d-sm-inline-flex align-items-center gap-2 shadow-xs">
-            <span class="badge-status-dot bg-success animate-pulse"></span> Live Supabase Synced
+        <span class="badge bg-secondary-subtle text-muted border px-3 py-2 d-none d-sm-inline-flex align-items-center gap-2">
+            <span class="status-beacon"></span> SUPABASE PG15 SYNCED
         </span>
     </div>
 </div>
@@ -33,14 +33,14 @@
             <div>
                 <div class="stat-header">
                     <span class="stat-title">Active Residents</span>
-                    <div class="stat-icon-wrapper bg-primary-subtle text-primary">
+                    <div class="stat-icon-wrapper text-info">
                         <i class="fa-solid fa-user-graduate"></i>
                     </div>
                 </div>
-                <div class="stat-value">{{ total_students }}</div>
+                <div class="stat-value text-white">{{ total_students }}</div>
             </div>
             <div class="stat-subtitle">
-                <i class="fa-solid fa-building text-secondary me-1"></i>
+                <i class="fa-solid fa-building text-info me-1"></i>
                 <span>Across {{ total_hostels }} Hostel Blocks</span>
             </div>
         </div>
@@ -52,14 +52,14 @@
             <div>
                 <div class="stat-header">
                     <span class="stat-title">Bed Occupancy</span>
-                    <div class="stat-icon-wrapper bg-success-subtle text-success">
+                    <div class="stat-icon-wrapper text-success">
                         <i class="fa-solid fa-bed"></i>
                     </div>
                 </div>
-                <div class="stat-value text-success">{{ occupancy_rate }}%</div>
+                <div class="stat-value text-success" style="text-shadow: 0 0 15px rgba(52, 211, 153, 0.4);">{{ occupancy_rate }}%</div>
             </div>
             <div class="stat-subtitle">
-                <span class="fw-semibold text-dark">{{ occupied_beds }}</span> occupied &bull; {{ available_beds }} free
+                <span class="fw-semibold text-white">{{ occupied_beds }}</span> occupied &bull; {{ available_beds }} free
             </div>
         </div>
     </div>
@@ -70,11 +70,11 @@
             <div>
                 <div class="stat-header">
                     <span class="stat-title">Fee Receipts</span>
-                    <div class="stat-icon-wrapper bg-info-subtle text-info">
+                    <div class="stat-icon-wrapper text-info">
                         <i class="fa-solid fa-indian-rupee-sign"></i>
                     </div>
                 </div>
-                <div class="stat-value text-primary">₹{{ "{:,.0f}".format(total_fees_collected) }}</div>
+                <div class="stat-value text-info" style="text-shadow: 0 0 15px rgba(56, 189, 248, 0.4);">₹{{ "{:,.0f}".format(total_fees_collected) }}</div>
             </div>
             <div class="stat-subtitle text-truncate">
                 <i class="fa-solid fa-circle-check text-success me-1"></i>
@@ -89,14 +89,14 @@
             <div>
                 <div class="stat-header">
                     <span class="stat-title">Pending Leave</span>
-                    <div class="stat-icon-wrapper bg-warning-subtle text-warning">
+                    <div class="stat-icon-wrapper text-warning">
                         <i class="fa-solid fa-calendar-days"></i>
                     </div>
                 </div>
-                <div class="stat-value text-warning">{{ pending_leaves }}</div>
+                <div class="stat-value text-warning" style="text-shadow: 0 0 15px rgba(251, 191, 36, 0.4);">{{ pending_leaves }}</div>
             </div>
             <div class="stat-subtitle">
-                <a href="{{ url_for('admin.leaves_list') }}" class="text-decoration-none">
+                <a href="{{ url_for('admin.leaves_list') }}" class="text-warning text-decoration-none">
                     Review out-passes &rarr;
                 </a>
             </div>
@@ -109,14 +109,14 @@
             <div>
                 <div class="stat-header">
                     <span class="stat-title">Open Grievances</span>
-                    <div class="stat-icon-wrapper bg-danger-subtle text-danger">
+                    <div class="stat-icon-wrapper text-danger">
                         <i class="fa-solid fa-triangle-exclamation"></i>
                     </div>
                 </div>
-                <div class="stat-value text-danger">{{ pending_complaints }}</div>
+                <div class="stat-value text-danger" style="text-shadow: 0 0 15px rgba(251, 113, 133, 0.4);">{{ pending_complaints }}</div>
             </div>
             <div class="stat-subtitle">
-                <a href="{{ url_for('admin.complaints_list') }}" class="text-decoration-none text-danger">
+                <a href="{{ url_for('admin.complaints_list') }}" class="text-danger text-decoration-none">
                     View maintenance &rarr;
                 </a>
             </div>
@@ -131,10 +131,10 @@
         <div class="card h-100">
             <div class="card-header">
                 <div class="d-flex align-items-center gap-2">
-                    <i class="fa-solid fa-chart-column text-primary"></i>
-                    <span>Hostel Occupancy Distribution</span>
+                    <i class="fa-solid fa-chart-column text-info"></i>
+                    <span class="text-white">Hostel Occupancy Distribution</span>
                 </div>
-                <span class="badge bg-light text-muted border">Beds per Block</span>
+                <span class="badge bg-secondary-subtle text-muted">Beds per Block</span>
             </div>
             <div class="card-body">
                 <div style="height: 290px; position: relative;">
@@ -150,9 +150,9 @@
             <div class="card-header">
                 <div class="d-flex align-items-center gap-2">
                     <i class="fa-solid fa-chart-pie text-warning"></i>
-                    <span>Grievances by Category</span>
+                    <span class="text-white">Grievances by Category</span>
                 </div>
-                <span class="badge bg-light text-muted border">Active Tickets</span>
+                <span class="badge bg-secondary-subtle text-muted">Active Tickets</span>
             </div>
             <div class="card-body">
                 <div style="height: 290px; position: relative;">
@@ -170,8 +170,8 @@
         <div class="card">
             <div class="card-header">
                 <div class="d-flex align-items-center gap-2">
-                    <i class="fa-solid fa-users text-primary"></i>
-                    <span>Recently Registered Students</span>
+                    <i class="fa-solid fa-users text-info"></i>
+                    <span class="text-white">Recently Registered Students</span>
                 </div>
                 <a href="{{ url_for('admin.students_list') }}" class="btn btn-sm btn-outline-secondary">
                     View Directory &rarr;
@@ -196,13 +196,13 @@
                                             {{ s.full_name[:1].upper() }}
                                         </div>
                                         <div>
-                                            <div class="fw-semibold text-dark small">{{ s.full_name }}</div>
+                                            <div class="fw-semibold text-white small">{{ s.full_name }}</div>
                                             <small class="text-muted" style="font-size: 0.75rem;">{{ s.phone }}</small>
                                         </div>
                                     </div>
                                 </td>
                                 <td>
-                                    <span class="badge bg-light text-dark border font-monospace small">{{ s.enrollment_no }}</span>
+                                    <span class="badge bg-secondary-subtle text-info font-monospace small">{{ s.enrollment_no }}</span>
                                 </td>
                                 <td class="small">{{ s.branch }} (Yr {{ s.year }})</td>
                                 <td>
@@ -232,7 +232,7 @@
             <div class="card-header">
                 <div class="d-flex align-items-center gap-2">
                     <i class="fa-solid fa-bell text-danger"></i>
-                    <span>Active Grievances</span>
+                    <span class="text-white">Active Grievances</span>
                 </div>
                 <a href="{{ url_for('admin.complaints_list') }}" class="btn btn-sm btn-outline-secondary">
                     Manage All &rarr;
@@ -242,7 +242,7 @@
                 {% for c in recent_complaints %}
                     <div class="list-group-item px-3 py-3 border-bottom">
                         <div class="d-flex justify-content-between align-items-start mb-1 gap-2">
-                            <a href="{{ url_for('admin.view_complaint', id=c.id) }}" class="fw-semibold text-dark small text-decoration-none">
+                            <a href="{{ url_for('admin.view_complaint', id=c.id) }}" class="fw-semibold text-white small text-decoration-none">
                                 {{ c.title }}
                             </a>
                             <span class="badge-status badge-{{ c.status }}" style="font-size: 0.7rem;">
@@ -250,7 +250,7 @@
                             </span>
                         </div>
                         <div class="d-flex align-items-center gap-2 text-muted" style="font-size: 0.75rem;">
-                            <span class="badge bg-light text-secondary border py-0 px-1">{{ c.category|capitalize }}</span>
+                            <span class="badge bg-secondary-subtle py-0 px-1">{{ c.category|capitalize }}</span>
                             <span>&bull;</span>
                             <span class="text-{% if c.priority == 'high' or c.priority == 'urgent' %}danger fw-bold{% else %}secondary{% endif %}">
                                 Priority: {{ c.priority|capitalize }}
@@ -286,13 +286,17 @@ document.addEventListener('DOMContentLoaded', function () {
                             {
                                 label: 'Occupied Beds',
                                 data: data.occupancy.occupied,
-                                backgroundColor: '#2563eb',
+                                backgroundColor: 'rgba(56, 189, 248, 0.85)',
+                                borderColor: '#38bdf8',
+                                borderWidth: 1,
                                 borderRadius: 6
                             },
                             {
                                 label: 'Available Beds',
                                 data: data.occupancy.available,
-                                backgroundColor: '#10b981',
+                                backgroundColor: 'rgba(52, 211, 153, 0.85)',
+                                borderColor: '#34d399',
+                                borderWidth: 1,
                                 borderRadius: 6
                             }
                         ]
@@ -303,12 +307,19 @@ document.addEventListener('DOMContentLoaded', function () {
                         plugins: {
                             legend: {
                                 position: 'top',
-                                labels: { font: { family: 'Inter', size: 12, weight: 500 } }
+                                labels: { color: '#94a3b8', font: { family: 'Inter', size: 12, weight: 600 } }
                             }
                         },
                         scales: {
-                            x: { grid: { display: false } },
-                            y: { beginAtZero: true, ticks: { precision: 0 } }
+                            x: {
+                                grid: { display: false },
+                                ticks: { color: '#94a3b8' }
+                            },
+                            y: {
+                                beginAtZero: true,
+                                ticks: { precision: 0, color: '#94a3b8' },
+                                grid: { color: 'rgba(148, 163, 184, 0.1)' }
+                            }
                         }
                     }
                 });
@@ -323,7 +334,11 @@ document.addEventListener('DOMContentLoaded', function () {
                         labels: data.complaints.labels,
                         datasets: [{
                             data: data.complaints.data,
-                            backgroundColor: ['#f59e0b', '#3b82f6', '#10b981', '#8b5cf6', '#ef4444', '#64748b']
+                            backgroundColor: [
+                                '#38bdf8', '#8b5cf6', '#34d399', '#fbbf24', '#fb7185', '#64748b'
+                            ],
+                            borderColor: '#070b14',
+                            borderWidth: 2
                         }]
                     },
                     options: {
@@ -332,10 +347,10 @@ document.addEventListener('DOMContentLoaded', function () {
                         plugins: {
                             legend: {
                                 position: 'bottom',
-                                labels: { font: { family: 'Inter', size: 12, weight: 500 } }
+                                labels: { color: '#94a3b8', font: { family: 'Inter', size: 11, weight: 500 } }
                             }
                         },
-                        cutout: '68%'
+                        cutout: '70%'
                     }
                 });
             }

@@ -1,74 +1,75 @@
 {% extends 'base.html' %}
 
-{% block title %}Resident Registration | HostelEase HMS{% endblock %}
+{% block title %}Resident Registration | HOSTELEASE NEXUS{% endblock %}
 
 {% block content %}
 <div class="row justify-content-center py-4">
     <div class="col-lg-10 col-xl-8">
-        <div class="card border-0 shadow-lg rounded-4 overflow-hidden bg-white">
+        <div class="card border-0 shadow-lg rounded-4 overflow-hidden" style="background: rgba(15, 23, 42, 0.85); backdrop-filter: blur(20px); border: 1px solid var(--glass-border) !important;">
             <div class="p-4 p-md-5">
                 <div class="text-center mb-4">
-                    <div class="sidebar-brand-icon mx-auto mb-3" style="width: 52px; height: 52px; font-size: 1.5rem; border-radius: 12px;">
+                    <div class="sidebar-brand-icon mx-auto mb-3" style="width: 56px; height: 56px; font-size: 1.6rem; border-radius: 14px;">
                         <i class="fa-solid fa-user-plus"></i>
                     </div>
-                    <h3 class="fw-bold text-dark mb-1">Hostel Resident Registration</h3>
-                    <p class="text-muted small">Enroll official academic, personal, and guardian emergency contact details</p>
+                    <div class="small fw-bold text-uppercase letter-spacing-1 text-info mb-1" style="font-size: 0.72rem; letter-spacing: 0.15em;">Resident Enrollment</div>
+                    <h3 class="fw-bold text-white mb-1">Hostel Resident Identity Enrollment</h3>
+                    <p class="text-muted small">Register academic credentials, resident node, and emergency telemetries</p>
                 </div>
 
                 <form method="POST" action="{{ url_for('auth.register') }}">
                     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
 
                     <!-- Section 1 -->
-                    <div class="card border mb-4 rounded-3 p-3 bg-light-subtle">
+                    <div class="card mb-4 rounded-3 p-3.5" style="background: rgba(255, 255, 255, 0.02); border: 1px solid var(--glass-border) !important;">
                         <div class="d-flex align-items-center gap-2 mb-3">
-                            <span class="badge bg-primary text-white rounded-circle p-2" style="width: 26px; height: 26px; display: inline-flex; align-items: center; justify-content: center; font-size: 0.75rem;">1</span>
-                            <h6 class="fw-bold text-dark mb-0">Account Credentials</h6>
+                            <span class="badge bg-primary text-white rounded-circle p-2" style="width: 28px; height: 28px; display: inline-flex; align-items: center; justify-content: center; font-size: 0.75rem; box-shadow: 0 0 10px rgba(56, 189, 248, 0.5);">1</span>
+                            <h6 class="fw-bold text-white mb-0">System Access Credentials</h6>
                         </div>
                         <div class="row g-3">
                             <div class="col-md-6">
-                                <label class="form-label small fw-semibold">Choose Username *</label>
+                                <label class="form-label small fw-semibold text-muted">Choose Username *</label>
                                 <input type="text" class="form-control" name="username" placeholder="e.g. rohit_kumar" required>
                             </div>
                             <div class="col-md-6">
-                                <label class="form-label small fw-semibold">Official Email Address *</label>
+                                <label class="form-label small fw-semibold text-muted">Official University Email *</label>
                                 <input type="email" class="form-control" name="email" placeholder="name@aktu.ac.in" required>
                             </div>
                             <div class="col-md-6">
-                                <label class="form-label small fw-semibold">Password *</label>
+                                <label class="form-label small fw-semibold text-muted">Password Key *</label>
                                 <input type="password" class="form-control" name="password" placeholder="At least 6 characters" required>
                             </div>
                             <div class="col-md-6">
-                                <label class="form-label small fw-semibold">Confirm Password *</label>
-                                <input type="password" class="form-control" name="confirm_password" placeholder="Confirm password" required>
+                                <label class="form-label small fw-semibold text-muted">Confirm Password Key *</label>
+                                <input type="password" class="form-control" name="confirm_password" placeholder="Confirm password key" required>
                             </div>
                         </div>
                     </div>
 
                     <!-- Section 2 -->
-                    <div class="card border mb-4 rounded-3 p-3 bg-light-subtle">
+                    <div class="card mb-4 rounded-3 p-3.5" style="background: rgba(255, 255, 255, 0.02); border: 1px solid var(--glass-border) !important;">
                         <div class="d-flex align-items-center gap-2 mb-3">
-                            <span class="badge bg-primary text-white rounded-circle p-2" style="width: 26px; height: 26px; display: inline-flex; align-items: center; justify-content: center; font-size: 0.75rem;">2</span>
-                            <h6 class="fw-bold text-dark mb-0">Student Academic & Hostel Profile</h6>
+                            <span class="badge bg-primary text-white rounded-circle p-2" style="width: 28px; height: 28px; display: inline-flex; align-items: center; justify-content: center; font-size: 0.75rem; box-shadow: 0 0 10px rgba(56, 189, 248, 0.5);">2</span>
+                            <h6 class="fw-bold text-white mb-0">Student Academic & Demographic Particulars</h6>
                         </div>
                         <div class="row g-3">
                             <div class="col-md-6">
-                                <label class="form-label small fw-semibold">Full Legal Name *</label>
+                                <label class="form-label small fw-semibold text-muted">Full Legal Name *</label>
                                 <input type="text" class="form-control" name="full_name" placeholder="Full Name as per 10th marksheet" required>
                             </div>
                             <div class="col-md-6">
-                                <label class="form-label small fw-semibold">University Enrollment Number *</label>
+                                <label class="form-label small fw-semibold text-muted">University Enrollment Number *</label>
                                 <input type="text" class="form-control" name="enrollment_no" placeholder="e.g. AKTU2023CSE0105" required>
                             </div>
                             <div class="col-md-6">
-                                <label class="form-label small fw-semibold">University Roll Number</label>
+                                <label class="form-label small fw-semibold text-muted">University Roll Number</label>
                                 <input type="text" class="form-control" name="roll_no" placeholder="e.g. 23000101005">
                             </div>
                             <div class="col-md-6">
-                                <label class="form-label small fw-semibold">Phone Number *</label>
+                                <label class="form-label small fw-semibold text-muted">Mobile Phone *</label>
                                 <input type="tel" class="form-control" name="phone" placeholder="+91 9876543210" required>
                             </div>
                             <div class="col-md-4">
-                                <label class="form-label small fw-semibold">Gender *</label>
+                                <label class="form-label small fw-semibold text-muted">Gender Identity *</label>
                                 <select class="form-select" name="gender" required>
                                     <option value="male" selected>Male (Boys Hostel)</option>
                                     <option value="female">Female (Girls Hostel)</option>
@@ -76,7 +77,7 @@
                                 </select>
                             </div>
                             <div class="col-md-4">
-                                <label class="form-label small fw-semibold">Branch / Department *</label>
+                                <label class="form-label small fw-semibold text-muted">Academic Branch *</label>
                                 <select class="form-select" name="branch" required>
                                     <option value="Computer Science & Engineering" selected>CSE</option>
                                     <option value="Information Technology">IT</option>
@@ -87,7 +88,7 @@
                                 </select>
                             </div>
                             <div class="col-md-2">
-                                <label class="form-label small fw-semibold">Year *</label>
+                                <label class="form-label small fw-semibold text-muted">Year *</label>
                                 <select class="form-select" name="year" required>
                                     <option value="1">1st Year</option>
                                     <option value="2">2nd Year</option>
@@ -96,33 +97,33 @@
                                 </select>
                             </div>
                             <div class="col-md-2">
-                                <label class="form-label small fw-semibold">Semester *</label>
+                                <label class="form-label small fw-semibold text-muted">Semester *</label>
                                 <input type="number" class="form-control" name="semester" min="1" max="8" value="5" required>
                             </div>
                         </div>
                     </div>
 
                     <!-- Section 3 -->
-                    <div class="card border mb-4 rounded-3 p-3 bg-light-subtle">
+                    <div class="card mb-4 rounded-3 p-3.5" style="background: rgba(255, 255, 255, 0.02); border: 1px solid var(--glass-border) !important;">
                         <div class="d-flex align-items-center gap-2 mb-3">
-                            <span class="badge bg-primary text-white rounded-circle p-2" style="width: 26px; height: 26px; display: inline-flex; align-items: center; justify-content: center; font-size: 0.75rem;">3</span>
-                            <h6 class="fw-bold text-dark mb-0">Guardian & Emergency Information</h6>
+                            <span class="badge bg-primary text-white rounded-circle p-2" style="width: 28px; height: 28px; display: inline-flex; align-items: center; justify-content: center; font-size: 0.75rem; box-shadow: 0 0 10px rgba(56, 189, 248, 0.5);">3</span>
+                            <h6 class="fw-bold text-white mb-0">Guardian Emergency Contacts</h6>
                         </div>
                         <div class="row g-3">
                             <div class="col-md-6">
-                                <label class="form-label small fw-semibold">Guardian / Parent Name *</label>
+                                <label class="form-label small fw-semibold text-muted">Guardian / Parent Name *</label>
                                 <input type="text" class="form-control" name="guardian_name" placeholder="Father/Mother/Guardian" required>
                             </div>
                             <div class="col-md-6">
-                                <label class="form-label small fw-semibold">Guardian Contact Phone *</label>
+                                <label class="form-label small fw-semibold text-muted">Guardian Contact Phone *</label>
                                 <input type="tel" class="form-control" name="guardian_phone" placeholder="+91 9876543210" required>
                             </div>
                             <div class="col-md-6">
-                                <label class="form-label small fw-semibold">Emergency Alternate Phone</label>
+                                <label class="form-label small fw-semibold text-muted">Emergency Alternate Phone</label>
                                 <input type="tel" class="form-control" name="emergency_phone" placeholder="Alternate phone">
                             </div>
                             <div class="col-md-6">
-                                <label class="form-label small fw-semibold">Blood Group</label>
+                                <label class="form-label small fw-semibold text-muted">Blood Group</label>
                                 <select class="form-select" name="blood_group">
                                     <option value="A+">A+</option>
                                     <option value="A-">A-</option>
@@ -135,7 +136,7 @@
                                 </select>
                             </div>
                             <div class="col-12">
-                                <label class="form-label small fw-semibold">Permanent Home Address *</label>
+                                <label class="form-label small fw-semibold text-muted">Permanent Address *</label>
                                 <textarea class="form-control" name="address" rows="2" placeholder="House No, Village/Street, District, State, PIN" required></textarea>
                             </div>
                         </div>
@@ -143,10 +144,10 @@
 
                     <div class="d-flex justify-content-between align-items-center pt-2">
                         <a href="{{ url_for('auth.login') }}" class="btn btn-outline-secondary">
-                            <i class="fa-solid fa-arrow-left me-1"></i> Back to Login
+                            <i class="fa-solid fa-arrow-left me-1"></i> Return to Sign In
                         </a>
-                        <button type="submit" class="btn btn-primary-custom px-4 py-2.5 shadow-sm">
-                            <i class="fa-solid fa-check me-2"></i>Complete Registration
+                        <button type="submit" class="btn btn-primary-custom px-4 py-2.5">
+                            <i class="fa-solid fa-check me-2"></i>Complete Nexus Enrollment
                         </button>
                     </div>
                 </form>

@@ -1,26 +1,26 @@
 {% extends 'base.html' %}
 
-{% block title %}Warden Desk | HostelEase HMS{% endblock %}
+{% block title %}Warden Supervisory Desk | HOSTELEASE NEXUS{% endblock %}
 
 {% block content %}
 <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4">
     <div>
         <div class="d-flex align-items-center gap-2 mb-1">
-            <h2 class="fw-bold text-dark mb-0">Warden Operational Desk</h2>
+            <h2 class="fw-bold text-white mb-0">Warden Supervisory Command Center</h2>
             {% if assigned_hostel %}
-                <span class="badge bg-primary-subtle text-primary border border-primary-subtle font-monospace">
-                    {{ assigned_hostel.name }}
+                <span class="badge bg-primary-subtle text-info border font-monospace">
+                    NODE: {{ assigned_hostel.name }}
                 </span>
             {% endif %}
         </div>
         <p class="text-muted small mb-0">
-            Welcome back, <strong>{{ warden_profile.full_name if warden_profile else current_user.username }}</strong>
-            &bull; Operational supervisory overview
+            Welcome, <strong>{{ warden_profile.full_name if warden_profile else current_user.username }}</strong>
+            &bull; Autonomous hostel wing telemetry & resident monitoring
         </p>
     </div>
     <div class="d-flex align-items-center gap-2">
-        <span class="badge bg-white text-secondary border px-3 py-2 d-flex align-items-center gap-2 shadow-xs">
-            <i class="fa-regular fa-calendar-check text-primary"></i> Roll Call Date: <strong>{{ today_date }}</strong>
+        <span class="badge bg-secondary-subtle text-muted border px-3 py-2 d-flex align-items-center gap-2">
+            <span class="status-beacon"></span> Roll-Call Cycle: <strong class="text-white">{{ today_date }}</strong>
         </span>
         <a href="{{ url_for('warden.attendance_view') }}" class="btn btn-primary-custom btn-sm">
             <i class="fa-solid fa-clipboard-user me-1"></i>Mark Attendance
@@ -36,15 +36,15 @@
             <div>
                 <div class="stat-header">
                     <span class="stat-title">Hostel Students</span>
-                    <div class="stat-icon-wrapper bg-primary-subtle text-primary">
+                    <div class="stat-icon-wrapper text-info">
                         <i class="fa-solid fa-users"></i>
                     </div>
                 </div>
-                <div class="stat-value">{{ student_count }}</div>
+                <div class="stat-value text-white">{{ student_count }}</div>
             </div>
             <div class="stat-subtitle">
-                <i class="fa-solid fa-building text-secondary me-1"></i>
-                <span>Active block residents</span>
+                <i class="fa-solid fa-building text-info me-1"></i>
+                <span>Active residents in assigned block</span>
             </div>
         </div>
     </div>
@@ -55,15 +55,15 @@
             <div>
                 <div class="stat-header">
                     <span class="stat-title">Pending Leave</span>
-                    <div class="stat-icon-wrapper bg-warning-subtle text-warning">
+                    <div class="stat-icon-wrapper text-warning">
                         <i class="fa-solid fa-envelope-open-text"></i>
                     </div>
                 </div>
-                <div class="stat-value text-warning">{{ pending_leaves }}</div>
+                <div class="stat-value text-warning" style="text-shadow: 0 0 15px rgba(251, 191, 36, 0.4);">{{ pending_leaves }}</div>
             </div>
             <div class="stat-subtitle">
-                <a href="{{ url_for('warden.leaves_list') }}" class="text-decoration-none">
-                    Awaiting authorization &rarr;
+                <a href="{{ url_for('warden.leaves_list') }}" class="text-warning text-decoration-none">
+                    Out-pass approvals pending &rarr;
                 </a>
             </div>
         </div>
@@ -75,15 +75,15 @@
             <div>
                 <div class="stat-header">
                     <span class="stat-title">Open Complaints</span>
-                    <div class="stat-icon-wrapper bg-danger-subtle text-danger">
+                    <div class="stat-icon-wrapper text-danger">
                         <i class="fa-solid fa-triangle-exclamation"></i>
                     </div>
                 </div>
-                <div class="stat-value text-danger">{{ pending_complaints }}</div>
+                <div class="stat-value text-danger" style="text-shadow: 0 0 15px rgba(251, 113, 133, 0.4);">{{ pending_complaints }}</div>
             </div>
             <div class="stat-subtitle">
-                <a href="{{ url_for('warden.complaints_list') }}" class="text-decoration-none text-danger">
-                    Maintenance pending &rarr;
+                <a href="{{ url_for('warden.complaints_list') }}" class="text-danger text-decoration-none">
+                    Maintenance tickets open &rarr;
                 </a>
             </div>
         </div>
@@ -95,16 +95,16 @@
             <div>
                 <div class="stat-header">
                     <span class="stat-title">Night Attendance</span>
-                    <div class="stat-icon-wrapper bg-success-subtle text-success">
+                    <div class="stat-icon-wrapper text-success">
                         <i class="fa-solid fa-clipboard-check"></i>
                     </div>
                 </div>
-                <div class="stat-value text-success" style="font-size: 1.5rem;">
+                <div class="stat-value text-success" style="font-size: 1.5rem; text-shadow: 0 0 15px rgba(52, 211, 153, 0.4);">
                     Daily Roster
                 </div>
             </div>
             <div class="stat-subtitle">
-                <a href="{{ url_for('warden.attendance_view') }}" class="text-decoration-none text-success">
+                <a href="{{ url_for('warden.attendance_view') }}" class="text-success text-decoration-none">
                     Ready for {{ today_date }} &rarr;
                 </a>
             </div>
@@ -119,20 +119,20 @@
             <div class="card-header">
                 <div class="d-flex align-items-center gap-2">
                     <i class="fa-solid fa-bolt text-warning"></i>
-                    <span>Primary Operational Workflows</span>
+                    <span class="text-white">Primary Supervisory Workflows</span>
                 </div>
-                <span class="badge bg-light text-muted border">Quick Launchers</span>
+                <span class="badge bg-secondary-subtle text-muted">Quick Launchers</span>
             </div>
             <div class="card-body">
                 <div class="row g-3">
                     <div class="col-md-4">
-                        <div class="p-3 border rounded-3 bg-light-subtle h-100 d-flex flex-column justify-content-between">
+                        <div class="p-3 border rounded-3 h-100 d-flex flex-column justify-content-between" style="background: rgba(255, 255, 255, 0.02); border-color: var(--glass-border) !important;">
                             <div>
                                 <div class="d-flex align-items-center gap-2 mb-2">
-                                    <span class="badge bg-warning-subtle text-warning border border-warning-subtle p-2 rounded-2">
+                                    <span class="badge bg-warning-subtle text-warning border p-2 rounded-2">
                                         <i class="fa-solid fa-envelope-open-text fs-6"></i>
                                     </span>
-                                    <h6 class="fw-bold mb-0 text-dark">Leave Requests</h6>
+                                    <h6 class="fw-bold mb-0 text-white">Leave Requests</h6>
                                 </div>
                                 <p class="small text-muted mb-3">Review out-station travel permissions, medical leaves, and out-passes.</p>
                             </div>
@@ -143,13 +143,13 @@
                     </div>
 
                     <div class="col-md-4">
-                        <div class="p-3 border rounded-3 bg-light-subtle h-100 d-flex flex-column justify-content-between">
+                        <div class="p-3 border rounded-3 h-100 d-flex flex-column justify-content-between" style="background: rgba(255, 255, 255, 0.02); border-color: var(--glass-border) !important;">
                             <div>
                                 <div class="d-flex align-items-center gap-2 mb-2">
-                                    <span class="badge bg-primary-subtle text-primary border border-primary-subtle p-2 rounded-2">
+                                    <span class="badge bg-primary-subtle text-info border p-2 rounded-2">
                                         <i class="fa-solid fa-clipboard-user fs-6"></i>
                                     </span>
-                                    <h6 class="fw-bold mb-0 text-dark">Mark Attendance</h6>
+                                    <h6 class="fw-bold mb-0 text-white">Mark Attendance</h6>
                                 </div>
                                 <p class="small text-muted mb-3">Conduct night hostel roll-call and record presence, absence, or leave status.</p>
                             </div>
@@ -160,13 +160,13 @@
                     </div>
 
                     <div class="col-md-4">
-                        <div class="p-3 border rounded-3 bg-light-subtle h-100 d-flex flex-column justify-content-between">
+                        <div class="p-3 border rounded-3 h-100 d-flex flex-column justify-content-between" style="background: rgba(255, 255, 255, 0.02); border-color: var(--glass-border) !important;">
                             <div>
                                 <div class="d-flex align-items-center gap-2 mb-2">
-                                    <span class="badge bg-danger-subtle text-danger border border-danger-subtle p-2 rounded-2">
+                                    <span class="badge bg-danger-subtle text-danger border p-2 rounded-2">
                                         <i class="fa-solid fa-wrench fs-6"></i>
                                     </span>
-                                    <h6 class="fw-bold mb-0 text-dark">Grievances</h6>
+                                    <h6 class="fw-bold mb-0 text-white">Grievances</h6>
                                 </div>
                                 <p class="small text-muted mb-3">Inspect electrical, plumbing, hygiene, Wi-Fi, or hostel maintenance issues.</p>
                             </div>
@@ -180,11 +180,11 @@
                 <!-- Secondary Row of Actions -->
                 <div class="row g-3 mt-1">
                     <div class="col-md-6">
-                        <div class="p-3 border rounded-3 bg-white d-flex align-items-center justify-content-between">
+                        <div class="p-3 border rounded-3 d-flex align-items-center justify-content-between" style="background: rgba(255, 255, 255, 0.02); border-color: var(--glass-border) !important;">
                             <div class="d-flex align-items-center gap-2">
                                 <i class="fa-solid fa-comments text-info fs-5"></i>
                                 <div>
-                                    <div class="fw-semibold text-dark small">Parent Inquiries</div>
+                                    <div class="fw-semibold text-white small">Parent Inquiries</div>
                                     <small class="text-muted">Direct communication channel with guardians</small>
                                 </div>
                             </div>
@@ -194,11 +194,11 @@
                         </div>
                     </div>
                     <div class="col-md-6">
-                        <div class="p-3 border rounded-3 bg-white d-flex align-items-center justify-content-between">
+                        <div class="p-3 border rounded-3 d-flex align-items-center justify-content-between" style="background: rgba(255, 255, 255, 0.02); border-color: var(--glass-border) !important;">
                             <div class="d-flex align-items-center gap-2">
                                 <i class="fa-solid fa-utensils text-success fs-5"></i>
                                 <div>
-                                    <div class="fw-semibold text-dark small">Mess Monitoring</div>
+                                    <div class="fw-semibold text-white small">Mess Monitoring</div>
                                     <small class="text-muted">Inspect weekly menus and dining quality</small>
                                 </div>
                             </div>
@@ -217,8 +217,8 @@
         <div class="card h-100">
             <div class="card-header">
                 <div class="d-flex align-items-center gap-2">
-                    <i class="fa-solid fa-bullhorn text-primary"></i>
-                    <span>Published Notices</span>
+                    <i class="fa-solid fa-bullhorn text-info"></i>
+                    <span class="text-white">Published Notices</span>
                 </div>
                 <a href="{{ url_for('warden.notices_list') }}" class="btn btn-sm btn-outline-secondary">
                     Post Notice
@@ -228,12 +228,12 @@
                 <div class="list-group list-group-flush">
                     {% for n in notices %}
                         <div class="list-group-item px-3 py-3 border-bottom">
-                            <div class="fw-semibold text-dark small mb-1">{{ n.title }}</div>
+                            <div class="fw-semibold text-white small mb-1">{{ n.title }}</div>
                             <div class="d-flex align-items-center gap-2 text-muted" style="font-size: 0.75rem;">
                                 <span><i class="fa-regular fa-clock me-1"></i>{{ n.created_at.strftime('%d %b %Y') }}</span>
                                 {% if n.priority %}
                                     <span>&bull;</span>
-                                    <span class="badge bg-light text-secondary border">{{ n.priority|capitalize }}</span>
+                                    <span class="badge bg-secondary-subtle">{{ n.priority|capitalize }}</span>
                                 {% endif %}
                             </div>
                         </div>

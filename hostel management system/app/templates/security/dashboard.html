@@ -7,18 +7,21 @@
 <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4">
     <div>
         <div class="d-flex align-items-center gap-2 mb-1">
-            <h2 class="fw-bold text-dark mb-0">Hostel Gate & Security Portal</h2>
-            <span class="badge bg-primary-subtle text-primary border border-primary-subtle">Perimeter Station</span>
+            <h2 class="fw-bold text-white mb-0">Hostel Gate & Security Portal</h2>
+            <span class="badge border" style="background: rgba(56, 189, 248, 0.15); color: #38bdf8; border-color: rgba(56, 189, 248, 0.3) !important;">Perimeter Station</span>
         </div>
-        <p class="text-muted small mb-0">
+        <p class="text-secondary small mb-0">
             Real-time digital out-pass scanning, gate ingress/egress authorization, and live campus perimeter tracking
         </p>
     </div>
     <div class="d-flex gap-2">
-        <a href="{{ url_for('security.scan', mode='EXIT') }}" class="btn btn-warning px-4 py-2 fw-bold shadow-sm" style="color: #000;">
+        <a href="{{ url_for('security.scan', mode='EXIT') }}" class="btn btn-warning px-4 py-2 fw-bold shadow-sm"
+            style="color: #000; box-shadow: 0 0 15px rgba(245, 158, 11, 0.3) !important;">
             <i class="fa-solid fa-arrow-right-from-bracket me-2"></i>Scan EXIT
         </a>
-        <a href="{{ url_for('security.scan', mode='ENTRY') }}" class="btn btn-success px-4 py-2 fw-bold shadow-sm text-white">
+        <a href="{{ url_for('security.scan', mode='ENTRY') }}"
+            class="btn btn-success px-4 py-2 fw-bold shadow-sm text-white"
+            style="box-shadow: 0 0 15px rgba(34, 197, 94, 0.3) !important;">
             <i class="fa-solid fa-arrow-right-to-bracket me-2"></i>Scan ENTRY
         </a>
     </div>
@@ -112,18 +115,23 @@
             </div>
             <div class="card-body d-flex flex-column justify-content-between">
                 <p class="text-muted small mb-3">
-                    Activate high-speed device camera to instantly scan the student's encrypted digital out-pass QR code at the gate terminal.
+                    Activate high-speed device camera to instantly scan the student's encrypted digital out-pass QR code
+                    at the gate terminal.
                 </p>
                 <div class="row g-3">
                     <div class="col-6">
-                        <a href="{{ url_for('security.scan', mode='EXIT') }}" class="btn btn-outline-warning w-100 py-3 rounded-3 text-center d-block border-2" style="background-color: #fffbeb;">
+                        <a href="{{ url_for('security.scan', mode='EXIT') }}"
+                            class="btn btn-outline-warning w-100 py-3 rounded-3 text-center d-block border-2"
+                            style="background-color: #fffbeb;">
                             <i class="fa-solid fa-arrow-right-from-bracket fa-2x mb-2 d-block text-warning"></i>
                             <span class="fw-bold text-dark d-block">Process EXIT</span>
                             <small class="text-muted" style="font-size: 0.75rem;">Departing Hostel</small>
                         </a>
                     </div>
                     <div class="col-6">
-                        <a href="{{ url_for('security.scan', mode='ENTRY') }}" class="btn btn-outline-success w-100 py-3 rounded-3 text-center d-block border-2" style="background-color: #f0fdf4;">
+                        <a href="{{ url_for('security.scan', mode='ENTRY') }}"
+                            class="btn btn-outline-success w-100 py-3 rounded-3 text-center d-block border-2"
+                            style="background-color: #f0fdf4;">
                             <i class="fa-solid fa-arrow-right-to-bracket fa-2x mb-2 d-block text-success"></i>
                             <span class="fw-bold text-dark d-block">Process ENTRY</span>
                             <small class="text-muted" style="font-size: 0.75rem;">Returning to Hostel</small>
@@ -146,18 +154,22 @@
             </div>
             <div class="card-body">
                 <form method="POST" action="{{ url_for('security.verify') }}">
-                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
 
                     <div class="mb-3">
                         <label class="form-label small fw-semibold text-secondary">Gate Event Type</label>
                         <div class="d-flex gap-4">
                             <div class="form-check">
-                                <input class="form-check-input" type="radio" name="event_type" id="dash_event_exit" value="EXIT" checked>
-                                <label class="form-check-label fw-bold text-warning small" for="dash_event_exit">EXIT (Departure)</label>
+                                <input class="form-check-input" type="radio" name="event_type" id="dash_event_exit"
+                                    value="EXIT" checked>
+                                <label class="form-check-label fw-bold text-warning small" for="dash_event_exit">EXIT
+                                    (Departure)</label>
                             </div>
                             <div class="form-check">
-                                <input class="form-check-input" type="radio" name="event_type" id="dash_event_entry" value="ENTRY">
-                                <label class="form-check-label fw-bold text-success small" for="dash_event_entry">ENTRY (Arrival)</label>
+                                <input class="form-check-input" type="radio" name="event_type" id="dash_event_entry"
+                                    value="ENTRY">
+                                <label class="form-check-label fw-bold text-success small" for="dash_event_entry">ENTRY
+                                    (Arrival)</label>
                             </div>
                         </div>
                     </div>
@@ -165,8 +177,10 @@
                     <div class="mb-3">
                         <label class="form-label small fw-semibold text-secondary">Pass Token or Reference Code</label>
                         <div class="input-group">
-                            <span class="input-group-text bg-light border-end-0"><i class="fa-solid fa-shield-halved text-muted"></i></span>
-                            <input type="text" name="token" class="form-control font-monospace border-start-0" placeholder="e.g. OP-xxxx or verification token" required>
+                            <span class="input-group-text bg-light border-end-0"><i
+                                    class="fa-solid fa-shield-halved text-muted"></i></span>
+                            <input type="text" name="token" class="form-control font-monospace border-start-0"
+                                placeholder="e.g. OP-xxxx or verification token" required>
                         </div>
                     </div>
 
@@ -209,50 +223,56 @@
             </thead>
             <tbody>
                 {% if outside_passes %}
-                    {% for p in outside_passes[:6] %}
-                    <tr>
-                        <td>
-                            <div class="fw-bold text-dark small">{{ p.student.full_name }}</div>
-                            <div class="small text-muted font-monospace" style="font-size: 0.72rem;">{{ p.student.enrollment_no }}</div>
-                        </td>
-                        <td class="small">
-                            <div class="fw-semibold text-dark">{{ p.leave_application.hostel.name if p.leave_application.hostel else 'N/A' }}</div>
-                            <div class="text-muted" style="font-size: 0.72rem;">Room: {{ p.student.room_number or 'N/A' }}</div>
-                        </td>
-                        <td class="small">
-                            <span class="badge bg-light text-dark border">{{ p.leave_application.leave_type }}</span>
-                            <div class="text-muted text-truncate" style="max-width: 180px; font-size: 0.75rem;">{{ p.leave_application.destination }}</div>
-                        </td>
-                        <td class="small">
-                            <div class="fw-semibold text-secondary">
-                                {{ p.actual_departure_time.strftime('%d %b, %I:%M %p') if p.actual_departure_time else 'N/A' }}
-                            </div>
-                        </td>
-                        <td class="small">
-                            <div class="fw-semibold {% if p.is_overdue %}text-danger fw-bold{% else %}text-muted{% endif %}">
-                                {{ p.expected_return_date.strftime('%d %b %Y') }} (10:00 PM)
-                            </div>
-                        </td>
-                        <td>
-                            {% if p.is_overdue %}
-                                <span class="badge bg-danger text-white">
-                                    <i class="fa-solid fa-circle-exclamation me-1"></i>OVERDUE
-                                </span>
-                            {% else %}
-                                <span class="badge bg-warning text-dark">
-                                    <i class="fa-solid fa-clock me-1"></i>OUTSIDE
-                                </span>
-                            {% endif %}
-                        </td>
-                    </tr>
-                    {% endfor %}
+                {% for p in outside_passes[:6] %}
+                <tr>
+                    <td>
+                        <div class="fw-bold text-dark small">{{ p.student.full_name }}</div>
+                        <div class="small text-muted font-monospace" style="font-size: 0.72rem;">{{
+                            p.student.enrollment_no }}</div>
+                    </td>
+                    <td class="small">
+                        <div class="fw-semibold text-dark">{{ p.leave_application.hostel.name if
+                            p.leave_application.hostel else 'N/A' }}</div>
+                        <div class="text-muted" style="font-size: 0.72rem;">Room: {{ p.student.room_number or 'N/A' }}
+                        </div>
+                    </td>
+                    <td class="small">
+                        <span class="badge bg-light text-dark border">{{ p.leave_application.leave_type }}</span>
+                        <div class="text-muted text-truncate" style="max-width: 180px; font-size: 0.75rem;">{{
+                            p.leave_application.destination }}</div>
+                    </td>
+                    <td class="small">
+                        <div class="fw-semibold text-secondary">
+                            {{ p.actual_departure_time.strftime('%d %b, %I:%M %p') if p.actual_departure_time else 'N/A'
+                            }}
+                        </div>
+                    </td>
+                    <td class="small">
+                        <div
+                            class="fw-semibold {% if p.is_overdue %}text-danger fw-bold{% else %}text-muted{% endif %}">
+                            {{ p.expected_return_date.strftime('%d %b %Y') }} (10:00 PM)
+                        </div>
+                    </td>
+                    <td>
+                        {% if p.is_overdue %}
+                        <span class="badge bg-danger text-white">
+                            <i class="fa-solid fa-circle-exclamation me-1"></i>OVERDUE
+                        </span>
+                        {% else %}
+                        <span class="badge bg-warning text-dark">
+                            <i class="fa-solid fa-clock me-1"></i>OUTSIDE
+                        </span>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
                 {% else %}
-                    <tr>
-                        <td colspan="6" class="text-center py-4 text-muted small">
-                            <i class="fa-solid fa-circle-check text-success fs-3 mb-2 d-block opacity-75"></i>
-                            All hostel residents are currently accounted for inside the hostel perimeter.
-                        </td>
-                    </tr>
+                <tr>
+                    <td colspan="6" class="text-center py-4 text-muted small">
+                        <i class="fa-solid fa-circle-check text-success fs-3 mb-2 d-block opacity-75"></i>
+                        All hostel residents are currently accounted for inside the hostel perimeter.
+                    </td>
+                </tr>
                 {% endif %}
             </tbody>
         </table>
@@ -284,54 +304,56 @@
             </thead>
             <tbody>
                 {% if recent_transactions %}
-                    {% for t in recent_transactions %}
-                    <tr>
-                        <td class="small">
-                            <div class="fw-bold text-dark">{{ t.scanned_at.strftime('%I:%M:%S %p') }}</div>
-                            <small class="text-muted" style="font-size: 0.72rem;">{{ t.scanned_at.strftime('%d %b %Y') }}</small>
-                        </td>
-                        <td>
-                            <div class="fw-bold text-dark small">{{ t.student.full_name }}</div>
-                            <small class="text-muted font-monospace" style="font-size: 0.72rem;">{{ t.student.enrollment_no }}</small>
-                        </td>
-                        <td>
-                            {% if t.event_type == 'EXIT' %}
-                                <span class="badge bg-warning text-dark px-2 py-1">
-                                    <i class="fa-solid fa-arrow-right-from-bracket me-1"></i>EXIT
-                                </span>
-                            {% else %}
-                                <span class="badge bg-success text-white px-2 py-1">
-                                    <i class="fa-solid fa-arrow-right-to-bracket me-1"></i>ENTRY
-                                </span>
-                            {% endif %}
-                        </td>
-                        <td class="small text-muted">{{ t.gate_location }}</td>
-                        <td>
-                            {% if t.verification_status == 'Success' %}
-                                <span class="badge bg-success-subtle text-success border border-success-subtle">
-                                    <i class="fa-solid fa-check me-1"></i>Verified
-                                </span>
-                            {% else %}
-                                <span class="badge bg-danger-subtle text-danger border border-danger-subtle">
-                                    <i class="fa-solid fa-xmark me-1"></i>Failed
-                                </span>
-                            {% endif %}
-                        </td>
-                        <td class="small">
-                            <span class="text-muted">{{ t.failure_reason or t.remarks or 'Standard gate scan' }}</span>
-                            {% if t.is_overdue %}
-                                <span class="badge bg-danger ms-1">OVERDUE</span>
-                            {% endif %}
-                        </td>
-                    </tr>
-                    {% endfor %}
+                {% for t in recent_transactions %}
+                <tr>
+                    <td class="small">
+                        <div class="fw-bold text-dark">{{ t.scanned_at.strftime('%I:%M:%S %p') }}</div>
+                        <small class="text-muted" style="font-size: 0.72rem;">{{ t.scanned_at.strftime('%d %b %Y')
+                            }}</small>
+                    </td>
+                    <td>
+                        <div class="fw-bold text-dark small">{{ t.student.full_name }}</div>
+                        <small class="text-muted font-monospace" style="font-size: 0.72rem;">{{ t.student.enrollment_no
+                            }}</small>
+                    </td>
+                    <td>
+                        {% if t.event_type == 'EXIT' %}
+                        <span class="badge bg-warning text-dark px-2 py-1">
+                            <i class="fa-solid fa-arrow-right-from-bracket me-1"></i>EXIT
+                        </span>
+                        {% else %}
+                        <span class="badge bg-success text-white px-2 py-1">
+                            <i class="fa-solid fa-arrow-right-to-bracket me-1"></i>ENTRY
+                        </span>
+                        {% endif %}
+                    </td>
+                    <td class="small text-muted">{{ t.gate_location }}</td>
+                    <td>
+                        {% if t.verification_status == 'Success' %}
+                        <span class="badge bg-success-subtle text-success border border-success-subtle">
+                            <i class="fa-solid fa-check me-1"></i>Verified
+                        </span>
+                        {% else %}
+                        <span class="badge bg-danger-subtle text-danger border border-danger-subtle">
+                            <i class="fa-solid fa-xmark me-1"></i>Failed
+                        </span>
+                        {% endif %}
+                    </td>
+                    <td class="small">
+                        <span class="text-muted">{{ t.failure_reason or t.remarks or 'Standard gate scan' }}</span>
+                        {% if t.is_overdue %}
+                        <span class="badge bg-danger ms-1">OVERDUE</span>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
                 {% else %}
-                    <tr>
-                        <td colspan="6" class="text-center py-4 text-muted small">
-                            <i class="fa-regular fa-clock fs-4 d-block mb-1 text-secondary opacity-50"></i>
-                            No gate scans recorded yet today.
-                        </td>
-                    </tr>
+                <tr>
+                    <td colspan="6" class="text-center py-4 text-muted small">
+                        <i class="fa-regular fa-clock fs-4 d-block mb-1 text-secondary opacity-50"></i>
+                        No gate scans recorded yet today.
+                    </td>
+                </tr>
                 {% endif %}
             </tbody>
         </table>

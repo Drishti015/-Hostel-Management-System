@@ -7,16 +7,16 @@
 <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4">
     <div>
         <div class="d-flex align-items-center gap-2 mb-1">
-            <h2 class="fw-bold text-dark mb-0">Parent & Guardian Desk</h2>
-            <span class="badge bg-primary-subtle text-primary border border-primary-subtle">Family Portal</span>
+            <h2 class="fw-bold text-white mb-0">Parent & Guardian Desk</h2>
+            <span class="badge border" style="background: rgba(56, 189, 248, 0.15); color: #38bdf8; border-color: rgba(56, 189, 248, 0.3) !important;">Family Portal</span>
         </div>
-        <p class="text-muted small mb-0">
+        <p class="text-secondary small mb-0">
             Welcome, <strong>{{ parent.parent_name }}</strong> ({{ parent.relationship_to_student }} of <strong>{{ data.student.full_name }}</strong>)
         </p>
     </div>
     <div class="d-flex align-items-center gap-2">
-        <span class="badge bg-white text-secondary border px-3 py-2 font-monospace shadow-xs">
-            <i class="fa-solid fa-graduation-cap text-primary me-1"></i>{{ data.student.enrollment_no }}
+        <span class="badge border px-3 py-2 font-monospace shadow-xs" style="background: rgba(15, 23, 42, 0.8); color: #38bdf8; border-color: rgba(148, 163, 184, 0.2) !important;">
+            <i class="fa-solid fa-graduation-cap text-info me-1"></i>{{ data.student.enrollment_no }}
         </span>
         <a href="{{ url_for('parent.child_profile') }}" class="btn btn-outline-secondary btn-sm">
             <i class="fa-solid fa-user me-1"></i>Child Profile
@@ -25,8 +25,8 @@
 </div>
 
 <!-- Prominent Real-Time Movement Status Banner -->
-<div class="card border-0 shadow-sm mb-4 overflow-hidden">
-    <div class="card-body p-4 bg-white border-start border-4 {% if data.movement.code == 'OVERDUE' %}border-danger{% elif data.movement.code == 'OUTSIDE' %}border-warning{% elif data.movement.code == 'APPROVED_PENDING_EXIT' %}border-info{% else %}border-success{% endif %}">
+<div class="card border-0 shadow-lg mb-4 overflow-hidden" style="background: rgba(11, 18, 32, 0.75); backdrop-filter: blur(16px); border: 1px solid rgba(148, 163, 184, 0.12) !important;">
+    <div class="card-body p-4 border-start border-4 {% if data.movement.code == 'OVERDUE' %}border-danger{% elif data.movement.code == 'OUTSIDE' %}border-warning{% elif data.movement.code == 'APPROVED_PENDING_EXIT' %}border-info{% else %}border-success{% endif %}">
         <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3">
             <div class="d-flex align-items-center gap-3">
                 <span class="d-inline-flex align-items-center justify-content-center rounded-circle p-3 {{ data.movement.badge_class }}" style="width: 52px; height: 52px; flex-shrink: 0;">
@@ -34,10 +34,10 @@
                 </span>
                 <div>
                     <div class="d-flex align-items-center gap-2 mb-1">
-                        <span class="small text-uppercase fw-bold text-muted">Gate & Movement Status:</span>
+                        <span class="small text-uppercase fw-bold text-secondary">Gate & Movement Status:</span>
                         <span class="badge {{ data.movement.badge_class }} px-2.5 py-1 small">{{ data.movement.badge_text }}</span>
                     </div>
-                    <p class="mb-0 text-dark small">{{ data.movement.description }}</p>
+                    <p class="mb-0 text-white small">{{ data.movement.description }}</p>
                 </div>
             </div>
             <div class="text-md-end text-nowrap">

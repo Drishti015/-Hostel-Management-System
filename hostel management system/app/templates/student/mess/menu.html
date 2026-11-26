@@ -6,10 +6,10 @@
 <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4">
     <div>
         <div class="d-flex align-items-center gap-2 mb-1">
-            <h2 class="fw-bold text-dark mb-0">Weekly Dining Schedule</h2>
-            <span class="badge bg-success-subtle text-success border border-success-subtle">7-Day Menu</span>
+            <h2 class="fw-bold text-white mb-0">Weekly Dining Schedule</h2>
+            <span class="badge border" style="background: rgba(34, 197, 94, 0.15); color: #4ade80; border-color: rgba(34, 197, 94, 0.3) !important;">7-Day Menu</span>
         </div>
-        <p class="text-muted small mb-0">
+        <p class="text-secondary small mb-0">
             Browse upcoming breakfast, lunch, snacks, and dinner options &bull; {{ mess.mess_name if mess else 'Hostel Dining Hall' }}
         </p>
     </div>
@@ -24,58 +24,58 @@
 </div>
 
 <!-- Weekly Schedule Container -->
-<div class="card border-0 shadow-sm rounded-4 p-4 bg-white mb-4">
+<div class="card border-0 shadow-lg rounded-4 p-4 mb-4" style="background: rgba(11, 18, 32, 0.75); backdrop-filter: blur(16px); border: 1px solid rgba(148, 163, 184, 0.12) !important;">
     <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-2 mb-4">
         <div>
-            <h5 class="fw-bold text-dark mb-1">
-                <i class="fa-solid fa-utensils text-primary me-2"></i>Full 7-Day Food Menu (Monday – Sunday)
+            <h5 class="fw-bold text-white mb-1">
+                <i class="fa-solid fa-utensils text-info me-2"></i>Full 7-Day Food Menu (Monday – Sunday)
             </h5>
-            <small class="text-muted">
+            <small class="text-secondary">
                 Week of {{ (weekly_calendar.keys()|list)[0].strftime('%d %B') if weekly_calendar else '' }} to {{ (weekly_calendar.keys()|list)[-1].strftime('%d %B, %Y') if weekly_calendar else '' }}
             </small>
         </div>
         <div>
-            <span class="badge bg-primary-subtle text-primary border border-primary-subtle px-3 py-2">
-                <i class="fa-solid fa-circle-check me-1"></i>Current Day auto-highlighted in blue
+            <span class="badge border px-3 py-2" style="background: rgba(56, 189, 248, 0.12); color: #38bdf8; border-color: rgba(56, 189, 248, 0.3) !important;">
+                <i class="fa-solid fa-circle-check me-1"></i>Current Day auto-highlighted in cyan
             </span>
         </div>
     </div>
 
     <div class="table-responsive">
-        <table class="table table-bordered align-middle text-center mb-0" style="border-color: var(--border-color);">
+        <table class="table align-middle text-center mb-0" style="border-color: rgba(148, 163, 184, 0.12);">
             <thead>
-                <tr class="bg-light">
-                    <th style="width: 14%; background-color: #f8fafc;" class="py-3 text-secondary small text-uppercase fw-bold">Day & Date</th>
-                    <th style="width: 21.5%; background-color: #f8fafc;" class="py-3">
-                        <div class="fw-bold text-dark"><i class="fa-solid fa-mug-hot text-warning me-1.5"></i>Breakfast</div>
-                        <small class="text-muted fw-normal" style="font-size: 0.75rem;">7:30 - 9:30 AM</small>
+                <tr>
+                    <th style="width: 14%; background-color: rgba(15, 23, 42, 0.7); color: #94a3b8;" class="py-3 small text-uppercase fw-bold">Day & Date</th>
+                    <th style="width: 21.5%; background-color: rgba(15, 23, 42, 0.7);" class="py-3">
+                        <div class="fw-bold text-white"><i class="fa-solid fa-mug-hot text-warning me-1.5"></i>Breakfast</div>
+                        <small class="text-secondary fw-normal" style="font-size: 0.75rem;">7:30 - 9:30 AM</small>
                     </th>
-                    <th style="width: 21.5%; background-color: #f8fafc;" class="py-3">
-                        <div class="fw-bold text-dark"><i class="fa-solid fa-bowl-rice text-success me-1.5"></i>Lunch</div>
-                        <small class="text-muted fw-normal" style="font-size: 0.75rem;">12:30 - 2:30 PM</small>
+                    <th style="width: 21.5%; background-color: rgba(15, 23, 42, 0.7);" class="py-3">
+                        <div class="fw-bold text-white"><i class="fa-solid fa-bowl-rice text-success me-1.5"></i>Lunch</div>
+                        <small class="text-secondary fw-normal" style="font-size: 0.75rem;">12:30 - 2:30 PM</small>
                     </th>
-                    <th style="width: 21.5%; background-color: #f8fafc;" class="py-3">
-                        <div class="fw-bold text-dark"><i class="fa-solid fa-cookie-bite text-info me-1.5"></i>Snacks</div>
-                        <small class="text-muted fw-normal" style="font-size: 0.75rem;">5:00 - 6:00 PM</small>
+                    <th style="width: 21.5%; background-color: rgba(15, 23, 42, 0.7);" class="py-3">
+                        <div class="fw-bold text-white"><i class="fa-solid fa-cookie-bite text-info me-1.5"></i>Snacks</div>
+                        <small class="text-secondary fw-normal" style="font-size: 0.75rem;">5:00 - 6:00 PM</small>
                     </th>
-                    <th style="width: 21.5%; background-color: #f8fafc;" class="py-3">
-                        <div class="fw-bold text-dark"><i class="fa-solid fa-plate-wheat text-primary me-1.5"></i>Dinner</div>
-                        <small class="text-muted fw-normal" style="font-size: 0.75rem;">7:30 - 9:30 PM</small>
+                    <th style="width: 21.5%; background-color: rgba(15, 23, 42, 0.7);" class="py-3">
+                        <div class="fw-bold text-white"><i class="fa-solid fa-plate-wheat text-primary me-1.5"></i>Dinner</div>
+                        <small class="text-secondary fw-normal" style="font-size: 0.75rem;">7:30 - 9:30 PM</small>
                     </th>
                 </tr>
             </thead>
             <tbody>
                 {% for day_date, slots in weekly_calendar.items() %}
                 {% set is_today = (day_date == today) %}
-                <tr {% if is_today %}class="table-primary border-primary border-2"{% endif %}>
-                    <td class="text-start p-3 {% if is_today %}bg-primary-subtle text-primary border-primary{% else %}bg-light-subtle{% endif %}">
+                <tr {% if is_today %}style="background: rgba(56, 189, 248, 0.05); border: 2px solid rgba(56, 189, 248, 0.4);"{% endif %}>
+                    <td class="text-start p-3" style="{% if is_today %}background: rgba(56, 189, 248, 0.12); border-left: 3px solid #38bdf8;{% else %}background: rgba(15, 23, 42, 0.4);{% endif %}">
                         <div class="d-flex align-items-center justify-content-between mb-1">
-                            <span class="fs-6 fw-bold text-dark">{{ day_date.strftime('%A') }}</span>
+                            <span class="fs-6 fw-bold {% if is_today %}text-info{% else %}text-white{% endif %}">{{ day_date.strftime('%A') }}</span>
                             {% if is_today %}
-                                <span class="badge bg-primary text-white text-uppercase" style="font-size: 0.65rem;">Today</span>
+                                <span class="badge bg-info text-dark text-uppercase fw-bold" style="font-size: 0.65rem;">Today</span>
                             {% endif %}
                         </div>
-                        <div class="small text-muted">{{ day_date.strftime('%d %b, %Y') }}</div>
+                        <div class="small text-secondary">{{ day_date.strftime('%d %b, %Y') }}</div>
                     </td>
                     {% for slot_name in ['Breakfast', 'Lunch', 'Snacks', 'Dinner'] %}
                     {% set meal = slots[slot_name] %}
@@ -85,15 +85,15 @@
                                 <em>Menu Pending</em>
                             </div>
                         {% else %}
-                            <div class="text-start p-2.5 rounded-3 bg-white border h-100 d-flex flex-column justify-content-between shadow-xs">
+                            <div class="text-start p-2.5 rounded-3 h-100 d-flex flex-column justify-content-between" style="background: rgba(15, 23, 42, 0.65); border: 1px solid rgba(148, 163, 184, 0.12);">
                                 <div>
                                     <div class="d-flex justify-content-between align-items-center mb-1.5">
                                         <span class="badge {% if meal.food_category == 'Vegetarian' %}bg-success-subtle text-success border border-success-subtle{% elif meal.food_category == 'Non-Vegetarian' %}bg-danger-subtle text-danger border border-danger-subtle{% else %}bg-info-subtle text-info border border-info-subtle{% endif %}" style="font-size: 0.7rem;">
                                             {{ meal.food_category }}
                                         </span>
-                                        <small class="text-muted" style="font-size: 0.7rem;">{{ meal.meal_timing }}</small>
+                                        <small class="text-secondary" style="font-size: 0.7rem;">{{ meal.meal_timing }}</small>
                                     </div>
-                                    <div class="fw-bold small text-dark mb-1">{{ meal.title }}</div>
+                                    <div class="fw-bold small text-white mb-1">{{ meal.title }}</div>
                                     
                                     {% if meal.special_dish %}
                                     <div class="mb-1.5">
@@ -103,13 +103,13 @@
                                     </div>
                                     {% endif %}
 
-                                    <div class="small text-muted mb-2" style="font-size: 0.78rem; line-height: 1.35;">
+                                    <div class="small text-secondary mb-2" style="font-size: 0.78rem; line-height: 1.35;">
                                         {{ meal.food_items_display or 'Wholesome student meal' }}
                                     </div>
                                 </div>
 
                                 <!-- Booking Action -->
-                                <div class="pt-2 border-top mt-auto">
+                                <div class="pt-2 border-top border-secondary border-opacity-25 mt-auto">
                                     {% if meal.id in booked_menu_ids %}
                                         <div class="d-flex justify-content-between align-items-center">
                                             <span class="badge bg-success text-white small py-1 px-2">

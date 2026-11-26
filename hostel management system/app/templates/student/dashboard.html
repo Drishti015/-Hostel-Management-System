@@ -1,22 +1,22 @@
 {% extends 'base.html' %}
 
-{% block title %}Student Resident Portal | HostelEase HMS{% endblock %}
+{% block title %}Resident Command Terminal | HOSTELEASE NEXUS{% endblock %}
 
 {% block content %}
 <!-- Top Header Bar -->
 <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4">
     <div>
         <div class="d-flex align-items-center gap-2 mb-1">
-            <h2 class="fw-bold text-dark mb-0">Student Residence Desk</h2>
-            <span class="badge bg-primary-subtle text-primary border border-primary-subtle">Resident Portal</span>
+            <h2 class="fw-bold text-white mb-0">Student Residence Desk</h2>
+            <span class="badge bg-primary-subtle text-info border font-monospace">SMART RESIDENT PORTAL</span>
         </div>
         <p class="text-muted small mb-0">
-            Welcome back, <strong>{{ student.full_name if student else current_user.username }}</strong> &bull; Semester Academic & Hostel Status
+            Welcome back, <strong>{{ student.full_name if student else current_user.username }}</strong> &bull; Autonomous room telemetry & resident status
         </p>
     </div>
     <div class="d-flex align-items-center gap-2 flex-wrap">
-        <span class="badge bg-white text-secondary border px-3 py-2 font-monospace shadow-xs">
-            <i class="fa-solid fa-graduation-cap text-primary me-1"></i>{{ student.enrollment_no if student else 'ENR-PENDING' }}
+        <span class="badge bg-secondary-subtle text-info border px-3 py-2 font-monospace">
+            <i class="fa-solid fa-graduation-cap me-1"></i>{{ student.enrollment_no if student else 'ENR-PENDING' }}
         </span>
         <a href="{{ url_for('student.apply_leave') }}" class="btn btn-primary-custom btn-sm">
             <i class="fa-solid fa-paper-plane me-1"></i>Apply Leave
@@ -35,13 +35,13 @@
             <div>
                 <div class="stat-header">
                     <span class="stat-title">Room & Bed Allocation</span>
-                    <div class="stat-icon-wrapper bg-primary-subtle text-primary">
+                    <div class="stat-icon-wrapper text-info">
                         <i class="fa-solid fa-door-open"></i>
                     </div>
                 </div>
-                <div class="stat-value text-primary">
+                <div class="stat-value text-info" style="text-shadow: 0 0 15px rgba(56, 189, 248, 0.4);">
                     {% if allocation %}
-                        Room {{ allocation.room.room_number }} <span class="fs-6 text-muted">({{ allocation.bed.bed_number }})</span>
+                        Room {{ allocation.room.room_number }} <span class="fs-6 text-muted fw-normal">({{ allocation.bed.bed_number }})</span>
                     {% else %}
                         <span class="text-secondary fs-5">Unallocated</span>
                     {% endif %}
@@ -49,7 +49,7 @@
             </div>
             <div class="stat-subtitle">
                 {% if allocation %}
-                    <i class="fa-solid fa-building text-secondary me-1"></i>
+                    <i class="fa-solid fa-building text-info me-1"></i>
                     <span>{{ allocation.hostel.name }}</span>
                 {% else %}
                     <span class="text-warning"><i class="fa-solid fa-circle-exclamation me-1"></i>Contact Admin for assignment</span>
@@ -64,17 +64,17 @@
             <div>
                 <div class="stat-header">
                     <span class="stat-title">Night Roll-Call Compliance</span>
-                    <div class="stat-icon-wrapper bg-success-subtle text-success">
+                    <div class="stat-icon-wrapper text-success">
                         <i class="fa-solid fa-calendar-check"></i>
                     </div>
                 </div>
-                <div class="stat-value text-success">
+                <div class="stat-value text-success" style="text-shadow: 0 0 15px rgba(52, 211, 153, 0.4);">
                     {{ student.attendance_percentage if student else 100 }}%
                 </div>
             </div>
             <div class="stat-subtitle d-flex justify-content-between align-items-center">
-                <span>Verified roll-call present rate</span>
-                <a href="{{ url_for('student.attendance_view') }}" class="text-decoration-none">
+                <span>Verified roll-call presence</span>
+                <a href="{{ url_for('student.attendance_view') }}" class="text-success text-decoration-none">
                     Logs &rarr;
                 </a>
             </div>
@@ -87,17 +87,17 @@
             <div>
                 <div class="stat-header">
                     <span class="stat-title">Hostel Fees Settled</span>
-                    <div class="stat-icon-wrapper bg-info-subtle text-info">
+                    <div class="stat-icon-wrapper text-info">
                         <i class="fa-solid fa-receipt"></i>
                     </div>
                 </div>
-                <div class="stat-value text-dark">
+                <div class="stat-value text-white">
                     ₹{{ "{:,.0f}".format(student.total_fees_paid if student else 0) }}
                 </div>
             </div>
             <div class="stat-subtitle d-flex justify-content-between align-items-center">
                 <span>Verified transactions</span>
-                <a href="{{ url_for('student.fees_view') }}" class="text-decoration-none">
+                <a href="{{ url_for('student.fees_view') }}" class="text-info text-decoration-none">
                     Dues & Receipts &rarr;
                 </a>
             </div>
@@ -109,7 +109,7 @@
 <div class="row g-2 mb-4">
     <div class="col-6 col-md-3">
         <a href="{{ url_for('student.outpasses_list') }}" class="btn btn-outline-secondary w-100 py-2.5 d-flex align-items-center justify-content-center gap-2">
-            <i class="fa-solid fa-qrcode text-primary"></i>
+            <i class="fa-solid fa-qrcode text-info"></i>
             <span class="small fw-semibold">Digital Out-Pass</span>
         </a>
     </div>
@@ -139,32 +139,32 @@
         <div class="card h-100">
             <div class="card-header">
                 <div class="d-flex align-items-center gap-2">
-                    <i class="fa-solid fa-id-card text-primary"></i>
-                    <span>Academic & Resident Profile</span>
+                    <i class="fa-solid fa-id-card text-info"></i>
+                    <span class="text-white">Academic & Resident Profile</span>
                 </div>
-                <span class="badge bg-light text-secondary border">AKTU Enrolled</span>
+                <span class="badge bg-secondary-subtle text-muted">AKTU Enrolled</span>
             </div>
             <div class="card-body">
                 <div class="row g-3 small">
                     <div class="col-sm-5 text-muted fw-medium">Department / Branch:</div>
-                    <div class="col-sm-7 fw-semibold text-dark">{{ student.branch if student else 'N/A' }}</div>
+                    <div class="col-sm-7 fw-semibold text-white">{{ student.branch if student else 'N/A' }}</div>
 
                     <div class="col-sm-5 text-muted fw-medium">Year & Semester:</div>
-                    <div class="col-sm-7 fw-semibold text-dark">Year {{ student.year if student else '-' }}, Semester {{ student.semester if student else '-' }}</div>
+                    <div class="col-sm-7 fw-semibold text-white">Year {{ student.year if student else '-' }}, Semester {{ student.semester if student else '-' }}</div>
 
                     <div class="col-sm-5 text-muted fw-medium">Student Contact:</div>
-                    <div class="col-sm-7 fw-semibold text-dark">{{ student.phone if student else '-' }}</div>
+                    <div class="col-sm-7 fw-semibold text-white">{{ student.phone if student else '-' }}</div>
 
                     <div class="col-sm-5 text-muted fw-medium">Blood Group:</div>
-                    <div class="col-sm-7 fw-semibold text-dark">
-                        <span class="badge bg-danger-subtle text-danger border border-danger-subtle">{{ student.blood_group or 'Not recorded' }}</span>
+                    <div class="col-sm-7 fw-semibold text-white">
+                        <span class="badge bg-danger-subtle text-danger">{{ student.blood_group or 'Not recorded' }}</span>
                     </div>
 
                     <div class="col-sm-5 text-muted fw-medium">Guardian Name & Phone:</div>
-                    <div class="col-sm-7 fw-semibold text-dark">{{ student.guardian_name if student else '-' }} ({{ student.guardian_phone if student else '-' }})</div>
+                    <div class="col-sm-7 fw-semibold text-white">{{ student.guardian_name if student else '-' }} ({{ student.guardian_phone if student else '-' }})</div>
 
                     <div class="col-sm-5 text-muted fw-medium">Permanent Address:</div>
-                    <div class="col-sm-7 text-dark">{{ student.address if student else '-' }}</div>
+                    <div class="col-sm-7 text-body">{{ student.address if student else '-' }}</div>
                 </div>
             </div>
         </div>
@@ -176,8 +176,8 @@
         <div class="card mb-4">
             <div class="card-header">
                 <div class="d-flex align-items-center gap-2">
-                    <i class="fa-solid fa-calendar-days text-primary"></i>
-                    <span>Recent Leave Requests</span>
+                    <i class="fa-solid fa-calendar-days text-info"></i>
+                    <span class="text-white">Recent Leave Requests</span>
                 </div>
                 <a href="{{ url_for('student.apply_leave') }}" class="btn btn-sm btn-outline-primary">
                     <i class="fa-solid fa-plus me-1"></i>New Request
@@ -188,20 +188,20 @@
                     {% for l in recent_leaves %}
                         <div class="list-group-item px-3 py-3 border-bottom d-flex justify-content-between align-items-center">
                             <div>
-                                <div class="fw-semibold text-dark small">{{ l.leave_type }}</div>
+                                <div class="fw-semibold text-white small">{{ l.leave_type }}</div>
                                 <small class="text-muted" style="font-size: 0.75rem;">
                                     {{ l.from_date.strftime('%d %b') }} &rarr; {{ l.to_date.strftime('%d %b, %Y') }} ({{ l.number_of_days }} days)
                                 </small>
                             </div>
                             <div class="d-flex align-items-center gap-2">
                                 {% if l.status == 'Approved' %}
-                                    <span class="badge bg-success-subtle text-success border border-success-subtle px-2 py-1" style="font-size: 0.72rem;">Approved</span>
+                                    <span class="badge bg-success-subtle text-success px-2 py-1" style="font-size: 0.72rem;">Approved</span>
                                 {% elif l.status == 'Pending' %}
-                                    <span class="badge bg-warning-subtle text-warning border border-warning-subtle px-2 py-1" style="font-size: 0.72rem;">Pending</span>
+                                    <span class="badge bg-warning-subtle text-warning px-2 py-1" style="font-size: 0.72rem;">Pending</span>
                                 {% elif l.status == 'Rejected' %}
-                                    <span class="badge bg-danger-subtle text-danger border border-danger-subtle px-2 py-1" style="font-size: 0.72rem;">Rejected</span>
+                                    <span class="badge bg-danger-subtle text-danger px-2 py-1" style="font-size: 0.72rem;">Rejected</span>
                                 {% else %}
-                                    <span class="badge bg-secondary-subtle text-secondary border border-secondary-subtle px-2 py-1" style="font-size: 0.72rem;">Cancelled</span>
+                                    <span class="badge bg-secondary-subtle text-secondary px-2 py-1" style="font-size: 0.72rem;">Cancelled</span>
                                 {% endif %}
                                 <a href="{{ url_for('student.view_leave', id=l.id) }}" class="btn btn-sm btn-outline-secondary py-0 px-2" style="font-size: 0.72rem;">
                                     View
@@ -223,7 +223,7 @@
             <div class="card-header">
                 <div class="d-flex align-items-center gap-2">
                     <i class="fa-solid fa-bullhorn text-warning"></i>
-                    <span>Resident Notices & Bulletins</span>
+                    <span class="text-white">Resident Notices & Bulletins</span>
                 </div>
                 <a href="{{ url_for('student.notices_view') }}" class="btn btn-sm btn-outline-secondary">
                     All Notices
@@ -233,7 +233,7 @@
                 <div class="list-group list-group-flush">
                     {% for n in notices %}
                         <div class="list-group-item px-3 py-3 border-bottom">
-                            <div class="fw-semibold text-dark small mb-1">{{ n.title }}</div>
+                            <div class="fw-semibold text-white small mb-1">{{ n.title }}</div>
                             <p class="small text-muted mb-0 text-truncate" style="font-size: 0.78rem;">{{ n.content }}</p>
                         </div>
                     {% else %}
